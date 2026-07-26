@@ -167,7 +167,7 @@ export default function StatsTable({
                   </td>
                 )}
                 <td className="px-3 py-2 text-right">
-                  <span className="rounded-full bg-brand-green/20 px-2.5 py-0.5 font-black tabular-nums text-brand-deep">
+                  <span className="rounded-full bg-brand-green/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
                     {r.totalPoints}
                   </span>
                 </td>

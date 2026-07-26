@@ -25,13 +25,11 @@ export default async function Nav() {
     <nav className="brand-gradient text-white">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
-          <span className="rounded bg-brand-green px-2 py-0.5 font-display text-lg font-black leading-tight text-brand-deep">
+          <span className="rounded bg-brand-green px-2 py-0.5 text-lg font-bold leading-tight text-brand-deep">
             A
           </span>
           <span className="leading-none">
-            <span className="block font-display text-lg font-bold tracking-tight sm:text-xl">
-              Angeli
-            </span>
+            <span className="block text-lg font-bold tracking-tight sm:text-xl">Angeli</span>
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
               Super League Fantasy
             </span>

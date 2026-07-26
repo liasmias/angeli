@@ -111,7 +111,7 @@ function PlayerCard({
   return (
     <div className="pop-in group relative flex w-[4.9rem] flex-col items-center sm:w-[5.6rem]">
       {pick.isCaptain && (
-        <span className="pop-in absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-black text-brand-green ring-2 ring-white">
+        <span className="pop-in absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-green ring-2 ring-white">
           C
         </span>
       )}
@@ -130,7 +130,7 @@ function PlayerCard({
           onClick={onCaptain}
           title="Zum Captain machen"
           aria-label={`${player.name} zum Captain machen`}
-          className={`pressable h-6 w-6 rounded-md text-[11px] font-black leading-none shadow-sm ${
+          className={`pressable h-6 w-6 rounded-md text-[11px] font-bold leading-none shadow-sm ${
             pick.isCaptain
               ? "bg-black text-brand-green"
               : "bg-white text-brand-deep hover:bg-black hover:text-brand-green"
@@ -145,7 +145,7 @@ function PlayerCard({
           aria-label={
             pick.isStarting ? `${player.name} auf die Bank` : `${player.name} in die Startelf`
           }
-          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-black leading-none text-brand-deep shadow-sm hover:bg-brand-cyan"
+          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-cyan"
         >
           {pick.isStarting ? "↓" : "↑"}
         </button>
@@ -154,7 +154,7 @@ function PlayerCard({
           onClick={onRemove}
           title="Aus dem Kader entfernen"
           aria-label={`${player.name} entfernen`}
-          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-black leading-none text-brand-pink shadow-sm hover:bg-brand-pink hover:text-white"
+          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-bold leading-none text-brand-pink shadow-sm hover:bg-brand-pink hover:text-white"
         >
           ✕
         </button>
@@ -434,7 +434,7 @@ export default function TeamBuilder({
               Restbudget
             </div>
             <div
-              className={`text-xl font-black tabular-nums ${
+              className={`text-xl font-bold tabular-nums ${
                 budgetLeft < 0 ? "text-brand-pink" : "text-brand-deep"
               }`}
             >
@@ -453,7 +453,7 @@ export default function TeamBuilder({
             <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
               Kader
             </div>
-            <div className="text-xl font-black tabular-nums text-brand-deep">
+            <div className="text-xl font-bold tabular-nums text-brand-deep">
               {squad.length}/{settings.squadSize}
             </div>
             <div className="mt-1 text-[11px] font-medium text-brand-deep/50">
@@ -465,11 +465,11 @@ export default function TeamBuilder({
               Startelf
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black tabular-nums text-brand-deep">
+              <span className="text-xl font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
               {startingCount === settings.startingSize && !formationError && (
-                <span className="rounded bg-brand-green/25 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-brand-deep">
+                <span className="rounded bg-brand-green/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
                   {formationLabel(startingCounts)}
                 </span>
               )}
@@ -749,7 +749,7 @@ export default function TeamBuilder({
                     {p.price.toFixed(1)}
                   </span>
                   <span
-                    className={`pressable flex h-6 w-6 items-center justify-center rounded-full text-sm font-black ${
+                    className={`pressable flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${
                       picked ? "bg-brand-pink text-white" : "bg-brand-green text-brand-deep"
                     }`}
                   >

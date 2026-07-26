@@ -28,7 +28,7 @@ export default async function AdminPlayersPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-black tracking-tight text-brand-deep">
+      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">
         Spieler verwalten
       </h1>
       <p className="mb-6 text-sm text-brand-deep/60">

@@ -10,7 +10,7 @@ export default function SignupPage() {
   return (
     <main className="brand-gradient-hero flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
-        <h1 className="mb-6 text-2xl font-black tracking-tight text-brand-deep">
+        <h1 className="mb-6 text-2xl font-bold tracking-tight text-brand-deep">
           Konto erstellen
         </h1>
         <form action={formAction} className="flex flex-col gap-3">

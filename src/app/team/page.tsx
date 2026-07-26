@@ -92,7 +92,7 @@ export default async function TeamPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-4 text-2xl font-black tracking-tight text-brand-deep">Mein Team</h1>
+      <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">Mein Team</h1>
       {!nextGameweek && (
         <p className="mb-6 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">
           Kein offener Spieltag gefunden — ein Admin muss zuerst Spieltage anlegen.

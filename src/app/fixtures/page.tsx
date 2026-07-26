@@ -61,7 +61,7 @@ export default async function FixturesPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-6 text-2xl font-black tracking-tight text-brand-deep">Spielplan</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-brand-deep">Spielplan</h1>
       <div className="flex flex-col gap-6">
         {ordered.map((gw) => {
           const gwFixtures = (fixtures ?? []).filter((f) => f.gameweek_id === gw.id);
@@ -89,7 +89,7 @@ export default async function FixturesPage() {
                         {home?.name ?? "?"}
                       </span>
                       {finished ? (
-                        <span className="rounded-lg bg-brand-deep px-3 py-1 font-black tabular-nums text-brand-green">
+                        <span className="rounded-lg bg-brand-deep px-3 py-1 font-bold tabular-nums text-brand-green">
                           {f.home_goals}:{f.away_goals}
                         </span>
                       ) : (

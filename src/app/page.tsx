@@ -15,7 +15,7 @@ export default async function Home() {
             Saison 26/27
           </span>
           <h1 className="max-w-3xl">
-            <span className="block text-6xl font-black leading-none tracking-tight sm:text-8xl">
+            <span className="block text-6xl font-bold leading-none tracking-tight sm:text-8xl">
               Angeli
             </span>
             <span className="mt-3 block bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-4xl">

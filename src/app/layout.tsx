@@ -1,24 +1,12 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Playfair_Display, Space_Grotesk } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import Nav from "@/components/nav";
 import "./globals.css";
 
-// Space Grotesk trägt die Oberfläche, Playfair Display die grossen Titel.
-// EB Garamond steht für längere Fliesstexte bereit.
+// Eine einzige Familie für die gesamte App — Abstufung nur über die Stärke.
+// Space Grotesk ist variabel von 300 bis 700.
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const ebGaramond = EB_Garamond({
-  variable: "--font-eb-garamond",
   subsets: ["latin"],
   display: "swap",
 });
@@ -36,7 +24,7 @@ export default function RootLayout({
   return (
     <html
       lang="de"
-      className={`${spaceGrotesk.variable} ${playfair.variable} ${ebGaramond.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Nav />

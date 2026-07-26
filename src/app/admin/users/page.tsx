@@ -21,7 +21,7 @@ export default async function AdminUsersPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-black tracking-tight text-brand-deep">Mitglieder</h1>
+      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Mitglieder</h1>
       <p className="mb-6 text-sm text-brand-deep/60">
         {total} Account{total === 1 ? "" : "s"}
         {blocked > 0 && ` · ${blocked} gesperrt`}. Gesperrte Accounts können sich nicht mehr

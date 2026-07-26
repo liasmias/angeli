@@ -41,7 +41,7 @@ export default async function StatsPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-1 text-2xl font-black tracking-tight text-brand-deep">Statistiken</h1>
+      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Statistiken</h1>
       <p className="mb-6 text-sm text-brand-deep/60">
         {latestGameweekWithPoints
           ? `Punkte aller Spieler — Stand nach Spieltag ${latestGameweekWithPoints.number}.`
