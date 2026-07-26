@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Die Vorlage enthält nur leere Platzhalter und dokumentiert die nötigen
+# Variablen fürs Deployment — die gehört ins Repo.
+!.env.local.example
 
 # vercel
 .vercel

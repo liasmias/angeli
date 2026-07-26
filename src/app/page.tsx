@@ -1,65 +1,90 @@
-import Image from "next/image";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="flex-1">
+      <section className="brand-gradient-hero text-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-6 py-24 sm:py-32">
+          <span className="rounded-full bg-brand-green px-4 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
+            Saison 26/27
+          </span>
+          <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            Dein Fantasy-Game zur{" "}
+            <span className="bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-transparent">
+              Swiss Super League
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="max-w-xl text-lg text-white/80">
+            Stell dein 15er-Team mit 100.0 Budget zusammen, wähle deinen Captain
+            und miss dich Spieltag für Spieltag mit deinen Freunden in der
+            Rangliste.
           </p>
+          <div className="flex flex-wrap gap-4 pt-2">
+            {user ? (
+              <>
+                <Link
+                  href="/team"
+                  className="pressable rounded-full bg-brand-green px-7 py-3 font-bold text-brand-deep"
+                >
+                  Zu meinem Team
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-green hover:text-brand-green"
+                >
+                  Rangliste
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signup"
+                  className="pressable rounded-full bg-brand-green px-7 py-3 font-bold text-brand-deep"
+                >
+                  Jetzt Team erstellen
+                </Link>
+                <Link
+                  href="/login"
+                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-green hover:text-brand-green"
+                >
+                  Einloggen
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </section>
+
+      <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-16 sm:grid-cols-3">
+        {[
+          {
+            title: "15er-Kader, 100.0 Budget",
+            text: "2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer — wie beim grossen Vorbild.",
+          },
+          {
+            title: "Captain & Transfers",
+            text: "Dein Captain zählt doppelt. Pro Spieltag gibt es einen Gratis-Transfer, jeder weitere kostet Punkte.",
+          },
+          {
+            title: "Echte Statistiken",
+            text: "Tore, Assists, Zu-null-Spiele und Karten aus der Super League fliessen automatisch in deine Punkte.",
+          },
+        ].map((f) => (
+          <div
+            key={f.title}
+            className="rounded-xl border border-brand-deep/10 bg-white p-6 shadow-sm"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <h2 className="mb-2 font-bold text-brand-deep">{f.title}</h2>
+            <p className="text-sm text-brand-deep/70">{f.text}</p>
+          </div>
+        ))}
+      </section>
+    </main>
   );
 }

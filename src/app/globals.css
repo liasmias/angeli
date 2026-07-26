@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f2f6;
+  --foreground: #1d1038;
+  /* Brand palette — FPL-inspiriert: tiefes Lila, Neon-Grün, Cyan */
+  --brand-deep: #37003c;
+  --brand-purple: #4c0d5e;
+  --brand-magenta: #963cff;
+  --brand-green: #00ff87;
+  --brand-cyan: #04f5ff;
+  --brand-pink: #e90052;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-magenta: var(--brand-magenta);
+  --color-brand-green: var(--brand-green);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-pink: var(--brand-pink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Header-/Hero-Verlauf wie das FPL-Banner */
+.brand-gradient {
+  background: linear-gradient(100deg, var(--brand-deep) 0%, #6a1b9a 55%, #04c8f5 130%);
+}
+
+.brand-gradient-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 85% 10%, rgba(4, 245, 255, 0.35), transparent),
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(233, 0, 82, 0.28), transparent),
+    linear-gradient(115deg, var(--brand-deep) 0%, #55127a 60%, #2a0e63 100%);
+}
+
+/* ===== Micro-Interactions ===== */
+
+/* Wachsen beim Hover, Schrumpfen beim Klick — für Buttons & Karten */
+.pressable {
+  transition: transform 0.13s ease, box-shadow 0.13s ease;
+}
+.pressable:hover {
+  transform: scale(1.045);
+}
+.pressable:active {
+  transform: scale(0.93);
+}
+
+/* Dezente Variante für Listenzeilen (kein Grow, nur Press) */
+.pressable-subtle {
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+.pressable-subtle:active {
+  transform: scale(0.98);
+}
+
+/* Neue Karten ploppen aufs Feld */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.09);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.pop-in {
+  animation: pop-in 0.28s cubic-bezier(0.2, 0.9, 0.35, 1.2);
+}
+
+/* Toast-Meldungen */
+@keyframes toast-in {
+  from {
+    transform: translate(-50%, 1.2rem);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 50;
+  animation: toast-in 0.22s ease-out;
+}
+
+/* Rasen mit Streifen + Mittellinie/-kreis + Strafräumen */
+.pitch {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #0ca648 0,
+      #0ca648 3.5rem,
+      #0b9a43 3.5rem,
+      #0b9a43 7rem
+    );
+}
+
+.pitch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    /* Aussenlinie */
+    linear-gradient(#ffffff55, #ffffff55),
+    linear-gradient(#ffffff55, #ffffff55),
+    linear-gradient(#ffffff55, #ffffff55),
+    /* Torraum + Strafraum oben */
+    radial-gradient(circle at 50% 0%, transparent 5.4rem, transparent 5.5rem),
+    linear-gradient(#ffffff55, #ffffff55),
+    linear-gradient(#ffffff55, #ffffff55),
+    linear-gradient(#ffffff55, #ffffff55);
+  background-repeat: no-repeat;
+  background-size:
+    calc(100% - 2rem) 2px,
+    2px calc(100% - 1rem),
+    2px calc(100% - 1rem),
+    0 0,
+    38% 2px,
+    2px 6.5rem,
+    2px 6.5rem;
+  background-position:
+    1rem 0.5rem,
+    1rem 0.5rem,
+    calc(100% - 1rem) 0.5rem,
+    0 0,
+    50% 7rem,
+    31% 0.5rem,
+    69% 0.5rem;
+  pointer-events: none;
+}
+
+.pitch::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4.5rem;
+  transform: translateX(-50%);
+  width: 14rem;
+  height: 9rem;
+  border: 2px solid #ffffff55;
+  border-radius: 50%;
+  pointer-events: none;
 }
