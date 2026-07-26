@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { emptyCounts, validateFormation } from "@/lib/formation";
 import type { SquadPick } from "./TeamBuilder";
 
 export async function saveSquad(
@@ -71,8 +72,15 @@ export async function saveSquad(
   if (counts.MID !== settings.mid_slots) return { error: `Genau ${settings.mid_slots} Mittelfeldspieler nötig.` };
   if (counts.FWD !== settings.fwd_slots) return { error: `Genau ${settings.fwd_slots} Stürmer nötig.` };
 
-  const startingGk = squad.filter((s) => s.isStarting && positionById.get(s.playerId) === "GK").length;
-  if (startingGk !== 1) return { error: "Genau ein Torhüter muss in der Startelf stehen." };
+  // Formation der Startelf prüfen (1 GK, mind. 3 DEF, mind. 3 MID, mind. 1 FWD).
+  const startingCounts = emptyCounts();
+  for (const s of squad) {
+    if (!s.isStarting) continue;
+    const pos = positionById.get(s.playerId);
+    if (pos) startingCounts[pos]++;
+  }
+  const formationError = validateFormation(startingCounts, settings.starting_size);
+  if (formationError) return { error: formationError };
 
   // --- transfer cost (no rollover: free transfers reset every gameweek) ---
   const { data: existing } = await supabase.from("squad_players").select("player_id").eq("squad_id", squadRow.id);

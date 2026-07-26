@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { Position } from "@/lib/database.types";
+import {
+  MIN_STARTERS,
+  canStart,
+  emptyCounts,
+  formationLabel,
+  validateFormation,
+} from "@/lib/formation";
 import { saveSquad } from "./actions";
 
 export interface PlayerOption {
@@ -209,6 +216,20 @@ export default function TeamBuilder({
   const startingCount = squad.filter((s) => s.isStarting).length;
   const hasCaptain = squad.some((s) => s.isCaptain);
 
+  /** Positionsverteilung der aktuellen Startelf. */
+  function starterCounts(picks: SquadPick[] = squad) {
+    const counts = emptyCounts();
+    for (const s of picks) {
+      if (!s.isStarting) continue;
+      const pos = playersById.get(s.playerId)?.position;
+      if (pos) counts[pos]++;
+    }
+    return counts;
+  }
+
+  const startingCounts = starterCounts();
+  const formationError = validateFormation(startingCounts, settings.startingSize);
+
   const starters = (pos: Position) =>
     squad.filter((s) => s.isStarting && playersById.get(s.playerId)?.position === pos);
   const bench = squad.filter((s) => !s.isStarting);
@@ -232,31 +253,61 @@ export default function TeamBuilder({
         setToast({ kind: "error", text: "Zu teuer — Budget reicht nicht." });
         return prev;
       }
-      // Neue Spieler landen in der Startelf, solange dort Platz ist (max. 1 startender GK).
-      const startersNow = prev.filter((s) => s.isStarting).length;
-      const gkStarting = prev.some(
-        (s) => s.isStarting && playersById.get(s.playerId)?.position === "GK"
-      );
-      const autoStart =
-        startersNow < settings.startingSize && !(player.position === "GK" && gkStarting);
+      // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das
+      // hergibt — sonst auf die Bank.
+      const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
       return [...prev, { playerId: player.id, isStarting: autoStart, isCaptain: false }];
     });
   }
 
   function toggleStarting(playerId: number) {
-    setSquad((prev) =>
-      prev.map((s) => (s.playerId === playerId ? { ...s, isStarting: !s.isStarting } : s))
-    );
+    setSquad((prev) => {
+      const pick = prev.find((s) => s.playerId === playerId);
+      const pos = playersById.get(playerId)?.position;
+      if (!pick || !pos) return prev;
+
+      if (pick.isStarting) {
+        // Auf die Bank: immer erlaubt (die Startelf ist dann eben unvollständig),
+        // nur der Captain muss in der Startelf bleiben.
+        if (pick.isCaptain) {
+          setToast({ kind: "error", text: "Der Captain muss in der Startelf stehen." });
+          return prev;
+        }
+        return prev.map((s) => (s.playerId === playerId ? { ...s, isStarting: false } : s));
+      }
+
+      const check = canStart(starterCounts(prev), pos, settings.startingSize);
+      if (!check.ok) {
+        setToast({ kind: "error", text: check.reason });
+        return prev;
+      }
+      return prev.map((s) => (s.playerId === playerId ? { ...s, isStarting: true } : s));
+    });
   }
 
   function setCaptain(playerId: number) {
-    setSquad((prev) =>
-      prev.map((s) => ({
+    setSquad((prev) => {
+      const pick = prev.find((s) => s.playerId === playerId);
+      const pos = playersById.get(playerId)?.position;
+      if (!pick || !pos) return prev;
+
+      // Ein Bankspieler wird zum Captain nur, wenn er auch in die Startelf passt.
+      if (!pick.isStarting) {
+        const check = canStart(starterCounts(prev), pos, settings.startingSize);
+        if (!check.ok) {
+          setToast({
+            kind: "error",
+            text: `Nur Spieler aus der Startelf können Captain sein. ${check.reason}`,
+          });
+          return prev;
+        }
+      }
+      return prev.map((s) => ({
         ...s,
         isCaptain: s.playerId === playerId,
         isStarting: s.playerId === playerId ? true : s.isStarting,
-      }))
-    );
+      }));
+    });
   }
 
   function removePlayer(playerId: number) {
@@ -264,6 +315,20 @@ export default function TeamBuilder({
   }
 
   function handleSave() {
+    // Vorprüfung im Client, damit der Fehler sofort kommt — der Server
+    // validiert dieselben Regeln nochmals verbindlich.
+    if (squad.length !== settings.squadSize) {
+      setToast({ kind: "error", text: `Kader muss genau ${settings.squadSize} Spieler haben.` });
+      return;
+    }
+    if (formationError) {
+      setToast({ kind: "error", text: formationError });
+      return;
+    }
+    if (!hasCaptain) {
+      setToast({ kind: "error", text: "Bitte wähle einen Captain (C-Knopf am Spieler)." });
+      return;
+    }
     startTransition(async () => {
       const result = await saveSquad(squad);
       if (result?.error) {
@@ -355,9 +420,27 @@ export default function TeamBuilder({
             <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
               Startelf
             </div>
-            <div className="text-xl font-black tabular-nums text-brand-deep">
-              {startingCount}/{settings.startingSize}
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black tabular-nums text-brand-deep">
+                {startingCount}/{settings.startingSize}
+              </span>
+              {startingCount === settings.startingSize && !formationError && (
+                <span className="rounded bg-brand-green/25 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-brand-deep">
+                  {formationLabel(startingCounts)}
+                </span>
+              )}
             </div>
+            {squad.length > 0 && formationError && (
+              <div className="mt-1 text-[11px] font-bold text-brand-pink">
+                {startingCount < settings.startingSize
+                  ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
+                    (["GK", "DEF", "MID", "FWD"] as Position[])
+                      .filter((p) => startingCounts[p] < MIN_STARTERS[p])
+                      .map((p) => `${MIN_STARTERS[p] - startingCounts[p]}× ${p}`)
+                      .join(", ") || `noch ${settings.startingSize - startingCount} Spieler`
+                  : formationError}
+              </div>
+            )}
             {!hasCaptain && squad.length > 0 && (
               <div className="mt-1 text-[11px] font-bold text-brand-pink">Captain fehlt</div>
             )}
