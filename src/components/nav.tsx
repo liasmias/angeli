@@ -31,7 +31,7 @@ export default async function Nav() {
           <span className="leading-none">
             <span className="block text-lg font-bold tracking-tight sm:text-xl">Angeli</span>
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
-              Super League Fantasy
+              Swiss League Fantasy
             </span>
           </span>
         </Link>

@@ -19,7 +19,7 @@ export default async function Home() {
               Angeli
             </span>
             <span className="mt-3 block bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-4xl">
-              Super League Fantasy
+              Swiss League Fantasy
             </span>
           </h1>
           <p className="max-w-xl text-lg text-white/80">
