@@ -111,30 +111,30 @@ function PlayerCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="pop-in group relative flex w-[4.9rem] flex-col items-center sm:w-[5.6rem]">
+    <div className="pop-in group relative flex w-[6.4rem] flex-col items-center sm:w-[7.4rem]">
       {pick.isCaptain && (
-        <span className="pop-in absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-green ring-2 ring-white">
+        <span className="pop-in absolute -right-1 top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs font-bold text-brand-green ring-2 ring-white">
           C
         </span>
       )}
-      <div className="flex flex-col items-center transition-transform duration-150 group-hover:scale-105">
-        <Jersey club={player.club} />
-        <div className="w-full overflow-hidden rounded-t bg-white px-1 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:text-[11px]">
+      <div className="flex w-full flex-col items-center transition-transform duration-150 group-hover:scale-105">
+        <Jersey club={player.club} size={64} />
+        <div className="w-full overflow-hidden rounded-t bg-white px-1.5 py-0.5 text-center text-xs font-bold leading-5 text-brand-deep shadow sm:text-sm">
           <span className="block truncate">{player.name}</span>
         </div>
         {/* Statt des eigenen Vereins der nächste Gegner — das ist die
             Information, die bei der Aufstellung zählt. */}
-        <div className="w-full rounded-b bg-brand-deep px-1 text-center text-[10px] font-medium leading-4 text-white/90">
+        <div className="w-full rounded-b bg-brand-deep px-1.5 py-0.5 text-center text-[11px] font-medium leading-4 text-white/90 sm:text-xs">
           {player.nextOpponent ?? "spielfrei"}
         </div>
       </div>
-      <div className="mt-1.5 flex gap-1.5">
+      <div className="mt-2 flex gap-1.5">
         <button
           type="button"
           onClick={onCaptain}
           title="Zum Captain machen"
           aria-label={`${player.name} zum Captain machen`}
-          className={`pressable h-6 w-6 rounded-md text-[11px] font-bold leading-none shadow-sm ${
+          className={`pressable h-7 w-7 rounded-md text-xs font-bold leading-none shadow-sm ${
             pick.isCaptain
               ? "bg-black text-brand-green"
               : "bg-white text-brand-deep hover:bg-black hover:text-brand-green"
@@ -149,7 +149,7 @@ function PlayerCard({
           aria-label={
             pick.isStarting ? `${player.name} auf die Bank` : `${player.name} in die Startelf`
           }
-          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-cyan"
+          className="pressable h-7 w-7 rounded-md bg-white text-xs font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-cyan"
         >
           {pick.isStarting ? "↓" : "↑"}
         </button>
@@ -158,7 +158,7 @@ function PlayerCard({
           onClick={onRemove}
           title="Aus dem Kader entfernen"
           aria-label={`${player.name} entfernen`}
-          className="pressable h-6 w-6 rounded-md bg-white text-[11px] font-bold leading-none text-brand-pink shadow-sm hover:bg-brand-pink hover:text-white"
+          className="pressable h-7 w-7 rounded-md bg-white text-xs font-bold leading-none text-brand-pink shadow-sm hover:bg-brand-pink hover:text-white"
         >
           ✕
         </button>
@@ -181,9 +181,9 @@ function EmptySlot({
       type="button"
       onClick={onClick}
       title={`${label} im Spielermarkt anzeigen`}
-      className="pressable flex h-[5.4rem] w-[4.9rem] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-white/60 text-center text-[10px] font-bold text-white/90 hover:border-brand-green hover:text-brand-green sm:w-[5.6rem]"
+      className="pressable flex h-[7.1rem] w-[6.4rem] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-white/60 text-center text-[11px] font-bold text-white/90 hover:border-brand-green hover:text-brand-green sm:w-[7.4rem] sm:text-xs"
     >
-      <span className="text-xl leading-none">+</span>
+      <span className="text-2xl leading-none">+</span>
       {label}
       <span className="font-medium text-white/60">noch {missing}</span>
     </button>
@@ -529,13 +529,13 @@ export default function TeamBuilder({
         </div>
 
         {/* Rasen */}
-        <div className="pitch px-2 py-6 sm:px-6">
-          <div className="relative z-10 flex flex-col gap-5">
+        <div className="pitch px-2 py-8 sm:px-6">
+          <div className="relative z-10 flex flex-col gap-7">
             {POSITIONS.map((pos) => {
               const row = starters(pos);
               const missing = slotsByPosition[pos] - countByPosition[pos];
               return (
-                <div key={pos} className="flex flex-wrap items-start justify-center gap-2 sm:gap-4">
+                <div key={pos} className="flex flex-wrap items-start justify-center gap-3 sm:gap-5">
                   {row.map((pick) => {
                     const player = playersById.get(pick.playerId);
                     if (!player) return null;
