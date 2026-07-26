@@ -14,10 +14,12 @@ export default async function Home() {
           <span className="rounded-full bg-brand-green px-4 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
             Saison 26/27
           </span>
-          <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-            Dein Fantasy-Game zur{" "}
-            <span className="bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-transparent">
-              Swiss Super League
+          <h1 className="max-w-3xl">
+            <span className="block text-6xl font-black leading-none tracking-tight sm:text-8xl">
+              Angeli
+            </span>
+            <span className="mt-3 block bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-4xl">
+              Super League Fantasy
             </span>
           </h1>
           <p className="max-w-xl text-lg text-white/80">

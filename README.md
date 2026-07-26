@@ -1,4 +1,4 @@
-# Fantasy Super League
+# Angeli — Super League Fantasy
 
 Fantasy-Football-App für die Swiss Super League 26/27 — FPL-artig: Budget-Kader
 aus 15 Spielern, wöchentliche Aufstellung mit Kapitän, limitierte Transfers pro

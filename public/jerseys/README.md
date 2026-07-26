@@ -4,12 +4,12 @@ Hier liegt pro Club ein Trikot-Bild, benannt nach dem Club-Kürzel aus der
 Datenbank (`clubs.short_name`):
 
 ```
-BAS.png  FC Basel 1893        LUZ.png  FC Luzern
-YOU.png  BSC Young Boys       ZUR.png  FC Zurich
-LUG.png  FC Lugano            GAL.png  FC St. Gallen
-SIO.png  FC Sion              GRA.png  Grasshoppers
-LAU.png  Lausanne             SER.png  Servette FC
-THU.png  FC Thun              VAD.png  FC Vaduz
+YB.png   Young Boys           LUZ.png  Luzern
+BAS.png  Basel                LS.png   Lausanne
+ZUR.png  Zürich               THU.png  Thun
+SG.png   St. Gallen           SIO.png  Sion
+GC.png   Grasshoppers         VAD.png  Vaduz
+SFC.png  Servette             LUG.png  Lugano
 ```
 
 ## Eigenes Design einsetzen

@@ -10,6 +10,27 @@ import {
   validateFormation,
 } from "@/lib/formation";
 import { saveSquad } from "./actions";
+import { activateChip, deactivateChip } from "./chip-actions";
+import type { ChipName } from "@/lib/database.types";
+
+export interface ChipState {
+  chip: ChipName;
+  activeNow: boolean;
+  usedInGameweek: number | null;
+}
+
+const CHIP_INFO: Record<ChipName, { name: string; desc: string; icon: string }> = {
+  wildcard: {
+    name: "Wildcard",
+    desc: "Beliebig viele Transfers an diesem Spieltag — ohne Punktabzug.",
+    icon: "🃏",
+  },
+  bench_boost: {
+    name: "Bench Boost",
+    desc: "An diesem Spieltag zählen auch die Punkte deiner vier Bankspieler.",
+    icon: "🚀",
+  },
+};
 
 export interface PlayerOption {
   id: number;
@@ -173,6 +194,9 @@ export default function TeamBuilder({
   gameweekNumber,
   deadline,
   freeTransfers,
+  transfersUsed,
+  extraTransferCost,
+  chips,
 }: {
   players: PlayerOption[];
   initialSquad: SquadPick[];
@@ -181,6 +205,9 @@ export default function TeamBuilder({
   gameweekNumber: number | null;
   deadline: string | null;
   freeTransfers: number;
+  transfersUsed: number;
+  extraTransferCost: number;
+  chips: ChipState[];
 }) {
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
@@ -229,6 +256,23 @@ export default function TeamBuilder({
 
   const startingCounts = starterCounts();
   const formationError = validateFormation(startingCounts, settings.startingSize);
+
+  // Vorschau der Transferkosten: alles, was gegenüber dem gespeicherten Kader
+  // neu dazugekommen ist, zählt als Transfer.
+  const savedIds = useMemo(() => new Set(initialSquad.map((s) => s.playerId)), [initialSquad]);
+  const wildcardActive = chips.some((c) => c.chip === "wildcard" && c.activeNow);
+  const pendingTransfers = squad.filter((s) => !savedIds.has(s.playerId)).length;
+  const pendingCost = wildcardActive
+    ? 0
+    : Math.max(0, pendingTransfers - freeTransfers) * extraTransferCost;
+
+  function handleChip(chip: ChipName, isActive: boolean) {
+    startTransition(async () => {
+      const res = isActive ? await deactivateChip(chip) : await activateChip(chip);
+      if (res.error) setToast({ kind: "error", text: res.error });
+      else if (res.message) setToast({ kind: "success", text: res.message });
+    });
+  }
 
   const starters = (pos: Position) =>
     squad.filter((s) => s.isStarting && playersById.get(s.playerId)?.position === pos);
@@ -461,8 +505,21 @@ export default function TeamBuilder({
                   })
                 : "—"}
               <span className="block text-[11px] font-medium text-brand-deep/50">
-                Freie Transfers: {freeTransfers}
+                {wildcardActive ? (
+                  <span className="font-bold text-brand-magenta">Wildcard aktiv</span>
+                ) : (
+                  <>
+                    Freie Transfers: {freeTransfers}
+                    {freeTransfers > 1 && " (angespart)"}
+                    {transfersUsed > 0 && ` · ${transfersUsed} genutzt`}
+                  </>
+                )}
               </span>
+              {pendingCost > 0 && (
+                <span className="block text-[11px] font-bold text-brand-pink">
+                  −{pendingCost} Punkte beim Speichern
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -532,6 +589,60 @@ export default function TeamBuilder({
               );
             })}
           </div>
+        </div>
+
+        {/* Chips */}
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {chips.map((c) => {
+            const info = CHIP_INFO[c.chip];
+            const verbraucht = c.usedInGameweek !== null;
+            return (
+              <div
+                key={c.chip}
+                className={`rounded-xl border-2 p-3 transition-colors ${
+                  c.activeNow
+                    ? "border-brand-green bg-brand-green/10"
+                    : verbraucht
+                      ? "border-brand-deep/10 bg-white opacity-60"
+                      : "border-brand-deep/10 bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-brand-deep">
+                      <span className="mr-1">{info.icon}</span>
+                      {info.name}
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/60">
+                      {verbraucht
+                        ? `Diese Saison an Spieltag ${c.usedInGameweek} eingesetzt.`
+                        : info.desc}
+                    </p>
+                  </div>
+                  {!verbraucht && (
+                    <button
+                      type="button"
+                      disabled={isPending || !gameweekOpen}
+                      onClick={() => handleChip(c.chip, c.activeNow)}
+                      className={`pressable shrink-0 rounded-full px-3 py-1 text-xs font-bold disabled:opacity-40 ${
+                        c.activeNow
+                          ? "bg-brand-deep text-brand-green"
+                          : "bg-brand-green text-brand-deep"
+                      }`}
+                    >
+                      {c.activeNow ? "Aktiv – zurücknehmen" : "Aktivieren"}
+                    </button>
+                  )}
+                </div>
+                {c.activeNow && gameweekNumber !== null && (
+                  <p className="mt-2 text-[11px] font-bold text-brand-deep">
+                    Läuft an Spieltag {gameweekNumber}. Bis zur Deadline umkehrbar — danach
+                    verbraucht.
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Speichern */}

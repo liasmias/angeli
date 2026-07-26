@@ -34,6 +34,7 @@ type LeagueSettingsRow = {
   starting_size: number;
   free_transfers_per_gameweek: number;
   extra_transfer_cost: number;
+  max_banked_transfers: number;
   gk_slots: number;
   def_slots: number;
   mid_slots: number;
@@ -172,6 +173,16 @@ type TransfersRow = {
   created_at: string;
 };
 
+export type ChipName = "wildcard" | "bench_boost";
+
+type ChipUsagesRow = {
+  id: number;
+  squad_id: number;
+  chip: ChipName;
+  gameweek_id: number;
+  activated_at: string;
+};
+
 type StandingsRow = {
   user_id: string;
   username: string;
@@ -288,6 +299,15 @@ export interface Database {
         Row: TransfersRow;
         Insert: Omit<TransfersRow, "id" | "created_at"> & { id?: number };
         Update: Partial<TransfersRow>;
+        Relationships: [];
+      };
+      chip_usages: {
+        Row: ChipUsagesRow;
+        Insert: Omit<ChipUsagesRow, "id" | "activated_at"> & {
+          id?: number;
+          activated_at?: string;
+        };
+        Update: Partial<ChipUsagesRow>;
         Relationships: [];
       };
     };

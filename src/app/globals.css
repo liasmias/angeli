@@ -21,14 +21,23 @@
   --color-brand-green: var(--brand-green);
   --color-brand-cyan: var(--brand-cyan);
   --color-brand-pink: var(--brand-pink);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-space-grotesk);
+  --font-display: var(--font-playfair);
+  --font-serif: var(--font-eb-garamond);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-space-grotesk), "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Grosse Titel bekommen die Display-Serife; Fliesstext und UI bleiben
+   bei Space Grotesk, damit Tabellen und Zahlen ruhig wirken. */
+h1,
+h2 {
+  font-family: var(--font-playfair), Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 /* Header-/Hero-Verlauf wie das FPL-Banner */

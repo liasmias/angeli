@@ -23,14 +23,21 @@ export default async function Nav() {
 
   return (
     <nav className="brand-gradient text-white">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-          <span className="rounded bg-brand-green px-1.5 py-0.5 text-sm font-black text-brand-deep">
-            FSL
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
+          <span className="rounded bg-brand-green px-2 py-0.5 font-display text-lg font-black leading-tight text-brand-deep">
+            A
           </span>
-          Fantasy Super League
+          <span className="leading-none">
+            <span className="block font-display text-lg font-bold tracking-tight sm:text-xl">
+              Angeli
+            </span>
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
+              Super League Fantasy
+            </span>
+          </span>
         </Link>
-        <div className="flex items-center gap-5 text-sm font-medium">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium [&_a]:whitespace-nowrap">
           <Link href="/fixtures" className="transition-colors hover:text-brand-green">
             Spielplan
           </Link>

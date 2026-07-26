@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTransferBudget } from "@/lib/transfers";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
 
 export default async function TeamPage() {
@@ -44,10 +45,32 @@ export default async function TeamPage() {
     return <main className="p-6">Konnte Team-Daten nicht laden. Ist das Schema aufgesetzt?</main>;
   }
 
-  const { data: squadPlayers } = await supabase
-    .from("squad_players")
-    .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
-    .eq("squad_id", squad.id);
+  const [{ data: squadPlayers }, { data: chipRows }] = await Promise.all([
+    supabase
+      .from("squad_players")
+      .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
+      .eq("squad_id", squad.id),
+    supabase
+      .from("chip_usages")
+      .select("chip, gameweek_id, gameweeks(number)")
+      .eq("squad_id", squad.id),
+  ]);
+
+  // Aus der Transferhistorie hergeleitet (inkl. angesparter Transfers) —
+  // nicht aus einem Zählerfeld, das beim Speichern überschrieben werden kann.
+  const budget = nextGameweek
+    ? await getTransferBudget(supabase, squad.id, nextGameweek, settings)
+    : { freeAvailable: 0, usedThisGameweek: 0, bankedAtStart: 0 };
+
+  const chipState = (["wildcard", "bench_boost"] as const).map((chip) => {
+    const row = (chipRows ?? []).find((c) => c.chip === chip);
+    const gw = row ? (Array.isArray(row.gameweeks) ? row.gameweeks[0] : row.gameweeks) : null;
+    return {
+      chip,
+      activeNow: !!row && !!nextGameweek && row.gameweek_id === nextGameweek.id,
+      usedInGameweek: row && (!nextGameweek || row.gameweek_id !== nextGameweek.id) ? (gw?.number ?? null) : null,
+    };
+  });
 
   const playerOptions: PlayerOption[] = (players ?? []).map((p) => {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
@@ -90,7 +113,10 @@ export default async function TeamPage() {
         gameweekOpen={!!nextGameweek}
         gameweekNumber={nextGameweek?.number ?? null}
         deadline={nextGameweek?.deadline ?? null}
-        freeTransfers={squad.free_transfers_remaining}
+        freeTransfers={budget.freeAvailable}
+        transfersUsed={budget.usedThisGameweek}
+        extraTransferCost={settings.extra_transfer_cost}
+        chips={chipState}
       />
     </main>
   );

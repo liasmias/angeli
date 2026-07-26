@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { emptyCounts, validateFormation } from "@/lib/formation";
+import { getTransferBudget } from "@/lib/transfers";
 import type { SquadPick } from "./TeamBuilder";
 
 export async function saveSquad(
@@ -82,14 +83,32 @@ export async function saveSquad(
   const formationError = validateFormation(startingCounts, settings.starting_size);
   if (formationError) return { error: formationError };
 
-  // --- transfer cost (no rollover: free transfers reset every gameweek) ---
+  // --- Transferkosten ---
+  // Die Zahl der Gratis-Transfers wird aus den tatsächlich gebuchten Transfers
+  // dieses Spieltags abgeleitet. Früher stand sie in squads.free_transfers_remaining
+  // und wurde bei jedem Speichern zurückgesetzt — dadurch war jeder Transfer gratis,
+  // solange man einzeln gespeichert hat.
   const { data: existing } = await supabase.from("squad_players").select("player_id").eq("squad_id", squadRow.id);
   const existingIds = new Set((existing ?? []).map((e) => e.player_id));
   const isFirstSquad = existingIds.size === 0;
   const newIds = new Set(playerIds);
   const added = playerIds.filter((id) => !existingIds.has(id));
   const removed = [...existingIds].filter((id) => !newIds.has(id));
-  const chargeableTransfers = isFirstSquad ? 0 : Math.max(0, added.length - squadRow.free_transfers_remaining);
+
+  const budget = await getTransferBudget(supabase, squadRow.id, nextGameweek, settings);
+
+  // Wildcard: an diesem Spieltag kosten beliebig viele Transfers nichts.
+  const { data: wildcard } = await supabase
+    .from("chip_usages")
+    .select("id")
+    .eq("squad_id", squadRow.id)
+    .eq("chip", "wildcard")
+    .eq("gameweek_id", nextGameweek.id)
+    .maybeSingle();
+
+  const freeLeft = budget.freeAvailable;
+  const transfersNow = Math.max(added.length, removed.length);
+  const costFree = isFirstSquad || !!wildcard;
 
   // --- persist squad ---
   await supabase.from("squad_players").delete().eq("squad_id", squadRow.id);
@@ -104,21 +123,24 @@ export async function saveSquad(
   const { error: insertError } = await supabase.from("squad_players").insert(squadPlayerRows);
   if (insertError) return { error: "Speichern fehlgeschlagen: " + insertError.message };
 
-  if (!isFirstSquad && (added.length > 0 || removed.length > 0)) {
-    const pairCount = Math.max(added.length, removed.length);
-    const transferRows = Array.from({ length: pairCount }).map((_, i) => ({
+  if (!isFirstSquad && transfersNow > 0) {
+    const transferRows = Array.from({ length: transfersNow }).map((_, i) => ({
       squad_id: squadRow.id,
       gameweek_id: nextGameweek.id,
       player_out_id: removed[i] ?? null,
       player_in_id: added[i] ?? null,
-      points_cost: i < chargeableTransfers ? settings.extra_transfer_cost : 0,
+      // Die ersten `freeLeft` Transfers dieses Spieltags sind gratis, der Rest kostet.
+      points_cost: costFree || i < freeLeft ? 0 : settings.extra_transfer_cost,
     }));
     await supabase.from("transfers").insert(transferRows);
   }
 
+  // Spiegelt nur noch den abgeleiteten Stand für die Anzeige.
   await supabase
     .from("squads")
-    .update({ free_transfers_remaining: settings.free_transfers_per_gameweek })
+    .update({
+      free_transfers_remaining: Math.max(0, freeLeft - (isFirstSquad ? 0 : transfersNow)),
+    })
     .eq("id", squadRow.id);
 
   // --- snapshot this gameweek's lineup for scoring ---
