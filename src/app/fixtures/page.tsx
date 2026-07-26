@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { shortenPlayerName } from "@/lib/player-name";
 
 const FINISHED = new Set(["FT", "AET", "PEN"]);
 
@@ -25,7 +26,7 @@ export default async function FixturesPage() {
     ]);
 
   const nameById = new Map(
-    (players ?? []).map((p) => [p.id, [p.first_name, p.last_name].filter(Boolean).join(" ")])
+    (players ?? []).map((p) => [p.id, shortenPlayerName(p.first_name, p.last_name)])
   );
   const pointsByPlayerGw = new Map((points ?? []).map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
 

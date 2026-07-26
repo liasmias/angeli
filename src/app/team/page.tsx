@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTransferBudget } from "@/lib/transfers";
+import { shortenPlayerName } from "@/lib/player-name";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
 
 export default async function TeamPage() {
@@ -18,7 +19,7 @@ export default async function TeamPage() {
       supabase.from("league_settings").select("*").eq("id", 1).single(),
       supabase
         .from("players")
-        .select("id, first_name, last_name, position, price, is_active, clubs(name, short_name)")
+        .select("id, first_name, last_name, position, price, is_active, club_id, clubs(name, short_name)")
         .eq("is_active", true)
         .order("position")
         .order("price", { ascending: false }),
@@ -45,7 +46,7 @@ export default async function TeamPage() {
     return <main className="p-6">Konnte Team-Daten nicht laden. Ist das Schema aufgesetzt?</main>;
   }
 
-  const [{ data: squadPlayers }, { data: chipRows }] = await Promise.all([
+  const [{ data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] = await Promise.all([
     supabase
       .from("squad_players")
       .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
@@ -54,7 +55,28 @@ export default async function TeamPage() {
       .from("chip_usages")
       .select("chip, gameweek_id, gameweeks(number)")
       .eq("squad_id", squad.id),
+    nextGameweek
+      ? supabase
+          .from("fixtures")
+          .select(
+            "home_club_id, away_club_id, home:clubs!fixtures_home_club_id_fkey(short_name), away:clubs!fixtures_away_club_id_fkey(short_name)"
+          )
+          .eq("gameweek_id", nextGameweek.id)
+      : Promise.resolve({ data: [] }),
   ]);
+
+  // Gegner des kommenden Spieltags pro Verein — (H)eim oder (A)uswärts.
+  const opponentByClub = new Map<number, string>();
+  for (const f of gwFixtures ?? []) {
+    const home = Array.isArray(f.home) ? f.home[0] : f.home;
+    const away = Array.isArray(f.away) ? f.away[0] : f.away;
+    if (f.home_club_id && away?.short_name) {
+      opponentByClub.set(f.home_club_id, `${away.short_name} (H)`);
+    }
+    if (f.away_club_id && home?.short_name) {
+      opponentByClub.set(f.away_club_id, `${home.short_name} (A)`);
+    }
+  }
 
   // Aus der Transferhistorie hergeleitet (inkl. angesparter Transfers) —
   // nicht aus einem Zählerfeld, das beim Speichern überschrieben werden kann.
@@ -76,11 +98,12 @@ export default async function TeamPage() {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
     return {
       id: p.id,
-      name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      name: shortenPlayerName(p.first_name, p.last_name),
       position: p.position,
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",
       points: totalPointsByPlayer.get(p.id) ?? 0,
+      nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
     };
   });
 

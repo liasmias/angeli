@@ -39,6 +39,8 @@ export interface PlayerOption {
   price: number;
   club: string;
   points: number;
+  /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
+  nextOpponent: string | null;
 }
 
 export interface SquadPick {
@@ -120,8 +122,10 @@ function PlayerCard({
         <div className="w-full overflow-hidden rounded-t bg-white px-1 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:text-[11px]">
           <span className="block truncate">{player.name}</span>
         </div>
+        {/* Statt des eigenen Vereins der nächste Gegner — das ist die
+            Information, die bei der Aufstellung zählt. */}
         <div className="w-full rounded-b bg-brand-deep px-1 text-center text-[10px] font-medium leading-4 text-white/90">
-          {player.club} · {player.price.toFixed(1)}
+          {player.nextOpponent ?? "spielfrei"}
         </div>
       </div>
       <div className="mt-1.5 flex gap-1.5">
@@ -735,8 +739,11 @@ export default function TeamBuilder({
                   <Jersey club={p.club} size={28} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-brand-deep">{p.name}</span>
-                    <span className="block text-xs text-brand-deep/50">
+                    <span className="block truncate text-xs text-brand-deep/50">
                       {p.club} · {p.position}
+                      {p.nextOpponent && (
+                        <span className="text-brand-deep/40"> · {p.nextOpponent}</span>
+                      )}
                     </span>
                   </span>
                   <span className="w-10 text-right">

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { shortenPlayerName } from "@/lib/player-name";
 import StatsTable, { type StatsRow } from "./StatsTable";
 
 export default async function StatsPage() {
@@ -30,7 +31,7 @@ export default async function StatsPage() {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
     return {
       id: p.id,
-      name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      name: shortenPlayerName(p.first_name, p.last_name),
       position: p.position,
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",
