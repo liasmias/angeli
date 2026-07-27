@@ -14,7 +14,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Angeli — Swiss League Fantasy",
-  description: "Fantasy Football für die Swiss Super League 26/27",
+  description: "Fantasy Football für die Schweizer Liga, Saison 26/27",
 };
 
 export default function RootLayout({

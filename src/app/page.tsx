@@ -23,9 +23,8 @@ export default async function Home() {
             </span>
           </h1>
           <p className="max-w-xl text-lg text-white/80">
-            Stell dein 15er-Team mit 100.0 Budget zusammen, wähle deinen Captain
-            und miss dich Spieltag für Spieltag mit deinen Freunden in der
-            Rangliste.
+            Die Schweizer Fantasy-Alternative für die Saison 26/27! Stelle dir dein Team
+            zusammen und sammel fleissig Punkte!
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
             {user ? (
@@ -66,7 +65,7 @@ export default async function Home() {
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-16 sm:grid-cols-3">
         {[
           {
-            title: "15er-Kader, 100.0 Budget",
+            title: "100 Mio. Budget für 15 Spieler",
             text: "2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer — wie beim grossen Vorbild.",
           },
           {
@@ -75,7 +74,7 @@ export default async function Home() {
           },
           {
             title: "Echte Statistiken",
-            text: "Tore, Assists, Zu-null-Spiele und Karten aus der Super League fliessen automatisch in deine Punkte.",
+            text: "Tore, Assists, Zu-null-Spiele und Karten aus der Schweizer Liga fliessen automatisch in deine Punkte.",
           },
         ].map((f) => (
           <div

@@ -35,6 +35,14 @@ export default async function AdminUsersPage() {
   const total = profiles?.length ?? 0;
   const blocked = (profiles ?? []).filter((p) => p.is_blocked).length;
 
+  // Ligadurchschnitt: Grundlage für die Gutschrift an Nachzügler (siehe
+  // Regelseite). Ohne diesen Wert müsste er von Hand ausgerechnet werden.
+  const punktestaende = (standings ?? []).map((s) => s.total_points);
+  const schnitt =
+    punktestaende.length > 0
+      ? Math.round(punktestaende.reduce((a, b) => a + b, 0) / punktestaende.length)
+      : 0;
+
   return (
     <>
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Mitglieder</h1>
@@ -43,6 +51,12 @@ export default async function AdminUsersPage() {
         {blocked > 0 && ` · ${blocked} gesperrt`}. Gesperrte Accounts können sich nicht mehr
         einloggen und erscheinen nicht in der Rangliste. Punkte lassen sich manuell gutschreiben
         oder abziehen — etwa als Startguthaben für Nachzügler.
+      </p>
+
+      <p className="mb-6 rounded-lg bg-brand-deep/5 px-4 py-3 text-sm text-brand-deep/70">
+        <b className="text-brand-deep">Ligadurchschnitt: {schnitt} Punkte.</b> Laut Regelwerk
+        erhalten Neuzugänge innerhalb der ersten 5 Runden diesen Wert gutgeschrieben — unten beim
+        jeweiligen Konto eintragen.
       </p>
 
       <div className="flex flex-col gap-3">

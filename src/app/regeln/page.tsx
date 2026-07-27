@@ -4,7 +4,8 @@ import { MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
 
 export const metadata = {
   title: "Regeln & FAQ — Angeli",
-  description: "Wie Angeli funktioniert: Punkte, Kader, Transfers und Chips.",
+  description:
+    "Wie Angeli funktioniert: Punkte, Kader, Transfers und Chips in der Schweizer Liga.",
 };
 
 function Abschnitt({ titel, children }: { titel: string; children: React.ReactNode }) {
@@ -72,7 +73,7 @@ export default async function RegelnPage() {
       <div className="flex flex-col gap-4">
         <Abschnitt titel="So funktioniert’s">
           <p>
-            Du stellst aus den Spielern der Swiss Super League ein Team zusammen und sammelst
+            Du stellst aus den Spielern der Schweizer Liga ein Team zusammen und sammelst
             Punkte danach, wie deine Spieler in echten Partien abschneiden. Vor jedem Spieltag
             bestimmst du deine Startelf und deinen Captain. Nach der Deadline ist die Aufstellung
             fix und wird automatisch ausgewertet.
@@ -163,9 +164,13 @@ export default async function RegelnPage() {
             liegt eine Stunde vor dem ersten Anpfiff der Runde. Danach ist deine Elf fix.
           </Frage>
           <Frage frage="Ich bin erst mitten in der Saison dazugestossen. Habe ich noch eine Chance?">
-            Deine erste Runde ist transferfrei, du baust dein Team also ohne Strafpunkte auf.
-            Zusätzlich kann der Admin Nachzüglern ein Startguthaben gutschreiben, damit der
-            Rückstand nicht von Beginn weg aussichtslos ist.
+            Ja. Deine erste Runde ist transferfrei, du baust dein Team also ohne Strafpunkte auf.
+            <br />
+            <br />
+            Steigst du <b>innerhalb der ersten 5 Runden</b> ein, erhältst du zusätzlich die bis
+            dahin <b>durchschnittlich erspielten Punkte</b> gutgeschrieben — du startest also
+            nicht bei null, während die anderen schon vorgelegt haben. Melde dich dafür einfach
+            beim Admin, er trägt die Gutschrift ein.
           </Frage>
           <Frage frage="Wann werden die Punkte aktualisiert?">
             Automatisch alle 15 Minuten, auch während laufender Spiele. Zwischenstände können
