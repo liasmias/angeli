@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Space_Grotesk } from "next/font/google";
 import AuthHashError from "@/components/auth-hash-error";
 import Nav from "@/components/nav";
@@ -33,6 +34,15 @@ export default function RootLayout({
             im Browser ausgewertet werden — daher hier, auf jeder Seite. */}
         <AuthHashError />
         {children}
+        <footer className="mt-auto px-4 py-4 text-center text-[11px] leading-relaxed text-brand-deep/45">
+          <p>
+            Inoffizielles, nicht-kommerzielles Fan-Projekt — keine Verbindung zur Swiss Football
+            League oder deren Clubs.{" "}
+            <Link href="/impressum" className="font-semibold underline hover:text-brand-magenta">
+              Impressum &amp; Datenschutz
+            </Link>
+          </p>
+        </footer>
       </body>
     </html>
   );
