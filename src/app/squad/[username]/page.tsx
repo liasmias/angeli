@@ -77,6 +77,14 @@ export default async function SquadPage({
   const prevGameweek = idx > 0 ? verfuegbar[idx - 1].number : null;
   const nextGameweek = idx < verfuegbar.length - 1 ? verfuegbar[idx + 1].number : null;
 
+  // Live-Phase: Deadline vorbei, aber noch nicht alle Partien beendet.
+  const BEENDET = new Set(["FT", "AET", "PEN"]);
+  const { data: fx } = await supabase
+    .from("fixtures")
+    .select("status")
+    .eq("gameweek_id", angezeigt.id);
+  const isLive = (fx ?? []).length > 0 && (fx ?? []).some((f) => !BEENDET.has(f.status ?? ""));
+
   const [punkte, rangInfo, { data: snapshot }, { data: chips }] = await Promise.all([
     getGameweekPoints(supabase, squad.id, angezeigt.id),
     getRank(supabase, profile.id),
@@ -120,6 +128,7 @@ export default async function SquadPage({
         username={profile.username}
         gameweekNumber={angezeigt.number}
         isPast
+        isLive={isLive}
         deadline={angezeigt.deadline}
         points={punkte}
         totalPoints={rangInfo.totalPoints}

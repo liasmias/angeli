@@ -5,6 +5,8 @@ export interface GameweekNavProps {
   gameweekNumber: number;
   /** Abgeschlossen = Deadline vorbei; sonst läuft die Aufstellungsphase. */
   isPast: boolean;
+  /** Deadline vorbei, aber noch nicht alle Partien beendet — Live-Phase. */
+  isLive?: boolean;
   deadline: string | null;
   points: number | null;
   totalPoints: number;
@@ -77,6 +79,7 @@ export default function GameweekNav(props: GameweekNavProps) {
     username,
     gameweekNumber,
     isPast,
+    isLive = false,
     deadline,
     points,
     totalPoints,
@@ -88,9 +91,11 @@ export default function GameweekNav(props: GameweekNavProps) {
   } = props;
 
   const deadlineDatum = deadline ? new Date(deadline) : null;
-  const status = isPast
-    ? `Spieltag ${gameweekNumber} ist abgeschlossen`
-    : `Spieltag ${gameweekNumber}`;
+  const status = isLive
+    ? `Spieltag ${gameweekNumber} läuft`
+    : isPast
+      ? `Spieltag ${gameweekNumber} ist abgeschlossen`
+      : `Spieltag ${gameweekNumber}`;
 
   return (
     <section className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
@@ -101,6 +106,13 @@ export default function GameweekNav(props: GameweekNavProps) {
         </h2>
         <Arrow to={nextGameweek} dir="next" basePath={basePath} />
       </div>
+
+      {isLive && (
+        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">
+          <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-brand-magenta align-middle" aria-hidden />
+          Live — Punkte aktualisieren sich alle 15 Minuten.
+        </p>
+      )}
 
       {!isPast && deadlineDatum && (
         <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">

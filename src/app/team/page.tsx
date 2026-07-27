@@ -41,12 +41,32 @@ export default async function TeamPage({
 
   const offenerSpieltag = gameweeks.find(istOffen) ?? null;
 
-  // Angezeigt wird entweder ein per ?gw= gewählter Spieltag oder der offene.
+  // Läuft gerade eine Runde? Deadline vorbei, aber noch nicht alle Partien
+  // beendet — dann ist DAS die Ansicht, die alle sehen wollen (Live-Punkte),
+  // nicht die Planung der Folgerunde.
+  const BEENDET = new Set(["FT", "AET", "PEN"]);
+  const letzteVergangene = [...gameweeks]
+    .reverse()
+    .find((g) => new Date(g.deadline).getTime() <= jetzt);
+  let laufenderSpieltag: (typeof gameweeks)[number] | null = null;
+  if (letzteVergangene) {
+    const { data: fx } = await supabase
+      .from("fixtures")
+      .select("status")
+      .eq("gameweek_id", letzteVergangene.id);
+    if ((fx ?? []).length > 0 && (fx ?? []).some((f) => !BEENDET.has(f.status ?? ""))) {
+      laufenderSpieltag = letzteVergangene;
+    }
+  }
+
+  // Angezeigt wird: der per ?gw= gewählte Spieltag, sonst die laufende Runde,
+  // sonst der offene.
   const gewuenschteNummer = gw ? Number(gw) : null;
   const angezeigt =
     (gewuenschteNummer !== null
       ? gameweeks.find((g) => g.number === gewuenschteNummer)
       : undefined) ??
+    laufenderSpieltag ??
     offenerSpieltag ??
     // Kein offener Spieltag mehr (Saisonende): den letzten zeigen.
     gameweeks[gameweeks.length - 1] ??
@@ -73,7 +93,10 @@ export default async function TeamPage({
     .eq("squad_id", squad.id);
   const mitAufstellung = new Set((snapshotGws ?? []).map((r) => r.gameweek_id));
   const navigierbar = gameweeks.filter(
-    (g) => mitAufstellung.has(g.id) || (offenerSpieltag && g.id === offenerSpieltag.id)
+    (g) =>
+      mitAufstellung.has(g.id) ||
+      (offenerSpieltag && g.id === offenerSpieltag.id) ||
+      (laufenderSpieltag && g.id === laufenderSpieltag.id)
   );
   const idx = navigierbar.findIndex((g) => g.id === angezeigt.id);
   const prevGameweek = idx > 0 ? navigierbar[idx - 1].number : null;
@@ -89,6 +112,7 @@ export default async function TeamPage({
       username={profile?.username ?? "Mein Team"}
       gameweekNumber={angezeigt.number}
       isPast={!bearbeitbar}
+      isLive={laufenderSpieltag?.id === angezeigt.id}
       deadline={angezeigt.deadline}
       points={punkte}
       totalPoints={rangInfo.totalPoints}
