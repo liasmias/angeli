@@ -20,14 +20,20 @@ export async function signup(_prevState: SignupState, formData: FormData): Promi
     return { error: "Passwort muss mindestens 8 Zeichen haben." };
   }
 
+  // Von Turnstile injiziertes Feld; leer, wenn CAPTCHA nicht aktiv ist.
+  const captchaToken = String(formData.get("cf-turnstile-response") ?? "") || undefined;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    options: { data: { username }, ...(captchaToken ? { captchaToken } : {}) },
   });
 
   if (error) {
+    if (error.message.toLowerCase().includes("captcha")) {
+      return { error: "Bot-Schutz nicht bestanden — bitte Seite neu laden und erneut versuchen." };
+    }
     return { error: error.message.includes("already registered") ? "Diese E-Mail ist bereits registriert." : error.message };
   }
 

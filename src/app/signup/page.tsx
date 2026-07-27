@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import Turnstile from "@/components/turnstile";
 import { signup } from "./actions";
 
 export default function SignupPage() {
@@ -50,6 +51,7 @@ export default function SignupPage() {
               {state.message}
             </p>
           )}
+          <Turnstile />
           <button
             disabled={pending}
             type="submit"

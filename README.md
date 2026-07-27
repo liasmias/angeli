@@ -62,6 +62,28 @@ cp .env.local.example .env.local
 | `API_FOOTBALL_LEAGUE_ID` | siehe Schritt 2 oben |
 | `CRON_SECRET` | Zufälliger String, z. B. `openssl rand -base64 32` |
 
+## 3b. Bot-Schutz bei der Registrierung (Cloudflare Turnstile, optional)
+
+Ohne E-Mail-Bestätigung könnten Bots massenhaft Accounts anlegen. Cloudflare
+Turnstile ist ein kostenloser CAPTCHA-Ersatz, der Registrierung und Login
+schützt (für echte Nutzer meist unsichtbar). Solange kein Site-Key gesetzt
+ist, bleibt der Schutz inaktiv und die Formulare laufen normal.
+
+Einrichten:
+
+1. Auf [dash.cloudflare.com](https://dash.cloudflare.com/) → **Turnstile** →
+   **Add site**. Domain deiner App eintragen (für lokale Tests zusätzlich
+   `localhost`). Widget-Typ „Managed" wählen.
+2. Cloudflare liefert zwei Schlüssel:
+   - **Site Key** (öffentlich) → in `.env.local` bzw. Vercel als
+     `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+   - **Secret Key** (geheim) → **nicht** in die App, sondern in Supabase:
+     **Auth → Bot & Abuse Protection → Enable CAPTCHA protection**, Provider
+     „Turnstile", Secret eintragen.
+3. Beides gehört zusammen: Erst wenn Site-Key gesetzt **und** CAPTCHA in
+   Supabase aktiviert ist, greift der Schutz. Nur eins von beiden führt zu
+   fehlschlagenden Logins — daher zusammen ausrollen.
+
 ## 4. Lokal entwickeln
 
 ```bash
