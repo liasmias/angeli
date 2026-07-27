@@ -53,7 +53,7 @@ export async function getFixturesByRound(
 interface ApiPlayerFixtureStats {
   player: { id: number; name: string };
   statistics: Array<{
-    games: { minutes: number | null };
+    games: { minutes: number | null; rating: string | null };
     goals: {
       total: number | null;
       conceded: number | null;
@@ -78,7 +78,7 @@ interface ApiFixturePlayersResponse {
 
 export async function getFixturePlayerStats(
   fixtureId: number
-): Promise<Array<{ apiFootballPlayerId: number; teamApiId: number; stats: StatFields }>> {
+): Promise<Array<{ apiFootballPlayerId: number; teamApiId: number; rating: number | null; stats: StatFields }>> {
   const teams = await apiFootballFetch<ApiFixturePlayersResponse[]>("/fixtures/players", {
     fixture: String(fixtureId),
   });
@@ -89,6 +89,8 @@ export async function getFixturePlayerStats(
       return {
         apiFootballPlayerId: entry.player.id,
         teamApiId: team.team.id,
+        // Bewertung der API, rein informativ — zaehlt nicht fuer die Punkte.
+        rating: s?.games.rating ? Number(s.games.rating) : null,
         stats: {
           minutes: s?.games.minutes ?? 0,
           goals: s?.goals.total ?? 0,

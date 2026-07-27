@@ -97,6 +97,8 @@ type PlayerStatsRow = {
   gameweek_id: number;
   fixture_id: number | null;
   synced_at: string;
+  /** Bewertung von API-Football (ca. 6.0-10.0); zaehlt nicht fuer die Punkte. */
+  rating: number | null;
   minutes: number;
   goals: number;
   assists: number;

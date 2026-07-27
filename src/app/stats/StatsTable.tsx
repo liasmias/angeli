@@ -11,11 +11,13 @@ export interface StatsRow {
   club: string;
   totalPoints: number;
   latestPoints: number | null;
+  /** Schnitt der API-Bewertung; null, wenn nie bewertet. */
+  rating: number | null;
 }
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-type SortKey = "totalPoints" | "latestPoints" | "price" | "name";
+type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating";
 
 export default function StatsTable({
   rows,
@@ -120,6 +122,11 @@ export default function StatsTable({
                   Preis{sortIndicator("price")}
                 </button>
               </th>
+              <th className="px-3 py-2 text-right">
+                <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title="Bewertung der Datenquelle — zählt nicht für die Punkte">
+                  Rating{sortIndicator("rating")}
+                </button>
+              </th>
               {latestGameweekNumber !== null && (
                 <th className="px-3 py-2 text-right">
                   <button
@@ -161,6 +168,9 @@ export default function StatsTable({
                 <td className="px-3 py-2 text-right tabular-nums text-brand-deep/80">
                   {r.price.toFixed(1)}
                 </td>
+                <td className="px-3 py-2 text-right tabular-nums text-brand-deep/60">
+                  {r.rating === null ? "—" : r.rating.toFixed(1)}
+                </td>
                 {latestGameweekNumber !== null && (
                   <td className="px-3 py-2 text-right tabular-nums text-brand-deep/80">
                     {r.latestPoints ?? "—"}
@@ -175,7 +185,7 @@ export default function StatsTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 7 : 6} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 8 : 7} className="px-3 py-8 text-center text-brand-deep/50">
                   Keine Spieler gefunden.
                 </td>
               </tr>

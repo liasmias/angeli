@@ -128,6 +128,7 @@ export async function GET(request: Request) {
           ...entry.stats,
           // Näherung: Spieler mit Einsatzzeit bekommen die Team-Gegentore zugerechnet.
           goals_conceded: entry.stats.minutes > 0 ? teamConceded : 0,
+          rating: entry.rating,
           // Explizit setzen: Der Standardwert `now()` greift nur beim Einfügen.
           // Ohne das blieb der Zeitstempel beim allerersten Import stehen und
           // liess frische Daten alt aussehen.

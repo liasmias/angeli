@@ -5,18 +5,27 @@ import StatsTable, { type StatsRow } from "./StatsTable";
 export default async function StatsPage() {
   const supabase = await createClient();
 
-  const [{ data: players }, { data: points }, { data: gameweeks }] = await Promise.all([
+  const [{ data: players }, { data: points }, { data: gameweeks }, { data: ratingRows }] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, position, price, clubs(name, short_name)")
       .eq("is_active", true),
     supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
+    supabase.from("player_stats").select("player_id, rating"),
   ]);
 
   const latestGameweekWithPoints = (gameweeks ?? []).find((gw) =>
     (points ?? []).some((p) => p.gameweek_id === gw.id)
   );
+
+  // Durchschnittliches Rating ueber alle Spieltage, in denen es eines gab.
+  const ratingSumme = new Map<number, { summe: number; anzahl: number }>();
+  for (const r of ratingRows ?? []) {
+    if (r.rating === null) continue;
+    const e = ratingSumme.get(r.player_id) ?? { summe: 0, anzahl: 0 };
+    ratingSumme.set(r.player_id, { summe: e.summe + Number(r.rating), anzahl: e.anzahl + 1 });
+  }
 
   const totalsByPlayer = new Map<number, number>();
   const latestByPlayer = new Map<number, number>();
@@ -37,6 +46,10 @@ export default async function StatsPage() {
       club: club?.short_name ?? club?.name ?? "—",
       totalPoints: totalsByPlayer.get(p.id) ?? 0,
       latestPoints: latestByPlayer.get(p.id) ?? null,
+      rating: (() => {
+        const e = ratingSumme.get(p.id);
+        return e ? e.summe / e.anzahl : null;
+      })(),
     };
   });
 
