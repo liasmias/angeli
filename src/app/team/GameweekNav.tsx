@@ -117,9 +117,10 @@ export default function GameweekNav(props: GameweekNavProps) {
         </p>
       )}
 
-      <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-        <span className="truncate text-lg font-bold text-brand-deep sm:text-xl">{username}</span>
-        <div className="flex items-stretch gap-2">
+      {/* Mittig statt links/rechts verteilt — wirkt als Kopf der Seite ruhiger. */}
+      <div className="flex flex-col items-center gap-3 p-3 sm:p-4">
+        <span className="max-w-full truncate text-lg font-bold text-brand-deep sm:text-xl">{username}</span>
+        <div className="flex items-stretch justify-center gap-2">
           <Kachel wert={String(totalPoints)} label="Gesamtpunkte" />
           <Kachel
             wert={points === null ? "—" : String(points)}
