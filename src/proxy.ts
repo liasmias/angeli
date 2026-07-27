@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/team", "/admin"];
+// `/passwort-neu` bleibt bewusst offen: Wer über den E-Mail-Link kommt, hat
+// zwar eine Sitzung, soll aber auch bei abgelaufenem Link die Seite mit dem
+// Hinweis "neuen Link anfordern" sehen statt im Login zu landen.
+const PROTECTED_PREFIXES = ["/team", "/admin", "/profil"];
 
 // Runs before every page request: refreshes the Supabase session cookie and
 // redirects signed-out users away from protected routes. (Renamed from

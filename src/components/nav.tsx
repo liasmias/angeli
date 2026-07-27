@@ -55,9 +55,13 @@ export default async function Nav() {
                   Admin
                 </Link>
               )}
-              <span className="hidden rounded-full bg-white/10 px-3 py-1 text-white/90 sm:inline">
+              <Link
+                href="/profil"
+                title="Mein Konto"
+                className="pressable rounded-full bg-white/10 px-3 py-1 text-white/90 hover:bg-white/20 hover:text-brand-accent"
+              >
                 {username}
-              </span>
+              </Link>
               <form action={logout}>
                 <button
                   type="submit"
