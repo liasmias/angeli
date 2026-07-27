@@ -111,13 +111,36 @@ berechnen.
 
 1. Repo mit Vercel verbinden, alle Variablen aus Schritt 3 in den Vercel
    Project Settings unter **Environment Variables** eintragen.
-2. `vercel.json` ist bereits vorhanden und registriert den Cron-Job
-   `/api/cron/sync` (alle 15 Minuten).
-   ⚠️ **Vercel Hobby-Plan führt Cron-Jobs nur einmal täglich aus** — für
-   Live-Updates während laufender Spiele wird der Pro-Plan (~20 USD/Monat)
-   benötigt. Mit Hobby reicht es trotzdem, wenn Ergebnisse bis zum nächsten
-   Tag synchronisiert sein müssen.
-3. Deploy auslösen — fertig.
+2. Deploy auslösen.
+3. **Regelmässigen Sync einrichten** — siehe nächster Abschnitt. Ohne das
+   werden während der Spiele keine Punkte aktualisiert.
+
+## 7. Punkte-Sync planen (wichtig)
+
+Der Endpunkt `/api/cron/sync` holt Spielstände und Statistiken. Er muss
+regelmässig aufgerufen werden — alle 15 Minuten, damit die Punkte während
+laufender Partien mitlaufen.
+
+⚠️ **Vercels `vercel.json`-Cron reicht im Hobby-Tarif nicht:** Dort läuft
+ein Job nur **einmal täglich**, und selbst dann zu beliebiger Minute
+innerhalb der Stunde.
+
+Zwei Wege:
+
+**A) Supabase pg_cron (empfohlen, kostenlos)** — läuft in deinem
+bestehenden Supabase-Projekt, minutengenau, kein zusätzlicher Dienst:
+[`supabase/migrations/0009_cron_sync.sql`](supabase/migrations/0009_cron_sync.sql)
+im SQL-Editor ausführen, vorher die beiden Platzhalter `<APP_URL>` und
+`<CRON_SECRET>` ersetzen. Kontrolle:
+
+```sql
+select * from cron.job_run_details order by start_time desc limit 10;
+```
+
+**B) Vercel Pro** (~20 USD/Monat) — dann greift `vercel.json` wie
+konfiguriert, ohne weiteres Zutun.
+
+Variante A hält die laufenden Kosten bei den ~19 USD für API-Football.
 
 ## Wie der Punkte-Sync funktioniert
 

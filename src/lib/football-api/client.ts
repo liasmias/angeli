@@ -9,9 +9,11 @@ async function apiFootballFetch<T>(path: string, params: Record<string, string>)
 
   const res = await fetch(url, {
     headers: { "x-apisports-key": process.env.API_FOOTBALL_KEY! },
-    // Match data doesn't change once a fixture is finished; avoid re-fetching
-    // the same round within a request burst.
-    next: { revalidate: 60 },
+    // Bewusst ungecached: Der Sync existiert ausschliesslich, um frische
+    // Daten zu holen. Mit Next.js' Data Cache lieferte er veraltete
+    // Spielstände aus — beendete Partien blieben auf "nicht gestartet"
+    // stehen, weil eine ältere Antwort wiederverwendet wurde.
+    cache: "no-store",
   });
 
   if (!res.ok) {
