@@ -1,21 +1,42 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    turnstile?: { reset: (container?: HTMLElement) => void };
+  }
+}
 
 /**
  * Cloudflare-Turnstile-Widget (Bot-Schutz für Registrierung und Login).
  *
  * Rendert nur, wenn NEXT_PUBLIC_TURNSTILE_SITE_KEY gesetzt ist — solange der
- * Key fehlt, ist der Bot-Schutz inaktiv und die Formulare funktionieren
- * unverändert. Das Widget fügt dem umgebenden <form> automatisch ein
- * verstecktes Feld `cf-turnstile-response` mit dem Token hinzu, das die
- * Server-Action ausliest und an Supabase weitergibt.
+ * Key fehlt, ist der Bot-Schutz inaktiv und die Formulare laufen unverändert.
+ * Das Widget fügt dem umgebenden <form> automatisch ein verstecktes Feld
+ * `cf-turnstile-response` mit dem Token hinzu.
  *
- * Zum Aktivieren: Key hier setzen UND in Supabase (Auth → Bot & Abuse
- * Protection) CAPTCHA mit dem passenden Secret einschalten. Beides gehört
- * zusammen.
+ * `resetSignal`: Turnstile-Token sind EINMALIG gültig. Nach einem
+ * fehlgeschlagenen Versuch (falsches Passwort o. ä.) bleibt das verbrauchte
+ * Token im Formular stehen, und jeder weitere Versuch scheitert am
+ * Bot-Schutz — der Nutzer käme ohne Neuladen nicht mehr hinein. Ändert sich
+ * dieser Wert, holt das Widget deshalb ein frisches Token.
  */
-export default function Turnstile() {
+export default function Turnstile({ resetSignal }: { resetSignal?: unknown }) {
+  const container = useRef<HTMLDivElement>(null);
+  const ersterLauf = useRef(true);
+
+  useEffect(() => {
+    if (ersterLauf.current) {
+      ersterLauf.current = false;
+      return;
+    }
+    if (container.current && window.turnstile) {
+      window.turnstile.reset(container.current);
+    }
+  }, [resetSignal]);
+
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   if (!siteKey) return null;
 
@@ -28,6 +49,7 @@ export default function Turnstile() {
         strategy="afterInteractive"
       />
       <div
+        ref={container}
         className="cf-turnstile"
         data-sitekey={siteKey}
         data-theme="light"

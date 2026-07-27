@@ -94,7 +94,7 @@ export function PasswortFormular() {
         />
         {/* Die Prüfung des aktuellen Passworts ist ein echter Login und
             unterliegt damit dem Bot-Schutz — das Token muss mit. */}
-        <Turnstile />
+        <Turnstile resetSignal={state} />
         <Meldung state={state} />
         <button
           type="submit"

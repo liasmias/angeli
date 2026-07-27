@@ -34,7 +34,7 @@ export default function LoginPage() {
               {state.error}
             </p>
           )}
-          <Turnstile />
+          <Turnstile resetSignal={state} />
           <button
             disabled={pending}
             type="submit"

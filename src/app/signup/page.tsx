@@ -51,7 +51,7 @@ export default function SignupPage() {
               {state.message}
             </p>
           )}
-          <Turnstile />
+          <Turnstile resetSignal={state} />
           <button
             disabled={pending}
             type="submit"

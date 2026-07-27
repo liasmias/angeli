@@ -37,7 +37,7 @@ export default function PasswortVergessenPage() {
               {state.message}
             </p>
           )}
-          <Turnstile />
+          <Turnstile resetSignal={state} />
           <button
             disabled={pending}
             type="submit"
