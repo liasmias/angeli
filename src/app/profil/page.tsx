@@ -21,7 +21,7 @@ export default async function ProfilPage() {
       <p className="mb-6 text-sm text-brand-deep/60">
         {user.email}
         {profil?.created_at &&
-          ` · dabei seit ${new Date(profil.created_at).toLocaleDateString("de-CH")}`}
+          ` · dabei seit ${new Date(profil.created_at).toLocaleDateString("de-CH", { timeZone: "Europe/Zurich" })}`}
         {profil?.role === "admin" && (
           <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-accent">
             Admin

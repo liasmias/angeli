@@ -43,7 +43,7 @@ export default async function AdminPage() {
                   Spieltag {gw.number}
                 </Link>
               </td>
-              <td className="py-2">{new Date(gw.deadline).toLocaleString("de-CH")}</td>
+              <td className="py-2">{new Date(gw.deadline).toLocaleString("de-CH", { timeZone: "Europe/Zurich" })}</td>
               <td className="py-2">{gw.is_locked ? "gesperrt" : "offen"}</td>
               <td className="py-2 text-right">
                 <form action={toggleGameweekLock.bind(null, gw.id, !gw.is_locked)}>

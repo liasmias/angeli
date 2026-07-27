@@ -124,6 +124,9 @@ export default function GameweekNav(props: GameweekNavProps) {
               month: "short",
               hour: "2-digit",
               minute: "2-digit",
+              // Server rendert in UTC — ohne explizite Zeitzone wären alle
+              // Zeiten um zwei Stunden verschoben.
+              timeZone: "Europe/Zurich",
             })}
           </span>
         </p>

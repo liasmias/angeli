@@ -87,7 +87,7 @@ export default async function AdminUsersPage() {
                   )}
                   {isSelf && <span className="ml-2 text-xs text-brand-deep/40">(du)</span>}
                   <span className="ml-2 text-xs text-brand-deep/50">
-                    seit {new Date(p.created_at).toLocaleDateString("de-CH")}
+                    seit {new Date(p.created_at).toLocaleDateString("de-CH", { timeZone: "Europe/Zurich" })}
                   </span>
                   <div className="mt-0.5 text-xs">
                     {p.is_blocked ? (
@@ -195,7 +195,7 @@ export default async function AdminUsersPage() {
                             {a.reason || "ohne Begründung"}
                           </span>
                           <span className="text-brand-deep/40">
-                            {new Date(a.created_at).toLocaleDateString("de-CH")}
+                            {new Date(a.created_at).toLocaleDateString("de-CH", { timeZone: "Europe/Zurich" })}
                           </span>
                           <form action={removePointAdjustment.bind(null, a.id)}>
                             <button

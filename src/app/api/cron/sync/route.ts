@@ -176,6 +176,63 @@ export async function GET(request: Request) {
     await recomputePlayerPoints(supabase, playerId, gameweek.id);
   }
 
+  // Deadlines pflegen: immer 1 Stunde vor dem ersten Anpfiff der Runde.
+  // Für die nächste offene Runde kommen die Anspielzeiten frisch von der API —
+  // Spielverschiebungen korrigieren die Deadline damit von selbst. Spätere
+  // Runden rechnen mit den bereits importierten Zeiten und werden präzisiert,
+  // sobald sie an der Reihe sind.
+  let deadlinesAdjusted = 0;
+  const { data: naechsteOffene } = await supabase
+    .from("gameweeks")
+    .select("id, number")
+    .eq("season", settings.season)
+    .eq("is_locked", false)
+    .order("number", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (naechsteOffene) {
+    const kommende = await getFixturesByRound(
+      leagueId,
+      settings.season,
+      `Regular Season - ${naechsteOffene.number}`
+    );
+    for (const fixture of kommende) {
+      await supabase.from("fixtures").upsert(
+        {
+          api_football_fixture_id: fixture.fixture.id,
+          gameweek_id: naechsteOffene.id,
+          home_club_id: clubIdByApiId.get(fixture.teams.home.id) ?? null,
+          away_club_id: clubIdByApiId.get(fixture.teams.away.id) ?? null,
+          kickoff: fixture.fixture.date,
+          status: fixture.fixture.status.short,
+          home_goals: fixture.goals.home,
+          away_goals: fixture.goals.away,
+        },
+        { onConflict: "api_football_fixture_id" }
+      );
+    }
+  }
+  const { data: offeneRunden } = await supabase
+    .from("gameweeks")
+    .select("id, deadline")
+    .eq("season", settings.season)
+    .eq("is_locked", false);
+  for (const runde of offeneRunden ?? []) {
+    const { data: ersterAnpfiff } = await supabase
+      .from("fixtures")
+      .select("kickoff")
+      .eq("gameweek_id", runde.id)
+      .order("kickoff", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!ersterAnpfiff?.kickoff) continue;
+    const soll = new Date(new Date(ersterAnpfiff.kickoff).getTime() - 3600_000).toISOString();
+    if (new Date(runde.deadline).toISOString() !== soll) {
+      await supabase.from("gameweeks").update({ deadline: soll }).eq("id", runde.id);
+      deadlinesAdjusted++;
+    }
+  }
+
   return NextResponse.json({
     gameweek: gameweek.number,
     lockedByDeadline: (newlyLocked ?? []).map((g) => g.number),
@@ -184,5 +241,6 @@ export async function GET(request: Request) {
     spiele: { live: liveSpiele, beendet: beendeteSpiele, offen: offeneSpiele },
     statsSynced,
     playersRecomputed: touchedPlayerIds.size,
+    deadlinesAdjusted,
   });
 }

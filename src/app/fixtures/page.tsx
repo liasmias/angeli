@@ -102,6 +102,7 @@ export default async function FixturesPage() {
                                 month: "short",
                                 hour: "2-digit",
                                 minute: "2-digit",
+                                timeZone: "Europe/Zurich",
                               })
                             : "—"}
                         </span>
