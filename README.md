@@ -123,7 +123,9 @@ laufender Partien mitlaufen.
 
 ⚠️ **Vercels `vercel.json`-Cron reicht im Hobby-Tarif nicht:** Dort läuft
 ein Job nur **einmal täglich**, und selbst dann zu beliebiger Minute
-innerhalb der Stunde.
+innerhalb der Stunde. Ein häufigerer Ausdruck lässt das Deployment
+fehlschlagen — deshalb steht in `vercel.json` bewusst `0 3 * * *`
+(nächtlicher Rückfall-Lauf, der im Hobby-Tarif akzeptiert wird).
 
 Zwei Wege:
 
