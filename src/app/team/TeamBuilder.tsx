@@ -236,7 +236,15 @@ export default function TeamBuilder({
   };
 
   const spent = squad.reduce((sum, s) => sum + (playersById.get(s.playerId)?.price ?? 0), 0);
-  const budgetLeft = settings.budgetCap - spent;
+  // Persönliche Obergrenze: Basis-Budget oder aktueller Wert des gespeicherten
+  // Teams — Preissteigerungen gehaltener Spieler sprengen die 100 legal.
+  // Spiegelt dieselbe Rechnung wie der Server beim Speichern.
+  const savedValue = initialSquad.reduce(
+    (sum, s) => sum + (playersById.get(s.playerId)?.price ?? 0),
+    0
+  );
+  const effectiveCap = Math.max(settings.budgetCap, savedValue);
+  const budgetLeft = effectiveCap - spent;
   const countByPosition: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   for (const s of squad) {
     const pos = playersById.get(s.playerId)?.position;
@@ -296,7 +304,7 @@ export default function TeamBuilder({
         });
         return prev;
       }
-      if (spent + player.price > settings.budgetCap) {
+      if (spent + player.price > effectiveCap + 1e-9) {
         setToast({ kind: "error", text: "Zu teuer — Budget reicht nicht." });
         return prev;
       }
@@ -445,6 +453,14 @@ export default function TeamBuilder({
               >
                 {budgetLeft.toFixed(1)}
               </span>
+              {effectiveCap > settings.budgetCap && (
+                <span
+                  className="ml-1 text-[11px] font-medium text-brand-deep/50"
+                  title="Dein Team ist durch Preissteigerungen mehr wert als das Basis-Budget — dieser Wert bleibt dir erhalten."
+                >
+                  von {effectiveCap.toFixed(1)}
+                </span>
+              )}
             </span>
             <span className="whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Kader </span>

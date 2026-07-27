@@ -83,7 +83,9 @@ export default async function RegelnPage() {
         <Abschnitt titel="Dein Kader">
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <b>{kader} Spieler</b> mit einem Budget von <b>{budget} Mio.</b>
+              <b>{kader} Spieler</b> mit einem Budget von <b>{budget} Mio.</b> — steigt der Wert
+              deiner Spieler durch Preisanpassungen, bleibt dir der volle Teamwert erhalten, auch
+              über dem Basis-Budget
             </li>
             <li>
               {s?.gk_slots ?? 2} Torhüter, {s?.def_slots ?? 5} Verteidiger, {s?.mid_slots ?? 5}{" "}

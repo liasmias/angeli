@@ -67,9 +67,26 @@ export async function saveSquad(
   const positionById = new Map(playerRows.map((p) => [p.id, p.position]));
 
   const totalPrice = playerIds.reduce((sum, id) => sum + (priceById.get(id) ?? 0), 0);
+
+  // Persönliche Obergrenze: das Basis-Budget ODER der aktuelle Wert des
+  // bereits gespeicherten Teams — je nachdem, was höher ist. Steigen Preise
+  // gehaltener Spieler, wächst der Spielraum mit; niemand wird durch fremde
+  // Preisänderungen handlungsunfähig. Mehr Wert als vorhanden lässt sich so
+  // trotzdem nicht einkaufen.
   const budgetCap = Number(settings.budget_cap);
-  if (totalPrice > budgetCap + 1e-9) {
-    return { error: `Budget überschritten (${totalPrice.toFixed(1)} / ${budgetCap.toFixed(1)}).` };
+  const { data: gehaltene } = await supabase
+    .from("squad_players")
+    .select("players(price)")
+    .eq("squad_id", squadRow.id);
+  const bisherigerWert = (gehaltene ?? []).reduce((sum, r) => {
+    const p = Array.isArray(r.players) ? r.players[0] : r.players;
+    return sum + Number(p?.price ?? 0);
+  }, 0);
+  const effektiveGrenze = Math.max(budgetCap, bisherigerWert);
+  if (totalPrice > effektiveGrenze + 1e-9) {
+    return {
+      error: `Budget überschritten (${totalPrice.toFixed(1)} / ${effektiveGrenze.toFixed(1)}).`,
+    };
   }
 
   const counts: Record<string, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
