@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Jersey from "@/components/jersey";
 import type { Position } from "@/lib/database.types";
 import {
   MIN_STARTERS,
@@ -68,45 +69,6 @@ const POSITION_LABEL: Record<Position, string> = {
   FWD: "Sturm",
 };
 
-/**
- * Trikots liegen als PNG in public/jerseys/<KÜRZEL>.png — einfach ersetzen für
- * eigene Designs.
- *
- * `fluid` skaliert das Trikot mit der Kartenbreite statt fester Pixelgrösse.
- * Auf dem Spielfeld nötig, damit auch fünf Spieler nebeneinander in eine
- * Reihe passen.
- */
-function Jersey({ club, size = 46, fluid = false }: { club: string; size?: number; fluid?: boolean }) {
-  const [failed, setFailed] = useState(false);
-  const className = fluid
-    ? "aspect-square w-[62%] max-w-16 select-none drop-shadow-sm"
-    : "select-none drop-shadow-sm";
-  const dimensions = fluid ? {} : { width: size, height: size };
-
-  if (failed) {
-    return (
-      <svg {...dimensions} viewBox="0 0 64 64" className={className} aria-hidden>
-        <path
-          d="M22 7 L8 15 L14 28 L19 24 L19 57 L45 57 L45 24 L50 28 L56 15 L42 7 C40 12 24 12 22 7 Z"
-          fill="#e5e7eb"
-          stroke="rgba(0,0,0,0.3)"
-          strokeWidth="1.5"
-        />
-      </svg>
-    );
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- kleine statische Assets, kein next/image nötig
-    <img
-      src={`/jerseys/${club}.png`}
-      alt=""
-      {...dimensions}
-      draggable={false}
-      onError={() => setFailed(true)}
-      className={className}
-    />
-  );
-}
 
 function PlayerCard({
   player,
@@ -504,38 +466,33 @@ export default function TeamBuilder({
               <div className="mt-1 text-[11px] font-bold text-brand-pink">Captain fehlt</div>
             )}
           </div>
+          {/* Spieltag und Deadline stehen in der Kopfleiste darüber — hier
+              geht es nur noch um die Transfers. */}
           <div className="rounded-lg bg-white p-3 shadow-sm">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
-              {gameweekNumber ? `Spieltag ${gameweekNumber}` : "Spieltag"}
-              {countdown && <span className="ml-1 normal-case text-brand-magenta">· {countdown}</span>}
-            </div>
-            <div className="text-sm font-bold text-brand-deep">
-              {deadlineDate
-                ? deadlineDate.toLocaleString("de-CH", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "—"}
-              <span className="block text-[11px] font-medium text-brand-deep/50">
-                {wildcardActive ? (
-                  <span className="font-bold text-brand-magenta">Wildcard aktiv</span>
-                ) : (
-                  <>
-                    Freie Transfers: {freeTransfers}
-                    {freeTransfers > 1 && " (angespart)"}
-                    {transfersUsed > 0 && ` · ${transfersUsed} genutzt`}
-                  </>
-                )}
-              </span>
-              {pendingCost > 0 && (
-                <span className="block text-[11px] font-bold text-brand-pink">
-                  −{pendingCost} Punkte beim Speichern
-                </span>
+              Transfers
+              {countdown && (
+                <span className="ml-1 normal-case text-brand-magenta">· Deadline {countdown}</span>
               )}
             </div>
+            {wildcardActive ? (
+              <div className="text-xl font-bold text-brand-magenta">Wildcard</div>
+            ) : (
+              <div className="text-xl font-bold tabular-nums text-brand-deep">
+                {freeTransfers}
+                <span className="ml-1 text-[11px] font-medium text-brand-deep/50">
+                  gratis{freeTransfers > 1 && " (angespart)"}
+                </span>
+              </div>
+            )}
+            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/50">
+              {transfersUsed > 0 ? `${transfersUsed} genutzt` : "noch keiner genutzt"}
+            </div>
+            {pendingCost > 0 && (
+              <div className="text-[11px] font-bold text-brand-pink">
+                −{pendingCost} Punkte beim Speichern
+              </div>
+            )}
           </div>
         </div>
 
