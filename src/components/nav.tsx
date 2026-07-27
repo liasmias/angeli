@@ -31,7 +31,7 @@ export default async function Nav() {
           href="/"
           className="mr-auto flex shrink-0 items-center gap-2 whitespace-nowrap sm:mr-0 sm:gap-2.5"
         >
-          <Logo className="h-6 w-6 shrink-0 text-brand-accent sm:h-8 sm:w-8" />
+          <Logo className="h-6 w-6 shrink-0 text-white sm:h-8 sm:w-8" />
           <span className="leading-none">
             <span className="block text-base font-bold tracking-tight sm:text-xl">Angeli</span>
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
