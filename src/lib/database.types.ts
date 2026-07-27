@@ -183,6 +183,15 @@ type ChipUsagesRow = {
   activated_at: string;
 };
 
+type PointAdjustmentsRow = {
+  id: number;
+  squad_id: number;
+  points: number;
+  reason: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 type StandingsRow = {
   user_id: string;
   username: string;
@@ -299,6 +308,15 @@ export interface Database {
         Row: TransfersRow;
         Insert: Omit<TransfersRow, "id" | "created_at"> & { id?: number };
         Update: Partial<TransfersRow>;
+        Relationships: [];
+      };
+      point_adjustments: {
+        Row: PointAdjustmentsRow;
+        Insert: Omit<PointAdjustmentsRow, "id" | "created_at"> & {
+          id?: number;
+          created_at?: string;
+        };
+        Update: Partial<PointAdjustmentsRow>;
         Relationships: [];
       };
       chip_usages: {

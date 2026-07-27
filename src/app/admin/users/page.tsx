@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { setUserBlocked } from "./actions";
+import { addPointAdjustment, removePointAdjustment, setUserBlocked } from "./actions";
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
@@ -11,10 +11,26 @@ export default async function AdminUsersPage() {
   // Service-Role-Client: die profiles-Tabelle ist für normale Clients
   // absichtlich schreibgeschützt, und wir wollen alle Accounts sehen.
   const admin = createAdminClient();
-  const { data: profiles } = await admin
-    .from("profiles")
-    .select("id, username, role, created_at, is_blocked")
-    .order("created_at", { ascending: false });
+  const [{ data: profiles }, { data: squads }, { data: adjustments }, { data: standings }] =
+    await Promise.all([
+      admin
+        .from("profiles")
+        .select("id, username, role, created_at, is_blocked")
+        .order("created_at", { ascending: false }),
+      admin.from("squads").select("id, user_id"),
+      admin
+        .from("point_adjustments")
+        .select("id, squad_id, points, reason, created_at")
+        .order("created_at", { ascending: false }),
+      admin.from("standings").select("user_id, total_points"),
+    ]);
+
+  const squadByUser = new Map((squads ?? []).map((s) => [s.user_id, s.id]));
+  const pointsByUser = new Map((standings ?? []).map((s) => [s.user_id, s.total_points]));
+  const adjustmentsBySquad = new Map<number, typeof adjustments>();
+  for (const a of adjustments ?? []) {
+    adjustmentsBySquad.set(a.squad_id, [...(adjustmentsBySquad.get(a.squad_id) ?? []), a]);
+  }
 
   const total = profiles?.length ?? 0;
   const blocked = (profiles ?? []).filter((p) => p.is_blocked).length;
@@ -25,74 +41,140 @@ export default async function AdminUsersPage() {
       <p className="mb-6 text-sm text-brand-deep/60">
         {total} Account{total === 1 ? "" : "s"}
         {blocked > 0 && ` · ${blocked} gesperrt`}. Gesperrte Accounts können sich nicht mehr
-        einloggen und erscheinen nicht in der Rangliste. Die Sperre ist jederzeit umkehrbar.
+        einloggen und erscheinen nicht in der Rangliste. Punkte lassen sich manuell gutschreiben
+        oder abziehen — etwa als Startguthaben für Nachzügler.
       </p>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <table className="w-full min-w-[32rem] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
-              <th className="px-4 py-2">Accountname</th>
-              <th className="px-4 py-2">Registriert</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-brand-deep/5">
-            {(profiles ?? []).map((p) => {
-              const isSelf = p.id === me?.id;
-              const isAdmin = p.role === "admin";
-              return (
-                <tr key={p.id} className={p.is_blocked ? "bg-brand-pink/5" : ""}>
-                  <td className="px-4 py-2 font-semibold text-brand-deep">
-                    {p.username}
-                    {isAdmin && (
-                      <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-green">
-                        Admin
-                      </span>
-                    )}
-                    {isSelf && <span className="ml-2 text-xs text-brand-deep/40">(du)</span>}
-                  </td>
-                  <td className="px-4 py-2 text-brand-deep/60">
-                    {new Date(p.created_at).toLocaleDateString("de-CH")}
-                  </td>
-                  <td className="px-4 py-2">
+      <div className="flex flex-col gap-3">
+        {(profiles ?? []).map((p) => {
+          const isSelf = p.id === me?.id;
+          const isAdmin = p.role === "admin";
+          const squadId = squadByUser.get(p.id);
+          const eigene = squadId ? (adjustmentsBySquad.get(squadId) ?? []) : [];
+          const korrekturSumme = eigene.reduce((s, a) => s + a.points, 0);
+
+          return (
+            <section
+              key={p.id}
+              className={`rounded-xl p-4 shadow-sm ${p.is_blocked ? "bg-brand-pink/5" : "bg-white"}`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="font-bold text-brand-deep">{p.username}</span>
+                  {isAdmin && (
+                    <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-green">
+                      Admin
+                    </span>
+                  )}
+                  {isSelf && <span className="ml-2 text-xs text-brand-deep/40">(du)</span>}
+                  <span className="ml-2 text-xs text-brand-deep/50">
+                    seit {new Date(p.created_at).toLocaleDateString("de-CH")}
+                  </span>
+                  <div className="mt-0.5 text-xs">
                     {p.is_blocked ? (
                       <span className="font-bold text-brand-pink">gesperrt</span>
                     ) : (
-                      <span className="text-brand-deep/60">aktiv</span>
+                      <span className="text-brand-deep/60">
+                        {pointsByUser.get(p.id) ?? 0} Punkte in der Rangliste
+                        {korrekturSumme !== 0 && (
+                          <span className="ml-1 font-bold text-brand-magenta">
+                            (davon {korrekturSumme > 0 ? "+" : ""}
+                            {korrekturSumme} manuell)
+                          </span>
+                        )}
+                      </span>
                     )}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {isSelf || isAdmin ? (
-                      <span className="text-xs text-brand-deep/30">—</span>
-                    ) : (
-                      <form action={setUserBlocked.bind(null, p.id, !p.is_blocked)}>
-                        <button
-                          type="submit"
-                          className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
-                            p.is_blocked
-                              ? "bg-brand-green text-brand-deep"
-                              : "bg-brand-pink text-white"
-                          }`}
+                  </div>
+                </div>
+
+                {!isSelf && !isAdmin && (
+                  <form action={setUserBlocked.bind(null, p.id, !p.is_blocked)}>
+                    <button
+                      type="submit"
+                      className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
+                        p.is_blocked ? "bg-brand-green text-brand-deep" : "bg-brand-pink text-white"
+                      }`}
+                    >
+                      {p.is_blocked ? "Entsperren" : "Sperren"}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {squadId && (
+                <div className="mt-3 border-t border-brand-deep/5 pt-3">
+                  <form
+                    action={addPointAdjustment.bind(null, p.id)}
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <input
+                      name="points"
+                      type="number"
+                      step="1"
+                      required
+                      placeholder="± Punkte"
+                      className="w-28 rounded-lg border border-brand-deep/15 px-2 py-1 text-sm tabular-nums outline-none focus:border-brand-magenta"
+                    />
+                    <input
+                      name="reason"
+                      type="text"
+                      placeholder="Grund, z. B. Startguthaben Spieltag 5"
+                      className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-2 py-1 text-sm outline-none focus:border-brand-magenta"
+                    />
+                    <button
+                      type="submit"
+                      className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-green"
+                    >
+                      Gutschreiben
+                    </button>
+                  </form>
+
+                  {eigene.length > 0 && (
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {eigene.map((a) => (
+                        <li
+                          key={a.id}
+                          className="flex items-center gap-2 text-xs text-brand-deep/70"
                         >
-                          {p.is_blocked ? "Entsperren" : "Sperren"}
-                        </button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {total === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-brand-deep/50">
-                  Noch keine Mitglieder registriert.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                          <span
+                            className={`rounded px-1.5 py-0.5 font-bold tabular-nums ${
+                              a.points >= 0
+                                ? "bg-brand-green/20 text-brand-deep"
+                                : "bg-brand-pink/15 text-brand-pink"
+                            }`}
+                          >
+                            {a.points > 0 ? "+" : ""}
+                            {a.points}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">
+                            {a.reason || "ohne Begründung"}
+                          </span>
+                          <span className="text-brand-deep/40">
+                            {new Date(a.created_at).toLocaleDateString("de-CH")}
+                          </span>
+                          <form action={removePointAdjustment.bind(null, a.id)}>
+                            <button
+                              type="submit"
+                              title="Korrektur zurücknehmen"
+                              className="pressable rounded px-1.5 py-0.5 font-bold text-brand-pink hover:bg-brand-pink hover:text-white"
+                            >
+                              ✕
+                            </button>
+                          </form>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
+        {total === 0 && (
+          <p className="rounded-xl bg-white px-4 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
+            Noch keine Mitglieder registriert.
+          </p>
+        )}
       </div>
     </>
   );

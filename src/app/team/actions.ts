@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { emptyCounts, validateFormation } from "@/lib/formation";
 import { getTransferBudget } from "@/lib/transfers";
 import type { SquadPick } from "./TeamBuilder";
@@ -9,12 +10,20 @@ import type { SquadPick } from "./TeamBuilder";
 export async function saveSquad(
   squad: SquadPick[]
 ): Promise<{ error?: string; savedForGameweek?: number } | undefined> {
-  const supabase = await createClient();
+  const auth = await createClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await auth.auth.getUser();
   if (!user) return { error: "Nicht eingeloggt." };
+
+  // Nach der Authentifizierung alle Schreib-/Leseoperationen über den
+  // Service-Role-Client. Der Zugriff bleibt auf den eingeloggten Nutzer
+  // beschränkt, weil der Kader ausschliesslich über `user_id = user.id`
+  // gefunden wird. Normale Clients dürfen diese Tabellen per RLS gar nicht
+  // mehr schreiben — sonst liesse sich die Validierung hier per Direkt-Request
+  // an die REST-API komplett umgehen.
+  const supabase = createAdminClient();
 
   const { data: settings } = await supabase.from("league_settings").select("*").eq("id", 1).single();
   if (!settings) return { error: "Liga-Einstellungen fehlen." };

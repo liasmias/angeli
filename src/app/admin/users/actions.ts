@@ -36,3 +36,39 @@ export async function setUserBlocked(userId: string, blocked: boolean, _formData
   revalidatePath("/admin/users");
   revalidatePath("/leaderboard");
 }
+
+/**
+ * Schreibt eine manuelle Punktekorrektur gut — etwa ein Startguthaben für
+ * jemanden, der erst mitten in der Saison dazustösst.
+ *
+ * Jede Korrektur ist ein eigener Eintrag: nachvollziehbar und einzeln
+ * zurücknehmbar, statt einen Gesamtwert zu überschreiben.
+ */
+export async function addPointAdjustment(userId: string, formData: FormData) {
+  const { supabase, user: actingAdmin } = await requireAdmin();
+
+  const points = Number(formData.get("points"));
+  if (!Number.isInteger(points) || points === 0) {
+    throw new Error("Bitte eine ganze Zahl ungleich 0 eingeben.");
+  }
+
+  const { data: squad } = await supabase.from("squads").select("id").eq("user_id", userId).single();
+  if (!squad) throw new Error("Kein Kader für diesen Account gefunden.");
+
+  await supabase.from("point_adjustments").insert({
+    squad_id: squad.id,
+    points,
+    reason: String(formData.get("reason") ?? "").trim() || null,
+    created_by: actingAdmin.id,
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/leaderboard");
+}
+
+export async function removePointAdjustment(adjustmentId: number, _formData: FormData) {
+  const { supabase } = await requireAdmin();
+  await supabase.from("point_adjustments").delete().eq("id", adjustmentId);
+  revalidatePath("/admin/users");
+  revalidatePath("/leaderboard");
+}

@@ -1,16 +1,22 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-/** Wirft, wenn der eingeloggte User kein Admin ist; gibt sonst Client + User zurück. */
+/**
+ * Wirft, wenn der eingeloggte User kein Admin ist. Gibt sonst einen
+ * Service-Role-Client zurück — die Admin-Aktionen schreiben darüber, sodass
+ * die Spielstand-Tabellen für normale Clients per RLS komplett gesperrt
+ * bleiben können.
+ */
 export async function requireAdmin() {
-  const supabase = await createClient();
+  const auth = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await auth.auth.getUser();
   if (!user) throw new Error("Nicht eingeloggt.");
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: profile } = await auth.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") throw new Error("Keine Admin-Rechte.");
 
-  return { supabase, user };
+  return { supabase: createAdminClient(), user };
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { ChipName } from "@/lib/database.types";
 
 export type ChipResult = { error?: string; message?: string };
@@ -13,11 +14,16 @@ const CHIP_LABEL: Record<ChipName, string> = {
 
 /** Gemeinsame Vorarbeit: eingeloggter Kader + aktuell offener Spieltag. */
 async function context() {
-  const supabase = await createClient();
+  const auth = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await auth.auth.getUser();
   if (!user) return { error: "Nicht eingeloggt." as const };
+
+  // Nach der Authentifizierung Service-Role-Client: normale Clients dürfen
+  // chip_usages per RLS nicht mehr schreiben, damit sich der Chip-Einsatz
+  // nicht per Direkt-Request an die REST-API manipulieren lässt.
+  const supabase = createAdminClient();
 
   const { data: squad } = await supabase.from("squads").select("id").eq("user_id", user.id).single();
   if (!squad) return { error: "Kein Kader gefunden." as const };
