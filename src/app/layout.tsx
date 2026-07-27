@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
+import AuthHashError from "@/components/auth-hash-error";
 import Nav from "@/components/nav";
 import "./globals.css";
 
@@ -28,6 +29,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Nav />
+        {/* Fehler aus E-Mail-Links kommen als URL-Fragment und können nur
+            im Browser ausgewertet werden — daher hier, auf jeder Seite. */}
+        <AuthHashError />
         {children}
       </body>
     </html>

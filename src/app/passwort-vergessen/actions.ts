@@ -14,9 +14,11 @@ export async function requestPasswordReset(
 
   const captchaToken = String(formData.get("cf-turnstile-response") ?? "") || undefined;
 
-  // Ziel-URL aus dem Request ableiten, damit sie lokal wie live stimmt.
+  // Ziel-URL: bevorzugt fest konfiguriert (verlässlich hinter Proxys),
+  // sonst aus dem Request abgeleitet, damit es lokal ebenfalls funktioniert.
   const h = await headers();
   const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
     h.get("origin") ??
     (h.get("host") ? `https://${h.get("host")}` : "https://angeli-fantasy.org");
 
