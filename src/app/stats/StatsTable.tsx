@@ -102,6 +102,25 @@ export default function StatsTable({
               </option>
             ))}
           </select>
+          {/* Auf dem Handy sind Preis- und Rating-Spalten ausgeblendet, ihre
+              klickbaren Köpfe damit unerreichbar — dieses Feld übernimmt dort
+              die Sortierung. Ab sm reichen die Spaltenköpfe. */}
+          <select
+            value={sortKey}
+            onChange={(e) => {
+              const key = e.target.value as SortKey;
+              setSortKey(key);
+              setSortDesc(key !== "name");
+            }}
+            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta sm:hidden"
+            aria-label="Sortieren nach"
+          >
+            <option value="totalPoints">Punkte ↓</option>
+            <option value="latestPoints">Letzter Spieltag ↓</option>
+            <option value="price">Preis ↓</option>
+            <option value="rating">Rating ↓</option>
+            <option value="name">Name A–Z</option>
+          </select>
         </div>
       </div>
 

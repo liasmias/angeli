@@ -206,6 +206,8 @@ export default function TeamBuilder({
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
+  const [sortiere, setSortiere] = useState<"points" | "price">("points");
   const marketRef = useRef<HTMLElement | null>(null);
 
   // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
@@ -390,12 +392,16 @@ export default function TeamBuilder({
     });
   }
 
-  const filtered = players.filter(
-    (p) =>
-      (filterPos === "ALL" || p.position === filterPos) &&
-      (filterClub === "ALL" || p.club === filterClub) &&
-      (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = players
+    .filter(
+      (p) =>
+        (filterPos === "ALL" || p.position === filterPos) &&
+        (filterClub === "ALL" || p.club === filterClub) &&
+        (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) =>
+      sortiere === "points" ? b.points - a.points || b.price - a.price : b.price - a.price || b.points - a.points
+    );
 
   const deadlineDate = deadline ? new Date(deadline) : null;
   const hoursLeft = deadlineDate
@@ -717,6 +723,14 @@ export default function TeamBuilder({
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setSortiere((s) => (s === "points" ? "price" : "points"))}
+                title="Sortierung umschalten"
+                className="pressable-subtle whitespace-nowrap rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm font-semibold text-brand-deep hover:border-brand-magenta"
+              >
+                {sortiere === "points" ? "Punkte ↓" : "Preis ↓"}
+              </button>
             </div>
           </div>
           <div className="max-h-[34rem] overflow-y-auto">
