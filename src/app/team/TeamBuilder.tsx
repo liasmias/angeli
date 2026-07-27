@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
 import type { Position } from "@/lib/database.types";
 import {
@@ -101,13 +101,17 @@ function PlayerCard({
           {player.nextOpponent ?? "spielfrei"}
         </div>
       </div>
-      <div className="mt-1.5 flex gap-1 sm:mt-2 sm:gap-1.5">
+      {/* Auf dem Handy als dunkle Pille gruppiert: In der Fünferkette liegen
+          die Nachbar-Trios sonst so dicht, dass sie zu einem durchgehenden
+          Band verschmelzen und die Zuordnung zum Spieler verloren geht.
+          Ab sm reicht der Abstand, dort bleibt alles wie gehabt. */}
+      <div className="mt-1 flex gap-0.5 rounded-lg bg-black/25 p-0.5 sm:mt-2 sm:gap-1.5 sm:rounded-none sm:bg-transparent sm:p-0">
         <button
           type="button"
           onClick={onCaptain}
           title="Zum Captain machen"
           aria-label={`${player.name} zum Captain machen`}
-          className={`pressable h-6 w-6 rounded-md text-[10px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:text-xs ${
+          className={`pressable h-5 w-5 rounded text-[9px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:rounded-md sm:text-xs ${
             pick.isCaptain
               ? "bg-black text-brand-accent"
               : "bg-white text-brand-deep hover:bg-black hover:text-brand-accent"
@@ -122,7 +126,7 @@ function PlayerCard({
           aria-label={
             pick.isStarting ? `${player.name} auf die Bank` : `${player.name} in die Startelf`
           }
-          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-lime sm:h-7 sm:w-7 sm:text-xs"
+          className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-lime sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
         >
           {pick.isStarting ? "↓" : "↑"}
         </button>
@@ -131,7 +135,7 @@ function PlayerCard({
           onClick={onRemove}
           title="Aus dem Kader entfernen"
           aria-label={`${player.name} entfernen`}
-          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-danger shadow-sm hover:bg-brand-danger hover:text-white sm:h-7 sm:w-7 sm:text-xs"
+          className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-danger shadow-sm hover:bg-brand-danger hover:text-white sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
         >
           ✕
         </button>
@@ -202,6 +206,15 @@ export default function TeamBuilder({
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  const marketRef = useRef<HTMLElement | null>(null);
+
+  // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
+  // auf einen leeren Slot würde sonst sichtbar nichts bewirken. Im breiten
+  // Layout (ab lg) steht der Markt daneben, dort wäre der Sprung störend.
+  function jumpToMarket() {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    marketRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   // Toast automatisch ausblenden — Fehler bleiben etwas länger lesbar
   useEffect(() => {
@@ -545,6 +558,7 @@ export default function TeamBuilder({
                         setFilterPos(pos);
                         setFilterClub("ALL");
                         setSearch("");
+                        jumpToMarket();
                       }}
                     />
                   )}
@@ -664,7 +678,7 @@ export default function TeamBuilder({
       </section>
 
       {/* ===== Spielermarkt ===== */}
-      <aside className="w-full shrink-0 lg:w-[22rem]">
+      <aside ref={marketRef} className="w-full shrink-0 scroll-mt-4 lg:w-[22rem]">
         <div className="overflow-hidden rounded-xl bg-white shadow-sm lg:sticky lg:top-4">
           <div className="brand-gradient px-4 py-3 text-sm font-bold text-white">
             Spieler wählen
