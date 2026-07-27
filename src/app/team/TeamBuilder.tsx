@@ -408,8 +408,6 @@ export default function TeamBuilder({
         ? `in ${Math.round(hoursLeft / 24)} Tagen`
         : `in ${hoursLeft} Std.`;
 
-  const budgetRatio = Math.min(1, Math.max(0, spent / settings.budgetCap));
-
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       {/* Toast */}
@@ -428,102 +426,84 @@ export default function TeamBuilder({
 
       {/* ===== Spielfeld ===== */}
       <section className="min-w-0 flex-1">
-        {/* Status-Kacheln */}
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg bg-white p-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
-              Restbudget
-            </div>
-            <div
-              className={`text-xl font-bold tabular-nums ${
-                budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
-              }`}
-            >
-              {budgetLeft.toFixed(1)}
-            </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-brand-deep/10">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  budgetRatio > 0.95 ? "bg-brand-danger" : "bg-brand-accent"
+        {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
+            vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
+        <div className="mb-3 rounded-lg bg-white px-3 py-2 shadow-sm">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+            <span className="whitespace-nowrap">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Budget </span>
+              <span
+                className={`font-bold tabular-nums ${
+                  budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
                 }`}
-                style={{ width: `${budgetRatio * 100}%` }}
-              />
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
-              Kader
-            </div>
-            <div className="text-xl font-bold tabular-nums text-brand-deep">
-              {squad.length}/{settings.squadSize}
-            </div>
-            <div className="mt-1 text-[11px] font-medium text-brand-deep/50">
-              {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
-            </div>
-          </div>
-          <div className="rounded-lg bg-white p-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
-              Startelf
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold tabular-nums text-brand-deep">
+              >
+                {budgetLeft.toFixed(1)}
+              </span>
+            </span>
+            <span className="whitespace-nowrap">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Kader </span>
+              <span className="font-bold tabular-nums text-brand-deep">
+                {squad.length}/{settings.squadSize}
+              </span>
+            </span>
+            <span className="whitespace-nowrap">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Startelf </span>
+              <span className="font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
               {startingCount === settings.startingSize && !formationError && (
-                <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
+                <span className="ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
                   {formationLabel(startingCounts)}
                 </span>
               )}
-            </div>
-            {squad.length > 0 && formationError && (
-              <div className="mt-1 text-[11px] font-bold text-brand-danger">
-                {startingCount < settings.startingSize
-                  ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
-                    (["GK", "DEF", "MID", "FWD"] as Position[])
-                      .filter((p) => startingCounts[p] < MIN_STARTERS[p])
-                      .map((p) => `${MIN_STARTERS[p] - startingCounts[p]}× ${p}`)
-                      .join(", ") || `noch ${settings.startingSize - startingCount} Spieler`
-                  : formationError}
-              </div>
-            )}
-            {!hasCaptain && squad.length > 0 && (
-              <div className="mt-1 text-[11px] font-bold text-brand-danger">Captain fehlt</div>
-            )}
-          </div>
-          {/* Spieltag und Deadline stehen in der Kopfleiste darüber — hier
-              geht es nur noch um die Transfers. */}
-          <div className="rounded-lg bg-white p-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">
-              Transfers
-              {countdown && (
-                <span className="ml-1 normal-case text-brand-magenta">· Deadline {countdown}</span>
-              )}
-            </div>
-            {unlimitedTransfers ? (
-              <div className="text-xl font-bold text-brand-magenta">Unbegrenzt</div>
-            ) : wildcardActive ? (
-              <div className="text-xl font-bold text-brand-magenta">Wildcard</div>
-            ) : (
-              <div className="text-xl font-bold tabular-nums text-brand-deep">
-                {freeTransfers}
-                <span className="ml-1 text-[11px] font-medium text-brand-deep/50">
-                  gratis{freeTransfers > 1 && " (angespart)"}
+            </span>
+            <span className="whitespace-nowrap">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Transfers </span>
+              {unlimitedTransfers ? (
+                <span className="font-bold text-brand-magenta">unbegrenzt</span>
+              ) : wildcardActive ? (
+                <span className="font-bold text-brand-magenta">Wildcard</span>
+              ) : (
+                <span className="font-bold tabular-nums text-brand-deep">
+                  {freeTransfers} gratis
+                  {transfersUsed > 0 && (
+                    <span className="font-medium text-brand-deep/50"> · {transfersUsed} genutzt</span>
+                  )}
                 </span>
-              </div>
-            )}
-            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/50">
-              {unlimitedTransfers
-                ? "Einstiegsrunde — ohne Punktabzug"
-                : transfersUsed > 0
-                  ? `${transfersUsed} genutzt`
-                  : "noch keiner genutzt"}
-            </div>
-            {pendingCost > 0 && (
-              <div className="text-[11px] font-bold text-brand-danger">
-                −{pendingCost} Punkte beim Speichern
-              </div>
+              )}
+            </span>
+            {countdown && (
+              <span className="whitespace-nowrap text-[11px] font-bold text-brand-magenta">
+                Deadline {countdown}
+              </span>
             )}
           </div>
+          {/* Detail- und Warnzeile: nur zeigen, wenn etwas fehlt oder kostet. */}
+          {squad.length < settings.squadSize && (
+            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/50">
+              {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
+            </div>
+          )}
+          {(formationError || (!hasCaptain && squad.length > 0) || pendingCost > 0) && (
+            <div className="mt-0.5 text-[11px] font-bold text-brand-danger">
+              {[
+                squad.length > 0 && formationError
+                  ? startingCount < settings.startingSize
+                    ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
+                      "Startelf: " +
+                      ((["GK", "DEF", "MID", "FWD"] as Position[])
+                        .filter((p) => startingCounts[p] < MIN_STARTERS[p])
+                        .map((p) => `${MIN_STARTERS[p] - startingCounts[p]}× ${p}`)
+                        .join(", ") || `noch ${settings.startingSize - startingCount} Spieler`)
+                    : formationError
+                  : null,
+                !hasCaptain && squad.length > 0 ? "Captain fehlt" : null,
+                pendingCost > 0 ? `−${pendingCost} Punkte beim Speichern` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </div>
+          )}
         </div>
 
         {/* Rasen */}

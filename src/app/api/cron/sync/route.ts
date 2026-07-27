@@ -60,6 +60,37 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Kein gesperrter Spieltag zum Synchronisieren." });
   }
 
+  // Fehlende Aufstellungs-Schnappschüsse nachziehen: Der Schnappschuss entsteht
+  // sonst nur beim Klick auf "Team speichern" — wer eine Runde lang nichts
+  // ändert, hätte gar keine Aufstellung und ginge leer aus. Stattdessen läuft
+  // das zuletzt gespeicherte Team automatisch weiter.
+  let squadsRolledOver = 0;
+  const { data: alleSquads } = await supabase.from("squads").select("id");
+  for (const s of alleSquads ?? []) {
+    const { count } = await supabase
+      .from("gameweek_squads")
+      .select("*", { count: "exact", head: true })
+      .eq("squad_id", s.id)
+      .eq("gameweek_id", gameweek.id);
+    if (count) continue;
+    const { data: aktuell } = await supabase
+      .from("squad_players")
+      .select("player_id, is_starting, is_captain")
+      .eq("squad_id", s.id);
+    if (!aktuell || aktuell.length === 0) continue;
+    await supabase.from("gameweek_squads").insert(
+      aktuell.map((r) => ({
+        squad_id: s.id,
+        gameweek_id: gameweek.id,
+        player_id: r.player_id,
+        is_starting: r.is_starting,
+        is_captain: r.is_captain,
+        points_earned: null,
+      }))
+    );
+    squadsRolledOver++;
+  }
+
   const { data: clubs } = await supabase.from("clubs").select("id, api_football_team_id");
   const clubIdByApiId = new Map((clubs ?? []).filter((c) => c.api_football_team_id !== null).map((c) => [c.api_football_team_id as number, c.id]));
 
@@ -148,6 +179,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     gameweek: gameweek.number,
     lockedByDeadline: (newlyLocked ?? []).map((g) => g.number),
+    squadsRolledOver,
     fixturesSynced,
     spiele: { live: liveSpiele, beendet: beendeteSpiele, offen: offeneSpiele },
     statsSynced,
