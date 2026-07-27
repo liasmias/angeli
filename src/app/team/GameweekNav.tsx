@@ -12,10 +12,12 @@ export interface GameweekNavProps {
   participants: number;
   prevGameweek: number | null;
   nextGameweek: number | null;
+  /** Ziel der Blätter-Links — "/team" für den eigenen Kader, "/squad/<name>" für fremde. */
+  basePath?: string;
 }
 
 /** Ein Pfeil zum Nachbar-Spieltag; als Platzhalter ausgegraut, wenn es keinen gibt. */
-function Arrow({ to, dir }: { to: number | null; dir: "prev" | "next" }) {
+function Arrow({ to, dir, basePath }: { to: number | null; dir: "prev" | "next"; basePath: string }) {
   const label = dir === "prev" ? "Vorheriger Spieltag" : "Nächster Spieltag";
   const glyph = dir === "prev" ? "‹" : "›";
   const base =
@@ -30,7 +32,7 @@ function Arrow({ to, dir }: { to: number | null; dir: "prev" | "next" }) {
   }
   return (
     <Link
-      href={`/team?gw=${to}`}
+      href={`${basePath}?gw=${to}`}
       aria-label={label}
       title={`${label} (${to})`}
       className={`pressable ${base} text-white hover:bg-white/15`}
@@ -82,6 +84,7 @@ export default function GameweekNav(props: GameweekNavProps) {
     participants,
     prevGameweek,
     nextGameweek,
+    basePath = "/team",
   } = props;
 
   const deadlineDatum = deadline ? new Date(deadline) : null;
@@ -92,11 +95,11 @@ export default function GameweekNav(props: GameweekNavProps) {
   return (
     <section className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
       <div className="brand-gradient flex items-center justify-between gap-2 px-2 py-2 sm:px-3">
-        <Arrow to={prevGameweek} dir="prev" />
+        <Arrow to={prevGameweek} dir="prev" basePath={basePath} />
         <h2 className="min-w-0 flex-1 truncate text-center text-sm font-bold text-white sm:text-base">
           {status}
         </h2>
-        <Arrow to={nextGameweek} dir="next" />
+        <Arrow to={nextGameweek} dir="next" basePath={basePath} />
       </div>
 
       {!isPast && deadlineDatum && (
