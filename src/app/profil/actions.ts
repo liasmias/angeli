@@ -72,11 +72,23 @@ export async function changePassword(
 
   // Aktuelles Passwort prüfen: Sonst könnte jemand an einem offen gelassenen
   // Rechner das Passwort ändern und den Account übernehmen.
+  //
+  // Die Prüfung läuft über einen echten Login — und der unterliegt der
+  // CAPTCHA-Pflicht. Deshalb muss das Formular ein Turnstile-Token
+  // mitliefern, sonst scheitert die Prüfung selbst bei richtigem Passwort.
+  const captchaToken = String(formData.get("cf-turnstile-response") ?? "") || undefined;
   const { error: loginFehler } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: aktuell,
+    options: captchaToken ? { captchaToken } : undefined,
   });
-  if (loginFehler) return { error: "Das aktuelle Passwort stimmt nicht." };
+  if (loginFehler) {
+    return {
+      error: loginFehler.message.toLowerCase().includes("captcha")
+        ? "Bot-Schutz nicht bestanden — bitte Seite neu laden und erneut versuchen."
+        : "Das aktuelle Passwort stimmt nicht.",
+    };
+  }
 
   const { error } = await supabase.auth.updateUser({ password: neu });
   if (error) return { error: error.message };

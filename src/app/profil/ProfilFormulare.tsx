@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Turnstile from "@/components/turnstile";
 import { changePassword, changeUsername, deleteAccount, type ProfilState } from "./actions";
 
 function Meldung({ state }: { state: ProfilState }) {
@@ -91,6 +92,9 @@ export function PasswortFormular() {
           autoComplete="new-password"
           className={feld}
         />
+        {/* Die Prüfung des aktuellen Passworts ist ein echter Login und
+            unterliegt damit dem Bot-Schutz — das Token muss mit. */}
+        <Turnstile />
         <Meldung state={state} />
         <button
           type="submit"
