@@ -6,23 +6,40 @@ import type { Position } from "@/lib/database.types";
 
 const VALID_POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
+/**
+ * Ändert Anzeigedaten eines Spielers.
+ *
+ * Bewusst NICHT änderbar: `id` und `api_football_player_id`. Über die
+ * API-ID ordnet der Sync die Statistiken zu — würde sie verstellt, bekäme
+ * der Spieler die Punkte eines anderen oder gar keine mehr. Die Felder
+ * werden deshalb im Formular gar nicht erst angeboten.
+ */
 export async function updatePlayer(formData: FormData) {
   const { supabase } = await requireAdmin();
   const playerId = Number(formData.get("playerId"));
   const price = Number(formData.get("price"));
   const clubId = Number(formData.get("clubId"));
   const isActive = formData.get("isActive") === "on";
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const firstName = String(formData.get("firstName") ?? "").trim() || null;
 
   if (!Number.isFinite(playerId) || !Number.isFinite(price) || price < 0) return;
-  if (!Number.isFinite(clubId)) return;
+  if (!Number.isFinite(clubId) || !lastName) return;
 
   await supabase
     .from("players")
-    .update({ price, club_id: clubId, is_active: isActive })
+    .update({
+      price,
+      club_id: clubId,
+      is_active: isActive,
+      first_name: firstName,
+      last_name: lastName,
+    })
     .eq("id", playerId);
   revalidatePath("/admin/players");
   revalidatePath("/team");
   revalidatePath("/stats");
+  revalidatePath("/fixtures");
 }
 
 export async function createPlayer(formData: FormData) {

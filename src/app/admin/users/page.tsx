@@ -1,6 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { addPointAdjustment, removePointAdjustment, setUserBlocked } from "./actions";
+import {
+  addPointAdjustment,
+  removePointAdjustment,
+  setUserAdmin,
+  setUserBlocked,
+} from "./actions";
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
@@ -101,18 +106,44 @@ export default async function AdminUsersPage() {
                   </div>
                 </div>
 
-                {!isSelf && !isAdmin && (
-                  <form action={setUserBlocked.bind(null, p.id, !p.is_blocked)}>
-                    <button
-                      type="submit"
-                      className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
-                        p.is_blocked ? "bg-brand-accent text-brand-deep" : "bg-brand-danger text-white"
-                      }`}
-                    >
-                      {p.is_blocked ? "Entsperren" : "Sperren"}
-                    </button>
-                  </form>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Sich selbst kann niemand degradieren — sonst stünde die
+                      Liga womöglich ohne Verwaltung da. */}
+                  {!isSelf && !p.is_blocked && (
+                    <form action={setUserAdmin.bind(null, p.id, !isAdmin)}>
+                      <button
+                        type="submit"
+                        title={
+                          isAdmin
+                            ? "Admin-Rechte entziehen"
+                            : "Zum Admin machen — darf Spieler, Punkte und Mitglieder verwalten"
+                        }
+                        className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
+                          isAdmin
+                            ? "border border-brand-deep/20 text-brand-deep/70 hover:bg-brand-deep/5"
+                            : "bg-brand-deep text-brand-accent"
+                        }`}
+                      >
+                        {isAdmin ? "Admin entziehen" : "Zum Admin machen"}
+                      </button>
+                    </form>
+                  )}
+
+                  {!isSelf && !isAdmin && (
+                    <form action={setUserBlocked.bind(null, p.id, !p.is_blocked)}>
+                      <button
+                        type="submit"
+                        className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
+                          p.is_blocked
+                            ? "bg-brand-accent text-brand-deep"
+                            : "bg-brand-danger text-white"
+                        }`}
+                      >
+                        {p.is_blocked ? "Entsperren" : "Sperren"}
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
 
               {squadId && (

@@ -6,7 +6,10 @@ import { updatePlayer } from "./actions";
 
 export interface AdminPlayerRow {
   id: number;
+  /** Zusammengesetzt, nur für die Suche. */
   name: string;
+  firstName: string;
+  lastName: string;
   position: Position;
   price: number;
   club: string;
@@ -97,7 +100,8 @@ export default function PlayerAdminTable({
         <table className="w-full min-w-[38rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
-              <th className="px-3 py-2">Spieler</th>
+              <th className="px-3 py-2">Vorname</th>
+              <th className="px-3 py-2">Nachname</th>
               <th className="px-3 py-2">Club</th>
               <th className="px-3 py-2">Pos.</th>
               <th className="px-3 py-2">Preis</th>
@@ -108,7 +112,24 @@ export default function PlayerAdminTable({
           <tbody className="divide-y divide-brand-deep/5">
             {visible.map((r) => (
               <tr key={r.id} className={r.isActive ? "" : "opacity-50"}>
-                <td className="px-3 py-1.5 font-semibold text-brand-deep">{r.name}</td>
+                <td className="px-3 py-1.5">
+                  <input
+                    form={`player-${r.id}`}
+                    name="firstName"
+                    defaultValue={r.firstName}
+                    placeholder="—"
+                    className="w-28 rounded border border-brand-deep/15 px-2 py-1 outline-none focus:border-brand-magenta"
+                  />
+                </td>
+                <td className="px-3 py-1.5">
+                  <input
+                    form={`player-${r.id}`}
+                    name="lastName"
+                    defaultValue={r.lastName}
+                    required
+                    className="w-40 rounded border border-brand-deep/15 px-2 py-1 font-semibold outline-none focus:border-brand-magenta"
+                  />
+                </td>
                 <td className="px-3 py-1.5">
                   <select
                     form={`player-${r.id}`}
@@ -158,7 +179,7 @@ export default function PlayerAdminTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={7} className="px-3 py-8 text-center text-brand-deep/50">
                   Keine Spieler gefunden.
                 </td>
               </tr>

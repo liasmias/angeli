@@ -38,6 +38,43 @@ export async function setUserBlocked(userId: string, blocked: boolean, _formData
 }
 
 /**
+ * Vergibt oder entzieht Admin-Rechte.
+ *
+ * Zwei Sicherungen, damit sich die Liga nicht selbst aussperrt:
+ * Niemand kann sich die eigenen Rechte entziehen, und der letzte
+ * verbleibende Admin lässt sich nicht degradieren.
+ */
+export async function setUserAdmin(userId: string, makeAdmin: boolean, _formData: FormData) {
+  const { user: actingAdmin } = await requireAdmin();
+  const admin = createAdminClient();
+
+  if (!makeAdmin) {
+    if (userId === actingAdmin.id) {
+      throw new Error("Du kannst dir die Admin-Rechte nicht selbst entziehen.");
+    }
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if ((count ?? 0) <= 1) {
+      throw new Error("Es muss mindestens ein Admin übrig bleiben.");
+    }
+  }
+
+  const { data: ziel } = await admin
+    .from("profiles")
+    .select("is_blocked")
+    .eq("id", userId)
+    .single();
+  if (makeAdmin && ziel?.is_blocked) {
+    throw new Error("Gesperrte Konten können nicht zu Admins gemacht werden.");
+  }
+
+  await admin.from("profiles").update({ role: makeAdmin ? "admin" : "user" }).eq("id", userId);
+  revalidatePath("/admin/users");
+}
+
+/**
  * Schreibt eine manuelle Punktekorrektur gut — etwa ein Startguthaben für
  * jemanden, der erst mitten in der Saison dazustösst.
  *

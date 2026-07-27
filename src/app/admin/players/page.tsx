@@ -18,6 +18,8 @@ export default async function AdminPlayersPage() {
     return {
       id: p.id,
       name: [p.first_name, p.last_name].filter(Boolean).join(" "),
+      firstName: p.first_name ?? "",
+      lastName: p.last_name,
       position: p.position,
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",
