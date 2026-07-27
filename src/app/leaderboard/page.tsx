@@ -33,7 +33,7 @@ export default async function LeaderboardPage() {
                   <span className="truncate font-semibold text-brand-deep">{row.username}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full bg-brand-green/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
+                  <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
                     {row.total_points}
                   </span>
                   <span className="text-brand-deep/30" aria-hidden>

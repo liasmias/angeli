@@ -3,8 +3,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 
-// Fixture states that mean "final result available" per API-Football's status codes.
+// Status-Codes von API-Football.
+//
+// Live-Spiele werden bewusst mitgenommen, damit die Punkte schon während der
+// Partie mitlaufen. Da der Cron alle 15 Minuten erneut über denselben
+// Spieltag läuft, werden Zwischenstände später automatisch durch die
+// Endergebnisse überschrieben.
+const LIVE_STATUSES = new Set(["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"]);
 const FINISHED_STATUSES = new Set(["FT", "AET", "PEN"]);
+const HAT_DATEN = new Set([...LIVE_STATUSES, ...FINISHED_STATUSES]);
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +71,9 @@ export async function GET(request: Request) {
   const touchedPlayerIds = new Set<number>();
   let fixturesSynced = 0;
   let statsSynced = 0;
+  let liveSpiele = 0;
+  let beendeteSpiele = 0;
+  let offeneSpiele = 0;
 
   for (const fixture of fixtures) {
     const homeClubId = clubIdByApiId.get(fixture.teams.home.id);
@@ -84,7 +94,12 @@ export async function GET(request: Request) {
     );
     fixturesSynced++;
 
-    if (!FINISHED_STATUSES.has(fixture.fixture.status.short)) continue;
+    const status = fixture.fixture.status.short;
+    if (LIVE_STATUSES.has(status)) liveSpiele++;
+    else if (FINISHED_STATUSES.has(status)) beendeteSpiele++;
+    else offeneSpiele++;
+
+    if (!HAT_DATEN.has(status)) continue;
 
     const { data: fixtureRow } = await supabase
       .from("fixtures")
@@ -129,6 +144,7 @@ export async function GET(request: Request) {
     gameweek: gameweek.number,
     lockedByDeadline: (newlyLocked ?? []).map((g) => g.number),
     fixturesSynced,
+    spiele: { live: liveSpiele, beendet: beendeteSpiele, offen: offeneSpiele },
     statsSynced,
     playersRecomputed: touchedPlayerIds.size,
   });

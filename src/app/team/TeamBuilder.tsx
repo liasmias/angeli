@@ -86,7 +86,7 @@ function PlayerCard({
   return (
     <div className="pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
       {pick.isCaptain && (
-        <span className="pop-in absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-green ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
+        <span className="pop-in absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
           C
         </span>
       )}
@@ -109,8 +109,8 @@ function PlayerCard({
           aria-label={`${player.name} zum Captain machen`}
           className={`pressable h-6 w-6 rounded-md text-[10px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:text-xs ${
             pick.isCaptain
-              ? "bg-black text-brand-green"
-              : "bg-white text-brand-deep hover:bg-black hover:text-brand-green"
+              ? "bg-black text-brand-accent"
+              : "bg-white text-brand-deep hover:bg-black hover:text-brand-accent"
           }`}
         >
           C
@@ -122,7 +122,7 @@ function PlayerCard({
           aria-label={
             pick.isStarting ? `${player.name} auf die Bank` : `${player.name} in die Startelf`
           }
-          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-cyan sm:h-7 sm:w-7 sm:text-xs"
+          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-lime sm:h-7 sm:w-7 sm:text-xs"
         >
           {pick.isStarting ? "↓" : "↑"}
         </button>
@@ -131,7 +131,7 @@ function PlayerCard({
           onClick={onRemove}
           title="Aus dem Kader entfernen"
           aria-label={`${player.name} entfernen`}
-          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-pink shadow-sm hover:bg-brand-pink hover:text-white sm:h-7 sm:w-7 sm:text-xs"
+          className="pressable h-6 w-6 rounded-md bg-white text-[10px] font-bold leading-none text-brand-danger shadow-sm hover:bg-brand-danger hover:text-white sm:h-7 sm:w-7 sm:text-xs"
         >
           ✕
         </button>
@@ -150,15 +150,22 @@ function EmptySlot({
   onClick: () => void;
 }) {
   return (
+    // Kompakter, runder Platzhalter: nimmt nur so viel Fläche wie nötig,
+    // damit die belegten Karten die Aufstellung dominieren.
     <button
       type="button"
       onClick={onClick}
-      title={`${label} im Spielermarkt anzeigen`}
-      className="pressable flex h-[6.2rem] min-w-0 max-w-[7.4rem] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border-2 border-dashed border-white/60 px-1 text-center text-[10px] font-bold text-white/90 hover:border-brand-green hover:text-brand-green sm:h-[7.1rem] sm:text-xs"
+      title={`${label} hinzufügen — noch ${missing}`}
+      aria-label={`${label} hinzufügen, noch ${missing}`}
+      className="pressable flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center justify-start gap-1 self-start pt-1"
     >
-      <span className="text-2xl leading-none">+</span>
-      <span className="w-full truncate">{label}</span>
-      <span className="font-medium text-white/60">noch {missing}</span>
+      <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-xl font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
+        +
+      </span>
+      <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-white/85 sm:text-[11px]">
+        {label}
+      </span>
+      <span className="text-[10px] font-medium text-white/55">noch {missing}</span>
     </button>
   );
 }
@@ -172,6 +179,7 @@ export default function TeamBuilder({
   deadline,
   freeTransfers,
   transfersUsed,
+  unlimitedTransfers,
   extraTransferCost,
   chips,
 }: {
@@ -183,6 +191,8 @@ export default function TeamBuilder({
   deadline: string | null;
   freeTransfers: number;
   transfersUsed: number;
+  /** Einstiegsrunde: Transfers kosten in dieser Runde nichts. */
+  unlimitedTransfers: boolean;
   extraTransferCost: number;
   chips: ChipState[];
 }) {
@@ -239,9 +249,10 @@ export default function TeamBuilder({
   const savedIds = useMemo(() => new Set(initialSquad.map((s) => s.playerId)), [initialSquad]);
   const wildcardActive = chips.some((c) => c.chip === "wildcard" && c.activeNow);
   const pendingTransfers = squad.filter((s) => !savedIds.has(s.playerId)).length;
-  const pendingCost = wildcardActive
-    ? 0
-    : Math.max(0, pendingTransfers - freeTransfers) * extraTransferCost;
+  const pendingCost =
+    wildcardActive || unlimitedTransfers
+      ? 0
+      : Math.max(0, pendingTransfers - freeTransfers) * extraTransferCost;
 
   function handleChip(chip: ChipName, isActive: boolean) {
     startTransition(async () => {
@@ -394,8 +405,8 @@ export default function TeamBuilder({
           role="status"
           className={`toast rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
             toast.kind === "error"
-              ? "bg-brand-pink text-white"
-              : "bg-brand-green text-brand-deep"
+              ? "bg-brand-danger text-white"
+              : "bg-brand-accent text-brand-deep"
           }`}
         >
           {toast.text}
@@ -412,7 +423,7 @@ export default function TeamBuilder({
             </div>
             <div
               className={`text-xl font-bold tabular-nums ${
-                budgetLeft < 0 ? "text-brand-pink" : "text-brand-deep"
+                budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
               }`}
             >
               {budgetLeft.toFixed(1)}
@@ -420,7 +431,7 @@ export default function TeamBuilder({
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-brand-deep/10">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
-                  budgetRatio > 0.95 ? "bg-brand-pink" : "bg-brand-green"
+                  budgetRatio > 0.95 ? "bg-brand-danger" : "bg-brand-accent"
                 }`}
                 style={{ width: `${budgetRatio * 100}%` }}
               />
@@ -446,13 +457,13 @@ export default function TeamBuilder({
                 {startingCount}/{settings.startingSize}
               </span>
               {startingCount === settings.startingSize && !formationError && (
-                <span className="rounded bg-brand-green/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
+                <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
                   {formationLabel(startingCounts)}
                 </span>
               )}
             </div>
             {squad.length > 0 && formationError && (
-              <div className="mt-1 text-[11px] font-bold text-brand-pink">
+              <div className="mt-1 text-[11px] font-bold text-brand-danger">
                 {startingCount < settings.startingSize
                   ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
                     (["GK", "DEF", "MID", "FWD"] as Position[])
@@ -463,7 +474,7 @@ export default function TeamBuilder({
               </div>
             )}
             {!hasCaptain && squad.length > 0 && (
-              <div className="mt-1 text-[11px] font-bold text-brand-pink">Captain fehlt</div>
+              <div className="mt-1 text-[11px] font-bold text-brand-danger">Captain fehlt</div>
             )}
           </div>
           {/* Spieltag und Deadline stehen in der Kopfleiste darüber — hier
@@ -475,7 +486,9 @@ export default function TeamBuilder({
                 <span className="ml-1 normal-case text-brand-magenta">· Deadline {countdown}</span>
               )}
             </div>
-            {wildcardActive ? (
+            {unlimitedTransfers ? (
+              <div className="text-xl font-bold text-brand-magenta">Unbegrenzt</div>
+            ) : wildcardActive ? (
               <div className="text-xl font-bold text-brand-magenta">Wildcard</div>
             ) : (
               <div className="text-xl font-bold tabular-nums text-brand-deep">
@@ -486,10 +499,14 @@ export default function TeamBuilder({
               </div>
             )}
             <div className="mt-0.5 text-[11px] font-medium text-brand-deep/50">
-              {transfersUsed > 0 ? `${transfersUsed} genutzt` : "noch keiner genutzt"}
+              {unlimitedTransfers
+                ? "Einstiegsrunde — ohne Punktabzug"
+                : transfersUsed > 0
+                  ? `${transfersUsed} genutzt`
+                  : "noch keiner genutzt"}
             </div>
             {pendingCost > 0 && (
-              <div className="text-[11px] font-bold text-brand-pink">
+              <div className="text-[11px] font-bold text-brand-danger">
                 −{pendingCost} Punkte beim Speichern
               </div>
             )}
@@ -575,7 +592,7 @@ export default function TeamBuilder({
                 key={c.chip}
                 className={`rounded-xl border-2 p-3 transition-colors ${
                   c.activeNow
-                    ? "border-brand-green bg-brand-green/10"
+                    ? "border-brand-accent bg-brand-accent/10"
                     : verbraucht
                       ? "border-brand-deep/10 bg-white opacity-60"
                       : "border-brand-deep/10 bg-white"
@@ -583,9 +600,23 @@ export default function TeamBuilder({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="font-bold text-brand-deep">
-                      <span className="mr-1">{info.icon}</span>
-                      {info.name}
+                    <div className="flex items-center gap-2 font-bold text-brand-deep">
+                      <span>
+                        <span className="mr-1">{info.icon}</span>
+                        {info.name}
+                      </span>
+                      {/* Verbleibende Einsätze diese Saison. Ein aktivierter
+                          Chip gilt als belegt — bis zur Deadline aber
+                          umkehrbar, dann steht wieder 1/1. */}
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                          verbraucht || c.activeNow
+                            ? "bg-brand-deep/10 text-brand-deep/50"
+                            : "bg-brand-accent/25 text-brand-deep"
+                        }`}
+                      >
+                        {verbraucht || c.activeNow ? "0/1" : "1/1"}
+                      </span>
                     </div>
                     <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/60">
                       {verbraucht
@@ -600,8 +631,8 @@ export default function TeamBuilder({
                       onClick={() => handleChip(c.chip, c.activeNow)}
                       className={`pressable shrink-0 rounded-full px-3 py-1 text-xs font-bold disabled:opacity-40 ${
                         c.activeNow
-                          ? "bg-brand-deep text-brand-green"
-                          : "bg-brand-green text-brand-deep"
+                          ? "bg-brand-deep text-brand-accent"
+                          : "bg-brand-accent text-brand-deep"
                       }`}
                     >
                       {c.activeNow ? "Aktiv – zurücknehmen" : "Aktivieren"}
@@ -625,7 +656,7 @@ export default function TeamBuilder({
             type="button"
             disabled={isPending || !gameweekOpen}
             onClick={handleSave}
-            className="pressable w-full max-w-xs rounded-full bg-brand-green px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
+            className="pressable w-full max-w-xs rounded-full bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
           >
             {isPending ? "Speichert…" : gameweekOpen ? "Team speichern" : "Spieltag gesperrt"}
           </button>
@@ -650,7 +681,7 @@ export default function TeamBuilder({
                     onClick={() => setFilterPos(pos)}
                     className={`pressable-subtle flex-1 rounded-full px-1 py-1 text-xs font-bold ${
                       filterPos === pos
-                        ? "bg-brand-deep text-brand-green"
+                        ? "bg-brand-deep text-brand-accent"
                         : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
                     }`}
                   >
@@ -659,7 +690,7 @@ export default function TeamBuilder({
                       <span
                         className={`ml-1 text-[10px] font-semibold ${
                           filterPos === pos
-                            ? "text-brand-green/70"
+                            ? "text-brand-accent/70"
                             : full
                               ? "text-emerald-600"
                               : "text-brand-deep/40"
@@ -703,7 +734,7 @@ export default function TeamBuilder({
                   type="button"
                   onClick={() => togglePlayer(p)}
                   className={`pressable-subtle flex w-full items-center gap-3 border-b border-brand-deep/5 px-3 py-2 text-left text-sm ${
-                    picked ? "bg-brand-green/15" : "hover:bg-brand-deep/5"
+                    picked ? "bg-brand-accent/15" : "hover:bg-brand-deep/5"
                   }`}
                 >
                   <Jersey club={p.club} size={28} />
@@ -727,7 +758,7 @@ export default function TeamBuilder({
                   </span>
                   <span
                     className={`pressable flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${
-                      picked ? "bg-brand-pink text-white" : "bg-brand-green text-brand-deep"
+                      picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
                     }`}
                   >
                     {picked ? "−" : "+"}

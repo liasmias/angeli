@@ -9,6 +9,12 @@ export interface TransferBudget {
   usedThisGameweek: number;
   /** Gratis-Transfers, mit denen der Spieltag gestartet ist (inkl. Angespartem). */
   bankedAtStart: number;
+  /**
+   * Einstiegsrunde: In dem Spieltag, in dem jemand sein Team zum ersten Mal
+   * aufstellt, kosten Transfers nichts. Sonst würde ein Neuzugang beim
+   * Zusammenstellen des ersten Kaders mit zweistelligen Minuspunkten starten.
+   */
+  unlimited: boolean;
 }
 
 /**
@@ -68,10 +74,16 @@ export async function getTransferBudget(
     banked = Math.min(cap, rest + allowance);
   }
 
+  // Einstiegsrunde: noch nie aufgestellt, oder der erste Spieltag mit
+  // Aufstellung ist genau der aktuelle. Gilt für die ganze Runde, nicht nur
+  // für das erste Speichern — sonst würde jede Korrektur davor bestraft.
+  const unlimited = !firstSnapshot || firstGw === currentGameweek.number;
+
   const usedThisGameweek = usedByGameweek.get(currentGameweek.id) ?? 0;
   return {
     bankedAtStart: banked,
     usedThisGameweek,
     freeAvailable: Math.max(0, banked - usedThisGameweek),
+    unlimited,
   };
 }

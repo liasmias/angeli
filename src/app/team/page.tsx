@@ -244,6 +244,7 @@ export default async function TeamPage({
         deadline={angezeigt.deadline}
         freeTransfers={budget.freeAvailable}
         transfersUsed={budget.usedThisGameweek}
+        unlimitedTransfers={budget.unlimited}
         extraTransferCost={settings.extra_transfer_cost}
         chips={chipState}
       />

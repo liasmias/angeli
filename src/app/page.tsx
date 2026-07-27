@@ -11,14 +11,14 @@ export default async function Home() {
     <main className="flex-1">
       <section className="brand-gradient-hero text-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-6 py-24 sm:py-32">
-          <span className="rounded-full bg-brand-green px-4 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
+          <span className="rounded-full bg-brand-accent px-4 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
             Saison 26/27
           </span>
           <h1 className="max-w-3xl">
             <span className="block text-6xl font-bold leading-none tracking-tight sm:text-8xl">
               Angeli
             </span>
-            <span className="mt-3 block bg-gradient-to-r from-brand-green to-brand-cyan bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-4xl">
+            <span className="mt-3 block bg-gradient-to-r from-brand-accent to-brand-lime bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-4xl">
               Swiss League Fantasy
             </span>
           </h1>
@@ -32,13 +32,13 @@ export default async function Home() {
               <>
                 <Link
                   href="/team"
-                  className="pressable rounded-full bg-brand-green px-7 py-3 font-bold text-brand-deep"
+                  className="pressable rounded-full bg-brand-accent px-7 py-3 font-bold text-brand-deep"
                 >
                   Zu meinem Team
                 </Link>
                 <Link
                   href="/leaderboard"
-                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-green hover:text-brand-green"
+                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-accent hover:text-brand-accent"
                 >
                   Rangliste
                 </Link>
@@ -47,13 +47,13 @@ export default async function Home() {
               <>
                 <Link
                   href="/signup"
-                  className="pressable rounded-full bg-brand-green px-7 py-3 font-bold text-brand-deep"
+                  className="pressable rounded-full bg-brand-accent px-7 py-3 font-bold text-brand-deep"
                 >
                   Jetzt Team erstellen
                 </Link>
                 <Link
                   href="/login"
-                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-green hover:text-brand-green"
+                  className="pressable rounded-full border-2 border-white/40 px-7 py-3 font-semibold hover:border-brand-accent hover:text-brand-accent"
                 >
                   Einloggen
                 </Link>

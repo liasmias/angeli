@@ -56,13 +56,13 @@ export default async function AdminUsersPage() {
           return (
             <section
               key={p.id}
-              className={`rounded-xl p-4 shadow-sm ${p.is_blocked ? "bg-brand-pink/5" : "bg-white"}`}
+              className={`rounded-xl p-4 shadow-sm ${p.is_blocked ? "bg-brand-danger/5" : "bg-white"}`}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <span className="font-bold text-brand-deep">{p.username}</span>
                   {isAdmin && (
-                    <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-green">
+                    <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-accent">
                       Admin
                     </span>
                   )}
@@ -72,7 +72,7 @@ export default async function AdminUsersPage() {
                   </span>
                   <div className="mt-0.5 text-xs">
                     {p.is_blocked ? (
-                      <span className="font-bold text-brand-pink">gesperrt</span>
+                      <span className="font-bold text-brand-danger">gesperrt</span>
                     ) : (
                       <span className="text-brand-deep/60">
                         {pointsByUser.get(p.id) ?? 0} Punkte in der Rangliste
@@ -92,7 +92,7 @@ export default async function AdminUsersPage() {
                     <button
                       type="submit"
                       className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
-                        p.is_blocked ? "bg-brand-green text-brand-deep" : "bg-brand-pink text-white"
+                        p.is_blocked ? "bg-brand-accent text-brand-deep" : "bg-brand-danger text-white"
                       }`}
                     >
                       {p.is_blocked ? "Entsperren" : "Sperren"}
@@ -123,7 +123,7 @@ export default async function AdminUsersPage() {
                     />
                     <button
                       type="submit"
-                      className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-green"
+                      className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
                     >
                       Gutschreiben
                     </button>
@@ -139,8 +139,8 @@ export default async function AdminUsersPage() {
                           <span
                             className={`rounded px-1.5 py-0.5 font-bold tabular-nums ${
                               a.points >= 0
-                                ? "bg-brand-green/20 text-brand-deep"
-                                : "bg-brand-pink/15 text-brand-pink"
+                                ? "bg-brand-accent/20 text-brand-deep"
+                                : "bg-brand-danger/15 text-brand-danger"
                             }`}
                           >
                             {a.points > 0 ? "+" : ""}
@@ -156,7 +156,7 @@ export default async function AdminUsersPage() {
                             <button
                               type="submit"
                               title="Korrektur zurücknehmen"
-                              className="pressable rounded px-1.5 py-0.5 font-bold text-brand-pink hover:bg-brand-pink hover:text-white"
+                              className="pressable rounded px-1.5 py-0.5 font-bold text-brand-danger hover:bg-brand-danger hover:text-white"
                             >
                               ✕
                             </button>

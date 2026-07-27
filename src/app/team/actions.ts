@@ -117,7 +117,8 @@ export async function saveSquad(
 
   const freeLeft = budget.freeAvailable;
   const transfersNow = Math.max(added.length, removed.length);
-  const costFree = isFirstSquad || !!wildcard;
+  // Gratis, wenn: erster Kader überhaupt, Einstiegsrunde oder Wildcard aktiv.
+  const costFree = isFirstSquad || budget.unlimited || !!wildcard;
 
   // --- persist squad ---
   await supabase.from("squad_players").delete().eq("squad_id", squadRow.id);

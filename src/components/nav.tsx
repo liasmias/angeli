@@ -25,7 +25,7 @@ export default async function Nav() {
     <nav className="brand-gradient text-white">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
-          <span className="rounded bg-brand-green px-2 py-0.5 text-lg font-bold leading-tight text-brand-deep">
+          <span className="rounded bg-brand-accent px-2 py-0.5 text-lg font-bold leading-tight text-brand-deep">
             A
           </span>
           <span className="leading-none">
@@ -36,22 +36,22 @@ export default async function Nav() {
           </span>
         </Link>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium [&_a]:whitespace-nowrap">
-          <Link href="/fixtures" className="transition-colors hover:text-brand-green">
+          <Link href="/fixtures" className="transition-colors hover:text-brand-accent">
             Spielplan
           </Link>
-          <Link href="/stats" className="transition-colors hover:text-brand-green">
+          <Link href="/stats" className="transition-colors hover:text-brand-accent">
             Statistiken
           </Link>
           {user ? (
             <>
-              <Link href="/team" className="transition-colors hover:text-brand-green">
+              <Link href="/team" className="transition-colors hover:text-brand-accent">
                 Mein Team
               </Link>
-              <Link href="/leaderboard" className="transition-colors hover:text-brand-green">
+              <Link href="/leaderboard" className="transition-colors hover:text-brand-accent">
                 Rangliste
               </Link>
               {isAdmin && (
-                <Link href="/admin" className="transition-colors hover:text-brand-green">
+                <Link href="/admin" className="transition-colors hover:text-brand-accent">
                   Admin
                 </Link>
               )}
@@ -61,7 +61,7 @@ export default async function Nav() {
               <form action={logout}>
                 <button
                   type="submit"
-                  className="pressable rounded-full border border-white/30 px-3 py-1 hover:border-brand-green hover:text-brand-green"
+                  className="pressable rounded-full border border-white/30 px-3 py-1 hover:border-brand-accent hover:text-brand-accent"
                 >
                   Logout
                 </button>
@@ -69,12 +69,12 @@ export default async function Nav() {
             </>
           ) : (
             <>
-              <Link href="/login" className="transition-colors hover:text-brand-green">
+              <Link href="/login" className="transition-colors hover:text-brand-accent">
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="pressable rounded-full bg-brand-green px-4 py-1.5 font-semibold text-brand-deep"
+                className="pressable rounded-full bg-brand-accent px-4 py-1.5 font-semibold text-brand-deep"
               >
                 Registrieren
               </Link>

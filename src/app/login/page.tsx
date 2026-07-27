@@ -30,7 +30,7 @@ export default function LoginPage() {
             className="rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
           />
           {state?.error && (
-            <p className="rounded-lg bg-brand-pink/10 px-3 py-2 text-sm font-semibold text-brand-pink">
+            <p className="rounded-lg bg-brand-danger/10 px-3 py-2 text-sm font-semibold text-brand-danger">
               {state.error}
             </p>
           )}
@@ -38,7 +38,7 @@ export default function LoginPage() {
           <button
             disabled={pending}
             type="submit"
-            className="pressable mt-1 rounded-full bg-brand-green px-3 py-2.5 font-bold text-brand-deep disabled:opacity-50"
+            className="pressable mt-1 rounded-full bg-brand-accent px-3 py-2.5 font-bold text-brand-deep disabled:opacity-50"
           >
             {pending ? "Wird geprüft…" : "Einloggen"}
           </button>

@@ -54,7 +54,7 @@ export default function PlayerAdminTable({
               onClick={() => setFilterPos(pos)}
               className={`pressable-subtle rounded-full px-3 py-1 text-xs font-bold ${
                 filterPos === pos
-                  ? "bg-brand-deep text-brand-green"
+                  ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
               }`}
             >
@@ -148,7 +148,7 @@ export default function PlayerAdminTable({
                     <input type="hidden" name="playerId" value={r.id} />
                     <button
                       type="submit"
-                      className="pressable rounded bg-brand-deep px-2.5 py-1 text-xs font-bold text-brand-green"
+                      className="pressable rounded bg-brand-deep px-2.5 py-1 text-xs font-bold text-brand-accent"
                     >
                       Speichern
                     </button>

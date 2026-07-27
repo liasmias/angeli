@@ -27,7 +27,7 @@ function Karte({ p, benchBoost }: { p: PastPlayer; benchBoost: boolean }) {
   return (
     <div className="relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
       {p.isCaptain && (
-        <span className="absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-green ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
+        <span className="absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
           C
         </span>
       )}
@@ -36,7 +36,7 @@ function Karte({ p, benchBoost }: { p: PastPlayer; benchBoost: boolean }) {
         <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
           <span className="block truncate">{p.name}</span>
         </div>
-        <div className="w-full rounded-b bg-brand-deep px-1 py-0.5 text-center text-[11px] font-bold leading-4 tabular-nums text-brand-green sm:text-xs">
+        <div className="w-full rounded-b bg-brand-deep px-1 py-0.5 text-center text-[11px] font-bold leading-4 tabular-nums text-brand-accent sm:text-xs">
           {punkte === null ? "—" : `${punkte} Pkt.`}
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function PastGameweek({
             </span>
           )}
           {benchBoost && (
-            <span className="rounded-full bg-brand-green/20 px-3 py-1 text-xs font-bold text-brand-deep">
+            <span className="rounded-full bg-brand-accent/20 px-3 py-1 text-xs font-bold text-brand-deep">
               🚀 Bench Boost war aktiv — die Bank zählte mit
             </span>
           )}
@@ -97,7 +97,7 @@ export default function PastGameweek({
 
       <div className="mt-3 rounded-xl bg-brand-deep/95 px-4 py-4">
         <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
-          Bank {benchBoost && <span className="text-brand-green">— zählte mit</span>}
+          Bank {benchBoost && <span className="text-brand-accent">— zählte mit</span>}
         </div>
         <div className="flex items-start gap-1.5 sm:gap-5">
           {bench.length === 0 ? (

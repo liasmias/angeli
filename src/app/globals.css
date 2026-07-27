@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f2f6;
-  --foreground: #1d1038;
-  /* Brand palette — FPL-inspiriert: tiefes Lila, Neon-Grün, Cyan */
-  --brand-deep: #37003c;
-  --brand-purple: #4c0d5e;
-  --brand-magenta: #963cff;
-  --brand-green: #00ff87;
-  --brand-cyan: #04f5ff;
-  --brand-pink: #e90052;
+  --background: #f3f6f3;
+  --foreground: #0b2e19;
+  /* Rasengrün-Verlauf mit Neonpink als Akzent.
+     deep → dunkle Flächen und Text, grass/lime → Verlauf,
+     accent → Aktionen, magenta → Links auf Weiss, danger → Fehler. */
+  --brand-deep: #0a2e19;
+  --brand-grass: #1f8b44;
+  --brand-lime: #8ef2a8;
+  --brand-accent: #ff7dff;
+  --brand-magenta: #c21fc2;
+  --brand-danger: #d81e2c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-deep: var(--brand-deep);
-  --color-brand-purple: var(--brand-purple);
+  --color-brand-grass: var(--brand-grass);
   --color-brand-magenta: var(--brand-magenta);
-  --color-brand-green: var(--brand-green);
-  --color-brand-cyan: var(--brand-cyan);
-  --color-brand-pink: var(--brand-pink);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-lime: var(--brand-lime);
+  --color-brand-danger: var(--brand-danger);
   --font-sans: var(--font-space-grotesk);
 }
 
@@ -37,16 +39,16 @@ h2 {
   letter-spacing: -0.02em;
 }
 
-/* Header-/Hero-Verlauf wie das FPL-Banner */
+/* Rasengrün ins Hellgrün — dieselbe Kurve wie zuvor, nur andere Töne. */
 .brand-gradient {
-  background: linear-gradient(100deg, var(--brand-deep) 0%, #6a1b9a 55%, #04c8f5 130%);
+  background: linear-gradient(100deg, var(--brand-deep) 0%, #1f8b44 55%, #8ef2a8 130%);
 }
 
 .brand-gradient-hero {
   background:
-    radial-gradient(ellipse 80% 60% at 85% 10%, rgba(4, 245, 255, 0.35), transparent),
-    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(233, 0, 82, 0.28), transparent),
-    linear-gradient(115deg, var(--brand-deep) 0%, #55127a 60%, #2a0e63 100%);
+    radial-gradient(ellipse 80% 60% at 85% 10%, rgba(142, 242, 168, 0.34), transparent),
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgba(255, 125, 255, 0.26), transparent),
+    linear-gradient(115deg, var(--brand-deep) 0%, #145c30 60%, #082616 100%);
 }
 
 /* ===== Micro-Interactions ===== */

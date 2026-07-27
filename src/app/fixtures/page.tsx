@@ -90,7 +90,7 @@ export default async function FixturesPage() {
                         {home?.name ?? "?"}
                       </span>
                       {finished ? (
-                        <span className="rounded-lg bg-brand-deep px-3 py-1 font-bold tabular-nums text-brand-green">
+                        <span className="rounded-lg bg-brand-deep px-3 py-1 font-bold tabular-nums text-brand-accent">
                           {f.home_goals}:{f.away_goals}
                         </span>
                       ) : (
@@ -133,7 +133,7 @@ export default async function FixturesPage() {
                             {best.map((b) => (
                               <span
                                 key={b.name}
-                                className="rounded-full bg-brand-green/20 px-2.5 py-0.5 text-xs font-bold text-brand-deep"
+                                className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 text-xs font-bold text-brand-deep"
                               >
                                 {b.name} ({b.points})
                               </span>

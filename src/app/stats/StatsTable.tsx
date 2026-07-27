@@ -72,7 +72,7 @@ export default function StatsTable({
               onClick={() => setFilterPos(pos)}
               className={`pressable-subtle rounded-full px-3 py-1 text-xs font-bold ${
                 filterPos === pos
-                  ? "bg-brand-deep text-brand-green"
+                  ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
               }`}
             >
@@ -167,7 +167,7 @@ export default function StatsTable({
                   </td>
                 )}
                 <td className="px-3 py-2 text-right">
-                  <span className="rounded-full bg-brand-green/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
+                  <span className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
                     {r.totalPoints}
                   </span>
                 </td>
