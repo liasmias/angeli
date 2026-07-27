@@ -105,30 +105,36 @@ export default function StatsTable({
         </div>
       </div>
 
+      {/*
+        Auf dem Handy passen acht Spalten nicht nebeneinander — die Punkte,
+        also die wichtigste Zahl, lagen ausserhalb des Bildschirms. Club,
+        Position, Preis und Rating wandern dort unter den Namen; ab `sm`
+        erscheint wieder die volle Tabelle.
+      */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[36rem] border-collapse text-sm">
+        <table className="w-full border-collapse text-sm sm:min-w-[36rem]">
           <thead>
             <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
-              <th className="px-3 py-2">#</th>
-              <th className="px-3 py-2">
+              <th className="px-2 py-2 sm:px-3">#</th>
+              <th className="px-2 py-2 sm:px-3">
                 <button type="button" onClick={() => toggleSort("name")} className="uppercase">
                   Spieler{sortIndicator("name")}
                 </button>
               </th>
-              <th className="px-3 py-2">Club</th>
-              <th className="px-3 py-2">Pos.</th>
-              <th className="px-3 py-2 text-right">
+              <th className="hidden px-3 py-2 sm:table-cell">Club</th>
+              <th className="hidden px-3 py-2 sm:table-cell">Pos.</th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
                 <button type="button" onClick={() => toggleSort("price")} className="uppercase">
                   Preis{sortIndicator("price")}
                 </button>
               </th>
-              <th className="px-3 py-2 text-right">
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
                 <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title="Bewertung der Datenquelle — zählt nicht für die Punkte">
                   Rating{sortIndicator("rating")}
                 </button>
               </th>
               {latestGameweekNumber !== null && (
-                <th className="px-3 py-2 text-right">
+                <th className="px-2 py-2 text-right sm:px-3">
                   <button
                     type="button"
                     onClick={() => toggleSort("latestPoints")}
@@ -139,7 +145,7 @@ export default function StatsTable({
                   </button>
                 </th>
               )}
-              <th className="px-3 py-2 text-right">
+              <th className="px-2 py-2 text-right sm:px-3">
                 <button type="button" onClick={() => toggleSort("totalPoints")} className="uppercase">
                   Punkte{sortIndicator("totalPoints")}
                 </button>
@@ -149,8 +155,8 @@ export default function StatsTable({
           <tbody className="divide-y divide-brand-deep/5">
             {visible.map((r, i) => (
               <tr key={r.id} className="hover:bg-brand-deep/5">
-                <td className="px-3 py-2 tabular-nums text-brand-deep/40">{i + 1}</td>
-                <td className="px-3 py-2">
+                <td className="px-2 py-2 tabular-nums text-brand-deep/40 sm:px-3">{i + 1}</td>
+                <td className="px-2 py-2 sm:px-3">
                   <span className="flex items-center gap-2 font-semibold text-brand-deep">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -158,25 +164,32 @@ export default function StatsTable({
                       alt=""
                       width={22}
                       height={22}
-                      className="select-none"
+                      className="shrink-0 select-none"
                     />
-                    {r.name}
+                    <span className="min-w-0">
+                      <span className="block truncate">{r.name}</span>
+                      {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
+                      <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
+                        {r.club} · {r.position} · {r.price.toFixed(1)}
+                        {r.rating !== null && ` · ★ ${r.rating.toFixed(1)}`}
+                      </span>
+                    </span>
                   </span>
                 </td>
-                <td className="px-3 py-2 text-brand-deep/60">{r.club}</td>
-                <td className="px-3 py-2 text-brand-deep/60">{r.position}</td>
-                <td className="px-3 py-2 text-right tabular-nums text-brand-deep/80">
+                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.club}</td>
+                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell">
                   {r.price.toFixed(1)}
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums text-brand-deep/60">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
                   {r.rating === null ? "—" : r.rating.toFixed(1)}
                 </td>
                 {latestGameweekNumber !== null && (
-                  <td className="px-3 py-2 text-right tabular-nums text-brand-deep/80">
+                  <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
                     {r.latestPoints ?? "—"}
                   </td>
                 )}
-                <td className="px-3 py-2 text-right">
+                <td className="px-2 py-2 text-right sm:px-3">
                   <span className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
                     {r.totalPoints}
                   </span>

@@ -97,13 +97,13 @@ export default function PlayerAdminTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[38rem] border-collapse text-sm">
+        <table className="w-full min-w-[34rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
               <th className="px-3 py-2">Vorname</th>
               <th className="px-3 py-2">Nachname</th>
-              <th className="px-3 py-2">Club</th>
-              <th className="px-3 py-2">Pos.</th>
+              <th className="px-2 py-2 sm:px-3">Club</th>
+              <th className="hidden px-3 py-2 sm:table-cell">Pos.</th>
               <th className="px-3 py-2">Preis</th>
               <th className="px-3 py-2">Aktiv</th>
               <th className="px-3 py-2"></th>
@@ -118,7 +118,7 @@ export default function PlayerAdminTable({
                     name="firstName"
                     defaultValue={r.firstName}
                     placeholder="—"
-                    className="w-28 rounded border border-brand-deep/15 px-2 py-1 outline-none focus:border-brand-magenta"
+                    className="w-24 rounded border border-brand-deep/15 px-2 py-1 outline-none focus:border-brand-magenta sm:w-28"
                   />
                 </td>
                 <td className="px-3 py-1.5">
@@ -127,10 +127,10 @@ export default function PlayerAdminTable({
                     name="lastName"
                     defaultValue={r.lastName}
                     required
-                    className="w-40 rounded border border-brand-deep/15 px-2 py-1 font-semibold outline-none focus:border-brand-magenta"
+                    className="w-28 rounded border border-brand-deep/15 px-2 py-1 font-semibold outline-none focus:border-brand-magenta sm:w-40"
                   />
                 </td>
-                <td className="px-3 py-1.5">
+                <td className="px-2 py-1.5 sm:px-3">
                   <select
                     form={`player-${r.id}`}
                     name="clubId"
@@ -144,8 +144,8 @@ export default function PlayerAdminTable({
                     ))}
                   </select>
                 </td>
-                <td className="px-3 py-1.5 text-brand-deep/60">{r.position}</td>
-                <td className="px-3 py-1.5">
+                <td className="hidden px-3 py-1.5 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="px-2 py-1.5 sm:px-3">
                   <input
                     form={`player-${r.id}`}
                     name="price"
@@ -153,7 +153,7 @@ export default function PlayerAdminTable({
                     step="0.1"
                     min="0"
                     defaultValue={r.price.toFixed(1)}
-                    className="w-20 rounded border border-brand-deep/15 px-2 py-1 tabular-nums outline-none focus:border-brand-magenta"
+                    className="w-16 rounded border border-brand-deep/15 px-2 py-1 tabular-nums outline-none focus:border-brand-magenta sm:w-20"
                   />
                 </td>
                 <td className="px-3 py-1.5">

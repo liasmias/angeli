@@ -24,17 +24,26 @@ export default async function Nav() {
 
   return (
     <nav className="brand-gradient text-white">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
-          <Logo className="h-7 w-7 shrink-0 text-brand-accent sm:h-8 sm:w-8" />
+      {/* Auf dem Handy bewusst kompakt: Die Navigation belegte sonst mit
+          drei Zeilen ein Sechstel des Bildschirms. */}
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:px-6 sm:py-4">
+        <Link
+          href="/"
+          className="mr-auto flex shrink-0 items-center gap-2 whitespace-nowrap sm:mr-0 sm:gap-2.5"
+        >
+          <Logo className="h-6 w-6 shrink-0 text-brand-accent sm:h-8 sm:w-8" />
           <span className="leading-none">
-            <span className="block text-lg font-bold tracking-tight sm:text-xl">Angeli</span>
+            <span className="block text-base font-bold tracking-tight sm:text-xl">Angeli</span>
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
               Swiss League Fantasy
             </span>
           </span>
         </Link>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium [&_a]:whitespace-nowrap">
+        {/* `contents` auf dem Handy: Die Links werden dadurch zu direkten
+            Geschwistern des Logos und fliessen einzeln um, statt als ganzer
+            Block auf eine eigene Zeile zu springen. Ab `sm` wieder ein
+            eigener Block, damit sie rechts gebündelt stehen. */}
+        <div className="contents text-[13px] font-medium sm:flex sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-sm [&_a]:whitespace-nowrap">
           <Link href="/fixtures" className="transition-colors hover:text-brand-accent">
             Spielplan
           </Link>
