@@ -262,7 +262,13 @@ export interface Database {
       };
       player_stats: {
         Row: PlayerStatsRow;
-        Insert: Omit<PlayerStatsRow, "id" | "synced_at"> & { id?: number };
+        // `synced_at` optional statt ausgeschlossen: Beim Upsert muss der
+        // Zeitstempel explizit mitgegeben werden, weil der Standardwert
+        // `now()` nur beim Einfügen greift.
+        Insert: Omit<PlayerStatsRow, "id" | "synced_at"> & {
+          id?: number;
+          synced_at?: string;
+        };
         Update: Partial<PlayerStatsRow>;
         Relationships: [
           {
