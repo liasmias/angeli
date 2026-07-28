@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import Jersey from "@/components/jersey";
 import { POSITIONS } from "@/lib/formation";
 import type { Position } from "@/lib/database.types";
 import { getDictionary, type Lang } from "@/lib/i18n";
+import type { PlayerDetail } from "@/lib/player-detail";
 
 export interface PastPlayer {
   playerId: number;
@@ -11,17 +15,179 @@ export interface PastPlayer {
   isStarting: boolean;
   isCaptain: boolean;
   pointsEarned: number | null;
+  /** Statistik und Punkte-Aufschlüsselung fürs Popup. */
+  detail?: PlayerDetail;
 }
 
+type TeamDict = ReturnType<typeof getDictionary>["team"];
 
+/** Reihenfolge der Zeilen im Popup — wie in der Regeltabelle. */
+const KATEGORIEN = [
+  "minutes", "goals", "assists", "clean_sheet", "goals_conceded", "saves",
+  "penalties_saved", "penalties_conceded", "yellow_cards", "red_cards", "own_goals",
+] as const;
 
-function Karte({ p, benchBoost, pts }: { p: PastPlayer; benchBoost: boolean; pts: string }) {
+function Popup({
+  p, gameweekNumber, lang, onClose,
+}: {
+  p: PastPlayer;
+  gameweekNumber: number;
+  lang: Lang;
+  onClose: () => void;
+}) {
+  const dict = getDictionary(lang);
+  const t = dict.team;
+  const posLabel = dict.builder.positions;
+  const d = p.detail;
+
+  // Nur Zeilen zeigen, die etwas hergeben — sonst elf Nullen. Minuten immer.
+  const zeilen = d
+    ? KATEGORIEN.map((k) => {
+        const punkte = d.breakdown[k] ?? 0;
+        const menge =
+          k === "clean_sheet"
+            ? punkte > 0 ? 1 : 0
+            : (d.stats[k as keyof typeof d.stats] as number) ?? 0;
+        return { k, menge, punkte };
+      }).filter((z) => z.k === "minutes" || z.menge !== 0 || z.punkte !== 0)
+    : [];
+  const basis = zeilen.reduce((s, z) => s + z.punkte, 0);
+  const total = basis * (p.isCaptain ? 2 : 1);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="chamfer max-h-full w-full max-w-md overflow-y-auto bg-white shadow-xl"
+      >
+        {/* Kopf: Name, Position/Club, Gegner */}
+        <div className="brand-gradient relative flex items-center gap-4 px-5 py-5 text-white">
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-xl font-bold leading-tight">{p.name}</h2>
+            <p className="mt-1 text-sm font-semibold text-white/80">
+              {posLabel[p.position]} / {p.club}
+            </p>
+            {d?.opponent && (
+              <p className="mt-1 inline-block rounded bg-black/25 px-2 py-0.5 text-xs font-bold">
+                v {d.opponent}
+              </p>
+            )}
+          </div>
+          <Jersey club={p.club} size={64} />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.detailClose}
+            className="pressable absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-black/30 text-lg font-bold leading-none hover:bg-black/50"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Spieltag, Anpfiff, Resultat */}
+        <div className="flex items-center justify-between gap-3 border-b border-brand-deep/10 bg-brand-deep/5 px-5 py-2.5 text-sm">
+          <span className="font-bold text-brand-deep">{t.detailGameweek(gameweekNumber)}</span>
+          {d?.kickoff && (
+            <span className="text-brand-deep/60">
+              {new Date(d.kickoff).toLocaleString(lang === "en" ? "en-GB" : "de-CH", {
+                day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                timeZone: "Europe/Zurich",
+              })}
+            </span>
+          )}
+        </div>
+
+        {d?.score && (
+          <div className="flex items-center justify-center gap-3 py-4">
+            <span className="rounded-lg bg-brand-deep px-4 py-1.5 text-lg font-bold tabular-nums text-brand-accent">
+              {d.score}
+            </span>
+          </div>
+        )}
+
+        {/* Punktetabelle */}
+        {zeilen.length === 0 ? (
+          <p className="px-5 py-8 text-center text-sm text-brand-deep/50">{t.detailNoData}</p>
+        ) : (
+          <div className="px-5 pb-5">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-brand-deep/10 text-left text-[11px] font-bold uppercase tracking-wide text-brand-deep/50">
+                  <th className="py-2">{t.detailStat}</th>
+                  <th className="py-2 text-right">{t.detailAmount}</th>
+                  <th className="py-2 text-right">{t.detailPoints}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-deep/5">
+                {zeilen.map((z) => (
+                  <tr key={z.k}>
+                    <td className="py-1.5 text-brand-deep/80">{t.statLabels[z.k]}</td>
+                    <td className="py-1.5 text-right tabular-nums text-brand-deep/70">{z.menge}</td>
+                    <td
+                      className={`py-1.5 text-right font-bold tabular-nums ${
+                        z.punkte < 0 ? "text-brand-danger" : z.punkte > 0 ? "text-emerald-600" : "text-brand-deep/40"
+                      }`}
+                    >
+                      {z.punkte > 0 ? `+${z.punkte}` : z.punkte}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-brand-deep/15">
+                  <td className="py-2 font-bold text-brand-deep" colSpan={2}>
+                    {t.detailTotal}
+                    {p.isCaptain && (
+                      <span className="ml-2 rounded bg-black px-1.5 py-0.5 text-[10px] font-bold text-brand-accent">
+                        C ×2
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 text-right text-lg font-bold tabular-nums text-brand-deep">
+                    {total}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+            {p.isCaptain && (
+              <p className="mt-2 text-[11px] text-brand-deep/50">{t.detailCaptainNote}</p>
+            )}
+            {d?.rating !== null && d?.rating !== undefined && (
+              <p className="mt-2 text-[11px] text-brand-deep/50">
+                {t.detailRating}: ★ {d.rating.toFixed(1)}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Karte({
+  p, benchBoost, t, onOpen,
+}: {
+  p: PastPlayer;
+  benchBoost: boolean;
+  t: TeamDict;
+  onOpen: () => void;
+}) {
   // Der Captain zählt doppelt — deshalb hier auch doppelt anzeigen.
   const zaehlt = p.isStarting || benchBoost;
   const punkte = p.pointsEarned === null ? null : p.pointsEarned * (p.isCaptain ? 2 : 1);
 
   return (
-    <div className="relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
+    <button
+      type="button"
+      onClick={onOpen}
+      title={p.name}
+      className="pressable relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center"
+    >
       {p.isCaptain && (
         <span className="absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
           C
@@ -33,10 +199,10 @@ function Karte({ p, benchBoost, pts }: { p: PastPlayer; benchBoost: boolean; pts
           <span className="block truncate">{p.name}</span>
         </div>
         <div className="w-full rounded-b bg-brand-deep px-1 py-0.5 text-center text-[11px] font-bold leading-4 tabular-nums text-brand-accent sm:text-xs">
-          {punkte === null ? "—" : `${punkte} ${pts}`}
+          {punkte === null ? "—" : `${punkte} ${t.pts}`}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -45,15 +211,19 @@ export default function PastGameweek({
   benchBoost,
   wildcard,
   lang,
+  gameweekNumber,
 }: {
   players: PastPlayer[];
   benchBoost: boolean;
   wildcard: boolean;
   lang: Lang;
+  gameweekNumber: number;
 }) {
   const dict = getDictionary(lang);
   const t = dict.team;
   const posLabel = dict.builder.positions;
+  const [offen, setOffen] = useState<PastPlayer | null>(null);
+
   const starters = (pos: Position) =>
     players.filter((p) => p.isStarting && p.position === pos);
   const bench = players.filter((p) => !p.isStarting);
@@ -87,7 +257,13 @@ export default function PastGameweek({
                   </span>
                 ) : (
                   reihe.map((p) => (
-                    <Karte key={p.playerId} p={p} benchBoost={benchBoost} pts={t.pts} />
+                    <Karte
+                      key={p.playerId}
+                      p={p}
+                      benchBoost={benchBoost}
+                      t={t}
+                      onOpen={() => setOffen(p)}
+                    />
                   ))
                 )}
               </div>
@@ -104,10 +280,27 @@ export default function PastGameweek({
           {bench.length === 0 ? (
             <p className="text-sm text-white/50">—</p>
           ) : (
-            bench.map((p) => <Karte key={p.playerId} p={p} benchBoost={benchBoost} pts={t.pts} />)
+            bench.map((p) => (
+              <Karte
+                key={p.playerId}
+                p={p}
+                benchBoost={benchBoost}
+                t={t}
+                onOpen={() => setOffen(p)}
+              />
+            ))
           )}
         </div>
       </div>
+
+      {offen && (
+        <Popup
+          p={offen}
+          gameweekNumber={gameweekNumber}
+          lang={lang}
+          onClose={() => setOffen(null)}
+        />
+      )}
     </>
   );
 }

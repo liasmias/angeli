@@ -7,6 +7,7 @@ import PastGameweek, { type PastPlayer } from "./PastGameweek";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
+import { loadPlayerDetails } from "@/lib/player-detail";
 
 export default async function TeamPage({
   searchParams,
@@ -145,6 +146,12 @@ export default async function TeamPage({
         .eq("gameweek_id", angezeigt.id),
     ]);
 
+    const details = await loadPlayerDetails(
+      supabase,
+      angezeigt.id,
+      (snapshot ?? []).map((r) => r.player_id)
+    );
+
     const pastPlayers: PastPlayer[] = (snapshot ?? []).map((r) => {
       const p = Array.isArray(r.players) ? r.players[0] : r.players;
       const club = p ? (Array.isArray(p.clubs) ? p.clubs[0] : p.clubs) : null;
@@ -156,6 +163,7 @@ export default async function TeamPage({
         isStarting: r.is_starting,
         isCaptain: r.is_captain,
         pointsEarned: r.points_earned,
+        detail: details[r.player_id],
       };
     });
 
@@ -170,6 +178,7 @@ export default async function TeamPage({
         ) : (
           <PastGameweek
             lang={lang}
+            gameweekNumber={angezeigt.number}
             players={pastPlayers}
             benchBoost={(chips ?? []).some((c) => c.chip === "bench_boost")}
             wildcard={(chips ?? []).some((c) => c.chip === "wildcard")}
