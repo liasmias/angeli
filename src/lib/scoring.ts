@@ -44,7 +44,14 @@ export function computeFantasyPoints(
     minutes: scoreMinutes(stats.minutes),
     goals: stats.goals * GOALS_PER_POSITION[position],
     assists: stats.assists * 3,
-    goals_conceded: isDefensivePosition ? -Math.floor(stats.goals_conceded / 2) : 0,
+    // Abzug erst ab 60 Minuten — dieselbe Schwelle wie beim Zu-Null.
+    // Die Datenquelle liefert für Feldspieler keine Gegentore "während der
+    // eigenen Einsatzzeit", wir rechnen deshalb mit den Team-Gegentoren.
+    // Ohne die Schwelle kassierte ein in der 73. eingewechselter Verteidiger
+    // den vollen Abzug für Tore, die vor seiner Einwechslung gefallen sind —
+    // sein Einsatzpunkt wurde dadurch regelmässig auf 0 aufgefressen.
+    goals_conceded:
+      isDefensivePosition && stats.minutes >= 60 ? -Math.floor(stats.goals_conceded / 2) : 0,
     clean_sheet: isDefensivePosition && stats.minutes >= 60 && stats.goals_conceded === 0 ? 4 : 0,
     saves: position === "GK" ? Math.floor(stats.saves / 2) : 0,
     penalties_saved: stats.penalties_saved * 5,
