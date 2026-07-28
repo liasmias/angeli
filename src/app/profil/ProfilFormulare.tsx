@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Turnstile from "@/components/turnstile";
-import { changePassword, changeUsername, deleteAccount, type ProfilState } from "./actions";
+import { changePassword, changeUsername, deleteAccount, sendReport, type ProfilState } from "./actions";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
 function Meldung({ state }: { state: ProfilState }) {
@@ -139,6 +139,36 @@ export function LoeschenFormular({ lang, username }: { lang: Lang; username: str
           </button>
         </form>
       </details>
+    </section>
+  );
+}
+
+export function MeldungFormular({ lang }: { lang: Lang }) {
+  const t = getDictionary(lang).profil;
+  const [state, action, pending] = useActionState(sendReport, undefined);
+  return (
+    <section className="chamfer bg-white p-5 shadow-sm">
+      <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.reportTitle}</h2>
+      <p className="mb-4 text-sm text-brand-deep/60">{t.reportHint}</p>
+      <form action={action} className="flex flex-col gap-3">
+        <textarea
+          name="message"
+          required
+          minLength={5}
+          maxLength={1000}
+          rows={3}
+          placeholder={t.reportPlaceholder}
+          className={feld}
+        />
+        <Meldung state={state} />
+        <button
+          type="submit"
+          disabled={pending}
+          className="pressable self-start rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
+        >
+          {pending ? t.reportSending : t.reportSend}
+        </button>
+      </form>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LoeschenFormular, PasswortFormular, UsernameFormular } from "./ProfilFormulare";
+import { LoeschenFormular, MeldungFormular, PasswortFormular, UsernameFormular } from "./ProfilFormulare";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 
@@ -35,6 +35,7 @@ export default async function ProfilPage() {
 
       <div className="flex flex-col gap-4">
         <UsernameFormular lang={lang} aktuell={profil?.username ?? ""} />
+        <MeldungFormular lang={lang} />
         <PasswortFormular lang={lang} />
         {profil?.role !== "admin" && <LoeschenFormular lang={lang} username={profil?.username ?? ""} />}
       </div>

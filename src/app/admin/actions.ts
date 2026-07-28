@@ -99,3 +99,13 @@ export async function recomputeGameweek(gameweekId: number, _formData: FormData)
   }
   revalidatePath(`/admin/gameweeks/${gameweekId}`);
 }
+
+/** Meldung als erledigt markieren (bzw. wieder öffnen). */
+export async function resolveReport(reportId: number, resolved: boolean, _formData: FormData) {
+  const { supabase } = await requireAdmin();
+  await supabase
+    .from("reports")
+    .update({ resolved_at: resolved ? new Date().toISOString() : null })
+    .eq("id", reportId);
+  revalidatePath("/admin");
+}

@@ -1,17 +1,29 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { saveAnnouncement, toggleGameweekLock } from "./actions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveReport, saveAnnouncement, toggleGameweekLock } from "./actions";
 import SyncStatus from "./SyncStatus";
 
 export default async function AdminPage() {
   const supabase = await createClient();
-  const [{ data: gameweeks }, { data: settings }] = await Promise.all([
+  // reports ist per RLS für normale Clients gesperrt — Zugriff nur hier,
+  // hinter dem Admin-Guard des Layouts.
+  const admin = createAdminClient();
+  const [{ data: gameweeks }, { data: settings }, { data: reports }] = await Promise.all([
     supabase
       .from("gameweeks")
       .select("id, number, deadline, is_locked")
       .order("number", { ascending: true }),
     supabase.from("league_settings").select("*").eq("id", 1).maybeSingle(),
+    admin
+      .from("reports")
+      .select("id, message, created_at, resolved_at, profiles(username)")
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
+
+  const offeneMeldungen = (reports ?? []).filter((r) => !r.resolved_at);
+  const erledigteMeldungen = (reports ?? []).filter((r) => r.resolved_at);
 
   return (
     <>
@@ -21,6 +33,88 @@ export default async function AdminPage() {
         lastSyncAt={settings?.last_sync_at ?? null}
         lastSyncNote={settings?.last_sync_note ?? null}
       />
+
+      {/* Posteingang: Meldungen aus dem Profil-Formular der Mitglieder. */}
+      <section className="mb-6 chamfer border border-zinc-200 bg-white p-4">
+        <h2 className="mb-3 text-sm font-bold text-brand-deep">
+          Meldungen{" "}
+          {offeneMeldungen.length > 0 && (
+            <span className="ml-1 rounded-full bg-brand-danger px-2 py-0.5 text-xs font-bold text-white">
+              {offeneMeldungen.length} offen
+            </span>
+          )}
+        </h2>
+        {offeneMeldungen.length === 0 ? (
+          <p className="text-sm text-brand-deep/50">
+            Keine offenen Meldungen. {reports === null && "(Migration 0012 schon ausgeführt?)"}
+          </p>
+        ) : (
+          <ul className="divide-y divide-brand-deep/5">
+            {offeneMeldungen.map((r) => {
+              const profil = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+              return (
+                <li key={r.id} className="flex items-start justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-brand-deep">
+                      {profil?.username ?? "?"}
+                      <span className="ml-2 font-medium text-brand-deep/50">
+                        {new Date(r.created_at).toLocaleString("de-CH", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "Europe/Zurich",
+                        })}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-sm text-brand-deep/80">
+                      {r.message}
+                    </p>
+                  </div>
+                  <form action={resolveReport.bind(null, r.id, true)}>
+                    <button
+                      type="submit"
+                      className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-bold text-brand-deep hover:border-emerald-500 hover:text-emerald-600"
+                    >
+                      Erledigt ✓
+                    </button>
+                  </form>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {erledigteMeldungen.length > 0 && (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-xs font-semibold text-brand-deep/50">
+              {erledigteMeldungen.length} erledigte anzeigen
+            </summary>
+            <ul className="mt-2 divide-y divide-brand-deep/5 opacity-60">
+              {erledigteMeldungen.map((r) => {
+                const profil = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+                return (
+                  <li key={r.id} className="flex items-start justify-between gap-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-brand-deep">{profil?.username ?? "?"}</p>
+                      <p className="mt-0.5 whitespace-pre-wrap text-sm text-brand-deep/70">
+                        {r.message}
+                      </p>
+                    </div>
+                    <form action={resolveReport.bind(null, r.id, false)}>
+                      <button
+                        type="submit"
+                        className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-semibold text-brand-deep/60"
+                      >
+                        Wieder öffnen
+                      </button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
+        )}
+      </section>
 
       {/* Ankündigung: erscheint bei allen Mitgliedern als Banner unter der
           Navigation. Leer speichern blendet sie wieder aus. */}

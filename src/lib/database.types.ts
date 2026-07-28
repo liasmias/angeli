@@ -44,6 +44,14 @@ type LeagueSettingsRow = {
   announcement: string | null;
 };
 
+type ReportsRow = {
+  id: number;
+  user_id: string;
+  message: string;
+  created_at: string;
+  resolved_at: string | null;
+};
+
 type ClubsRow = {
   id: number;
   name: string;
@@ -211,6 +219,23 @@ export interface Database {
         Insert: Partial<LeagueSettingsRow>;
         Update: Partial<LeagueSettingsRow>;
         Relationships: [];
+      };
+      reports: {
+        Row: ReportsRow;
+        Insert: Omit<ReportsRow, "id" | "created_at" | "resolved_at"> & {
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+        Update: Partial<ReportsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "reports_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       clubs: {
         Row: ClubsRow;

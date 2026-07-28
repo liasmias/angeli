@@ -125,3 +125,34 @@ export async function deleteAccount(
 
   redirect("/");
 }
+
+/**
+ * Meldung an die Admins — falsche Punkte, Gutschrift-Anfrage, Sonstiges.
+ * Höchstens drei offene Meldungen pro Konto, damit niemand den Posteingang
+ * fluten kann.
+ */
+export async function sendReport(
+  _prevState: ProfilState,
+  formData: FormData
+): Promise<ProfilState> {
+  const { user } = await eingeloggt();
+  if (!user) return { error: "Nicht eingeloggt." };
+
+  const message = String(formData.get("message") ?? "").trim();
+  if (message.length < 5) return { error: "Bitte beschreibe dein Anliegen (mind. 5 Zeichen)." };
+  if (message.length > 1000) return { error: "Bitte kürzer fassen (max. 1000 Zeichen)." };
+
+  const admin = createAdminClient();
+  const { count } = await admin
+    .from("reports")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .is("resolved_at", null);
+  if ((count ?? 0) >= 3) {
+    return { error: "Du hast bereits 3 offene Meldungen — bitte warte, bis sich ein Admin meldet." };
+  }
+
+  const { error } = await admin.from("reports").insert({ user_id: user.id, message });
+  if (error) return { error: "Senden fehlgeschlagen: " + error.message };
+  return { message: "Meldung gesendet — ein Admin schaut es sich an." };
+}

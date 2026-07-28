@@ -173,6 +173,11 @@ const de = {
     deleteConfirmPost: "ein:",
     deleteButton: "Konto endgültig löschen",
     deleting: "Wird gelöscht…",
+    reportTitle: "Dem Admin etwas melden",
+    reportHint: "Falsche Punkte, Späteinsteiger-Gutschrift oder ein anderes Anliegen — schreib es hier, die Admins sehen es in ihrem Posteingang.",
+    reportPlaceholder: "Dein Anliegen…",
+    reportSend: "Meldung senden",
+    reportSending: "Sendet…",
   },
   leaderboard: {
     title: "Rangliste",
@@ -385,6 +390,11 @@ const en: typeof de = {
     deleteConfirmPost: "to confirm:",
     deleteButton: "Delete account permanently",
     deleting: "Deleting…",
+    reportTitle: "Report something to the admin",
+    reportHint: "Wrong points, late-joiner credit or anything else — write it here, the admins see it in their inbox.",
+    reportPlaceholder: "Your message…",
+    reportSend: "Send report",
+    reportSending: "Sending…",
   },
   leaderboard: {
     title: "Leaderboard",
