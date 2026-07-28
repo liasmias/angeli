@@ -11,6 +11,7 @@ import {
   validateFormation,
 } from "@/lib/formation";
 import { saveSquad } from "./actions";
+import { getDictionary, type Lang } from "@/lib/i18n";
 import { activateChip, deactivateChip } from "./chip-actions";
 import type { ChipName } from "@/lib/database.types";
 
@@ -20,17 +21,9 @@ export interface ChipState {
   usedInGameweek: number | null;
 }
 
-const CHIP_INFO: Record<ChipName, { name: string; desc: string; icon: string }> = {
-  wildcard: {
-    name: "Wildcard",
-    desc: "Beliebig viele Transfers an diesem Spieltag — ohne Punktabzug.",
-    icon: "🃏",
-  },
-  bench_boost: {
-    name: "Bench Boost",
-    desc: "An diesem Spieltag zählen auch die Punkte deiner vier Bankspieler.",
-    icon: "🚀",
-  },
+const CHIP_META: Record<ChipName, { name: string; icon: string }> = {
+  wildcard: { name: "Wildcard", icon: "🃏" },
+  bench_boost: { name: "Bench Boost", icon: "🚀" },
 };
 
 export interface PlayerOption {
@@ -62,13 +55,10 @@ interface Settings {
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-const POSITION_LABEL: Record<Position, string> = {
-  GK: "Torhüter",
-  DEF: "Verteidiger",
-  MID: "Mittelfeld",
-  FWD: "Sturm",
-};
 
+
+
+type BuilderDict = ReturnType<typeof getDictionary>["builder"];
 
 function PlayerCard({
   player,
@@ -76,12 +66,14 @@ function PlayerCard({
   onCaptain,
   onToggleStarting,
   onRemove,
+  t,
 }: {
   player: PlayerOption;
   pick: SquadPick;
   onCaptain: () => void;
   onToggleStarting: () => void;
   onRemove: () => void;
+  t: BuilderDict;
 }) {
   return (
     <div className="pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
@@ -98,7 +90,7 @@ function PlayerCard({
         {/* Statt des eigenen Vereins der nächste Gegner — das ist die
             Information, die bei der Aufstellung zählt. */}
         <div className="w-full truncate rounded-b bg-brand-deep px-1 py-0.5 text-center text-[9px] font-medium leading-4 text-white/90 sm:px-1.5 sm:text-xs">
-          {player.nextOpponent ?? "spielfrei"}
+          {player.nextOpponent ?? "—"}
         </div>
       </div>
       {/* Auf dem Handy als dunkle Pille gruppiert: In der Fünferkette liegen
@@ -109,8 +101,8 @@ function PlayerCard({
         <button
           type="button"
           onClick={onCaptain}
-          title="Zum Captain machen"
-          aria-label={`${player.name} zum Captain machen`}
+          title={t.captainTitle}
+          aria-label={t.makeCaptain(player.name)}
           className={`pressable h-5 w-5 rounded text-[9px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:rounded-md sm:text-xs ${
             pick.isCaptain
               ? "bg-black text-brand-accent"
@@ -122,10 +114,8 @@ function PlayerCard({
         <button
           type="button"
           onClick={onToggleStarting}
-          title={pick.isStarting ? "Auf die Bank" : "In die Startelf"}
-          aria-label={
-            pick.isStarting ? `${player.name} auf die Bank` : `${player.name} in die Startelf`
-          }
+          title={pick.isStarting ? t.benchTitle : t.startTitle}
+          aria-label={pick.isStarting ? t.toBench(player.name) : t.toStarters(player.name)}
           className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-lime sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
         >
           {pick.isStarting ? "↓" : "↑"}
@@ -133,8 +123,8 @@ function PlayerCard({
         <button
           type="button"
           onClick={onRemove}
-          title="Aus dem Kader entfernen"
-          aria-label={`${player.name} entfernen`}
+          title={t.removeTitle}
+          aria-label={t.remove(player.name)}
           className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-danger shadow-sm hover:bg-brand-danger hover:text-white sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
         >
           ✕
@@ -148,10 +138,12 @@ function EmptySlot({
   label,
   missing,
   onClick,
+  t,
 }: {
   label: string;
   missing: number;
   onClick: () => void;
+  t: BuilderDict;
 }) {
   return (
     // Kompakter, runder Platzhalter: nimmt nur so viel Fläche wie nötig,
@@ -159,8 +151,8 @@ function EmptySlot({
     <button
       type="button"
       onClick={onClick}
-      title={`${label} hinzufügen — noch ${missing}`}
-      aria-label={`${label} hinzufügen, noch ${missing}`}
+      title={t.addSlot(label, missing)}
+      aria-label={t.addSlot(label, missing)}
       className="pressable flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center justify-start gap-1 self-start pt-1"
     >
       <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-xl font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
@@ -169,12 +161,13 @@ function EmptySlot({
       <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-white/85 sm:text-[11px]">
         {label}
       </span>
-      <span className="text-[10px] font-medium text-white/55">noch {missing}</span>
+      <span className="text-[10px] font-medium text-white/55">{t.slotMissing(missing)}</span>
     </button>
   );
 }
 
 export default function TeamBuilder({
+  lang,
   players,
   initialSquad,
   settings,
@@ -187,6 +180,7 @@ export default function TeamBuilder({
   extraTransferCost,
   chips,
 }: {
+  lang: Lang;
   players: PlayerOption[];
   initialSquad: SquadPick[];
   settings: Settings;
@@ -200,6 +194,7 @@ export default function TeamBuilder({
   extraTransferCost: number;
   chips: ChipState[];
 }) {
+  const t = getDictionary(lang).builder;
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "error" | "success"; text: string } | null>(null);
@@ -294,18 +289,15 @@ export default function TeamBuilder({
       const exists = prev.find((s) => s.playerId === player.id);
       if (exists) return prev.filter((s) => s.playerId !== player.id);
       if (prev.length >= settings.squadSize) {
-        setToast({ kind: "error", text: `Kader ist voll (${settings.squadSize} Spieler).` });
+        setToast({ kind: "error", text: t.errSquadFull(settings.squadSize) });
         return prev;
       }
       if (countByPosition[player.position] >= slotsByPosition[player.position]) {
-        setToast({
-          kind: "error",
-          text: `Alle ${POSITION_LABEL[player.position]}-Plätze sind besetzt.`,
-        });
+        setToast({ kind: "error", text: t.errPosFull(t.positions[player.position]) });
         return prev;
       }
       if (spent + player.price > effectiveCap + 1e-9) {
-        setToast({ kind: "error", text: "Zu teuer — Budget reicht nicht." });
+        setToast({ kind: "error", text: t.errTooExpensive });
         return prev;
       }
       // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das
@@ -325,7 +317,7 @@ export default function TeamBuilder({
         // Auf die Bank: immer erlaubt (die Startelf ist dann eben unvollständig),
         // nur der Captain muss in der Startelf bleiben.
         if (pick.isCaptain) {
-          setToast({ kind: "error", text: "Der Captain muss in der Startelf stehen." });
+          setToast({ kind: "error", text: t.errCaptainStart });
           return prev;
         }
         return prev.map((s) => (s.playerId === playerId ? { ...s, isStarting: false } : s));
@@ -373,7 +365,7 @@ export default function TeamBuilder({
     // Vorprüfung im Client, damit der Fehler sofort kommt — der Server
     // validiert dieselben Regeln nochmals verbindlich.
     if (squad.length !== settings.squadSize) {
-      setToast({ kind: "error", text: `Kader muss genau ${settings.squadSize} Spieler haben.` });
+      setToast({ kind: "error", text: t.errSquadSize(settings.squadSize) });
       return;
     }
     if (formationError) {
@@ -381,7 +373,7 @@ export default function TeamBuilder({
       return;
     }
     if (!hasCaptain) {
-      setToast({ kind: "error", text: "Bitte wähle einen Captain (C-Knopf am Spieler)." });
+      setToast({ kind: "error", text: t.errNoCaptain });
       return;
     }
     startTransition(async () => {
@@ -391,11 +383,7 @@ export default function TeamBuilder({
       } else {
         // Spieltag mitnennen: nach einer verstrichenen Deadline gilt die
         // Aufstellung automatisch für den nächsten Spieltag.
-        const gw = result?.savedForGameweek;
-        setToast({
-          kind: "success",
-          text: gw ? `Team für Spieltag ${gw} gespeichert. Viel Glück! 🍀` : "Team gespeichert. 🍀",
-        });
+        setToast({ kind: "success", text: t.saved(result?.savedForGameweek) });
       }
     });
   }
@@ -419,8 +407,8 @@ export default function TeamBuilder({
     hoursLeft === null
       ? null
       : hoursLeft >= 48
-        ? `in ${Math.round(hoursLeft / 24)} Tagen`
-        : `in ${hoursLeft} Std.`;
+        ? t.inDays(Math.round(hoursLeft / 24))
+        : t.inHours(hoursLeft);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
@@ -445,7 +433,7 @@ export default function TeamBuilder({
         <div className="mb-3 rounded-lg bg-white px-3 py-2 shadow-sm">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Budget </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.budget} </span>
               <span
                 className={`font-bold tabular-nums ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
@@ -456,20 +444,20 @@ export default function TeamBuilder({
               {effectiveCap > settings.budgetCap && (
                 <span
                   className="ml-1 text-[11px] font-medium text-brand-deep/50"
-                  title="Dein Team ist durch Preissteigerungen mehr wert als das Basis-Budget — dieser Wert bleibt dir erhalten."
+                  title={t.capHint}
                 >
-                  von {effectiveCap.toFixed(1)}
+                  {t.of} {effectiveCap.toFixed(1)}
                 </span>
               )}
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Kader </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.squad} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {squad.length}/{settings.squadSize}
               </span>
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Startelf </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.starters} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
@@ -480,23 +468,23 @@ export default function TeamBuilder({
               )}
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">Transfers </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.transfers} </span>
               {unlimitedTransfers ? (
-                <span className="font-bold text-brand-magenta">unbegrenzt</span>
+                <span className="font-bold text-brand-magenta">{t.unlimited}</span>
               ) : wildcardActive ? (
                 <span className="font-bold text-brand-magenta">Wildcard</span>
               ) : (
                 <span className="font-bold tabular-nums text-brand-deep">
-                  {freeTransfers} gratis
+                  {freeTransfers} {t.free}
                   {transfersUsed > 0 && (
-                    <span className="font-medium text-brand-deep/50"> · {transfersUsed} genutzt</span>
+                    <span className="font-medium text-brand-deep/50"> · {transfersUsed} {t.used}</span>
                   )}
                 </span>
               )}
             </span>
             {countdown && (
               <span className="whitespace-nowrap text-[11px] font-bold text-brand-magenta">
-                Deadline {countdown}
+                {t.deadlineIn(countdown)}
               </span>
             )}
           </div>
@@ -512,15 +500,15 @@ export default function TeamBuilder({
                 squad.length > 0 && formationError
                   ? startingCount < settings.startingSize
                     ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
-                      "Startelf: " +
+                      t.startersLabel + " " +
                       ((["GK", "DEF", "MID", "FWD"] as Position[])
                         .filter((p) => startingCounts[p] < MIN_STARTERS[p])
                         .map((p) => `${MIN_STARTERS[p] - startingCounts[p]}× ${p}`)
-                        .join(", ") || `noch ${settings.startingSize - startingCount} Spieler`)
+                        .join(", ") || t.stillNeeded(settings.startingSize - startingCount))
                     : formationError
                   : null,
-                !hasCaptain && squad.length > 0 ? "Captain fehlt" : null,
-                pendingCost > 0 ? `−${pendingCost} Punkte beim Speichern` : null,
+                !hasCaptain && squad.length > 0 ? t.captainMissing : null,
+                pendingCost > 0 ? t.pointsOnSave(pendingCost) : null,
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -544,6 +532,7 @@ export default function TeamBuilder({
                     return (
                       <PlayerCard
                         key={pick.playerId}
+                        t={t}
                         player={player}
                         pick={pick}
                         onCaptain={() => setCaptain(pick.playerId)}
@@ -554,7 +543,8 @@ export default function TeamBuilder({
                   })}
                   {missing > 0 && (
                     <EmptySlot
-                      label={POSITION_LABEL[pos]}
+                      t={t}
+                      label={t.positions[pos]}
                       missing={missing}
                       onClick={() => {
                         setFilterPos(pos);
@@ -573,12 +563,12 @@ export default function TeamBuilder({
         {/* Bank */}
         <div className="mt-3 rounded-xl bg-brand-deep/95 px-4 py-4">
           <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
-            Bank
+            {t.bank}
           </div>
           <div className="flex items-start gap-1.5 sm:gap-5">
             {bench.length === 0 && (
               <p className="text-sm text-white/50">
-                Keine Bankspieler — Spieler mit ↓ auf die Bank setzen.
+                {t.emptyBench}
               </p>
             )}
             {bench.map((pick) => {
@@ -587,6 +577,7 @@ export default function TeamBuilder({
               return (
                 <PlayerCard
                   key={pick.playerId}
+                  t={t}
                   player={player}
                   pick={pick}
                   onCaptain={() => setCaptain(pick.playerId)}
@@ -601,7 +592,8 @@ export default function TeamBuilder({
         {/* Chips */}
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {chips.map((c) => {
-            const info = CHIP_INFO[c.chip];
+            const info = CHIP_META[c.chip];
+            const desc = c.chip === "wildcard" ? t.wildcardDesc : t.benchBoostDesc;
             const verbraucht = c.usedInGameweek !== null;
             return (
               <div
@@ -635,9 +627,7 @@ export default function TeamBuilder({
                       </span>
                     </div>
                     <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/60">
-                      {verbraucht
-                        ? `Diese Saison an Spieltag ${c.usedInGameweek} eingesetzt.`
-                        : info.desc}
+                      {verbraucht ? t.chipUsed(c.usedInGameweek ?? 0) : desc}
                     </p>
                   </div>
                   {!verbraucht && (
@@ -651,14 +641,13 @@ export default function TeamBuilder({
                           : "bg-brand-accent text-brand-deep"
                       }`}
                     >
-                      {c.activeNow ? "Aktiv – zurücknehmen" : "Aktivieren"}
+                      {c.activeNow ? t.deactivate : t.activate}
                     </button>
                   )}
                 </div>
                 {c.activeNow && gameweekNumber !== null && (
                   <p className="mt-2 text-[11px] font-bold text-brand-deep">
-                    Läuft an Spieltag {gameweekNumber}. Bis zur Deadline umkehrbar — danach
-                    verbraucht.
+                    {t.chipActive(gameweekNumber)}
                   </p>
                 )}
               </div>
@@ -674,7 +663,7 @@ export default function TeamBuilder({
             onClick={handleSave}
             className="pressable w-full max-w-xs rounded-full bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
           >
-            {isPending ? "Speichert…" : gameweekOpen ? "Team speichern" : "Spieltag gesperrt"}
+            {isPending ? t.saving : gameweekOpen ? t.save : t.locked}
           </button>
         </div>
       </section>
@@ -683,7 +672,7 @@ export default function TeamBuilder({
       <aside ref={marketRef} className="w-full shrink-0 scroll-mt-4 lg:w-[22rem]">
         <div className="overflow-hidden rounded-xl bg-white shadow-sm lg:sticky lg:top-4">
           <div className="brand-gradient px-4 py-3 text-sm font-bold text-white">
-            Spieler wählen
+            {t.pickPlayers}
           </div>
           <div className="flex flex-col gap-2 border-b border-brand-deep/10 p-3">
             <div className="flex gap-1">
@@ -701,7 +690,7 @@ export default function TeamBuilder({
                         : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
                     }`}
                   >
-                    {pos === "ALL" ? "Alle" : pos}
+                    {pos === "ALL" ? t.all : pos}
                     {pos !== "ALL" && (
                       <span
                         className={`ml-1 text-[10px] font-semibold ${
@@ -724,7 +713,7 @@ export default function TeamBuilder({
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Spieler suchen…"
+                placeholder={t.search}
                 className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-sm outline-none focus:border-brand-magenta"
               />
               <select
@@ -732,7 +721,7 @@ export default function TeamBuilder({
                 onChange={(e) => setFilterClub(e.target.value)}
                 className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta"
               >
-                <option value="ALL">Club</option>
+                <option value="ALL">{t.club}</option>
                 {clubs.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -742,10 +731,10 @@ export default function TeamBuilder({
               <button
                 type="button"
                 onClick={() => setSortiere((s) => (s === "points" ? "price" : "points"))}
-                title="Sortierung umschalten"
+                title={t.toggleSort}
                 className="pressable-subtle whitespace-nowrap rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm font-semibold text-brand-deep hover:border-brand-magenta"
               >
-                {sortiere === "points" ? "Punkte ↓" : "Preis ↓"}
+                {sortiere === "points" ? t.sortPoints : t.sortPrice}
               </button>
             </div>
           </div>
@@ -773,7 +762,7 @@ export default function TeamBuilder({
                   </span>
                   <span className="w-10 text-right">
                     <span className="block text-[10px] font-semibold uppercase text-brand-deep/40">
-                      Pkt.
+                      {t.pts}
                     </span>
                     <span className="block font-bold tabular-nums text-brand-deep">{p.points}</span>
                   </span>
@@ -792,7 +781,7 @@ export default function TeamBuilder({
             })}
             {filtered.length === 0 && (
               <p className="px-4 py-6 text-center text-sm text-brand-deep/50">
-                Keine Spieler gefunden.
+                {t.noneFound}
               </p>
             )}
           </div>

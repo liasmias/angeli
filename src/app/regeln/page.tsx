@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
+import { getLang } from "@/lib/lang";
 
 export const metadata = {
   title: "Regeln & FAQ — Angeli",
@@ -34,6 +35,7 @@ function Frage({ frage, children }: { frage: string; children: React.ReactNode }
 
 export default async function RegelnPage() {
   const supabase = await createClient();
+  const lang = await getLang();
   // Werte aus der Datenbank lesen statt fest eintragen — sonst weicht die
   // Seite von den tatsächlich geltenden Regeln ab, sobald jemand die
   // Einstellungen ändert.
@@ -62,6 +64,172 @@ export default async function RegelnPage() {
     ["Verursachter Elfmeter", "−2"],
     ["Eigentor", "−2"],
   ];
+
+
+  if (lang === "en") {
+    const pointsEn: Array<[string, string]> = [
+      ["Appearance up to 59 minutes", "+1"],
+      ["Appearance of 60+ minutes", "+2"],
+      ["Goal by a goalkeeper or defender", "+6"],
+      ["Goal by a midfielder", "+5"],
+      ["Goal by a forward", "+4"],
+      ["Assist", "+3"],
+      ["Goalkeeper or defender clean sheet (60+ min.)", "+4"],
+      ["Every 2 goals conceded (GK, DEF)", "−1"],
+      ["Every 2 saves by a goalkeeper", "+1"],
+      ["Penalty saved", "+5"],
+      ["Yellow card", "−1"],
+      ["Red card", "−3"],
+      ["Penalty conceded", "−2"],
+      ["Own goal", "−2"],
+    ];
+    return (
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Rules & FAQ</h1>
+        <p className="mb-6 text-sm text-brand-deep/60">
+          Everything you need to play — a two-minute read.
+        </p>
+
+        <div className="flex flex-col gap-4">
+          <Abschnitt titel="How it works">
+            <p>
+              You build a team from Swiss league players and collect points based on how they
+              perform in real matches. Before each gameweek you set your starting XI and your
+              captain. After the deadline your lineup is locked and scored automatically.
+            </p>
+          </Abschnitt>
+
+          <Abschnitt titel="Your squad">
+            <ul className="ml-4 list-disc space-y-1">
+              <li>
+                <b>{kader} players</b> with a budget of <b>{budget}m</b> — if price rises make
+                your players worth more, you keep the full team value, even above the base budget
+              </li>
+              <li>
+                {s?.gk_slots ?? 2} goalkeepers, {s?.def_slots ?? 5} defenders, {s?.mid_slots ?? 5}{" "}
+                midfielders, {s?.fwd_slots ?? 3} forwards
+              </li>
+              <li>
+                <b>{elf} of them start</b>, the rest sit on the bench
+              </li>
+            </ul>
+            <p className="rounded-lg bg-brand-deep/5 p-3">
+              <b>Allowed formations:</b> always exactly {MIN_STARTERS.GK} goalkeeper, at least{" "}
+              {MIN_STARTERS.DEF} defenders, at least {MIN_STARTERS.MID} midfielders and at least{" "}
+              {MIN_STARTERS.FWD} forward. Upper limits: at most {MAX_STARTERS.DEF} defenders,{" "}
+              {MAX_STARTERS.MID} midfielders and {MAX_STARTERS.FWD} forwards.
+            </p>
+          </Abschnitt>
+
+          <Abschnitt titel="Points">
+            <div className="overflow-hidden rounded-lg border border-brand-deep/10">
+              <table className="w-full border-collapse text-sm">
+                <tbody className="divide-y divide-brand-deep/5">
+                  {pointsEn.map(([what, value]) => (
+                    <tr key={what}>
+                      <td className="px-3 py-1.5">{what}</td>
+                      <td
+                        className={`w-16 px-3 py-1.5 text-right font-bold tabular-nums ${
+                          value.startsWith("−") ? "text-brand-danger" : "text-brand-deep"
+                        }`}
+                      >
+                        {value}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Your <b>captain</b> scores double — including negatives. Bench players do not
+              count, unless you play the Bench Boost.
+            </p>
+          </Abschnitt>
+
+          <Abschnitt titel="Transfers">
+            <ul className="ml-4 list-disc space-y-1">
+              <li>
+                <b>{gratis} free transfer per gameweek.</b> Every additional one costs {strafe}{" "}
+                points.
+              </li>
+              <li>
+                Unused transfers <b>bank up</b>, to a maximum of {maxBank}.
+              </li>
+              <li>
+                In your <b>first round</b> transfers are unlimited and free — you should be able
+                to build your team without penalty, whenever you join.
+              </li>
+            </ul>
+          </Abschnitt>
+
+          <Abschnitt titel="Chips">
+            <p>
+              Two chips, each <b>once per season</b>. You can take them back until the deadline —
+              after that they are spent.
+            </p>
+            <ul className="ml-4 list-disc space-y-1">
+              <li>
+                <b>🃏 Wildcard</b> — unlimited transfers this gameweek, without point deductions.
+              </li>
+              <li>
+                <b>🚀 Bench Boost</b> — this gameweek the points of your bench players count too.
+              </li>
+            </ul>
+          </Abschnitt>
+
+          <Abschnitt titel="Frequently asked questions">
+            <Frage frage="When do I have to submit my lineup?">
+              Before the deadline of each gameweek — it is shown above your lineup and sits one
+              hour before the round&apos;s first kick-off. After that, your XI is locked.
+            </Frage>
+            <Frage frage="I joined mid-season. Do I still stand a chance?">
+              Yes. Your first round is transfer-free, so you build your team without penalty
+              points.
+              <br />
+              <br />
+              If you join <b>within the first 5 rounds</b>, you are additionally credited the{" "}
+              <b>average points scored so far</b> — you do not start from zero while everyone
+              else is ahead. Just message the admin, who enters the credit.
+            </Frage>
+            <Frage frage="When are points updated?">
+              Automatically every 15 minutes, including during live matches. Interim scores can
+              still change — numbers are final only after the final whistle.
+            </Frage>
+            <Frage frage="Can I see other people's teams?">
+              Yes, via the leaderboard — but only after each gameweek&apos;s deadline. If live
+              lineups were visible, you could simply copy them.
+            </Frage>
+            <Frage frage="What happens if one of my players doesn't play?">
+              They score 0 points. Unlike some other games, bench players do not step in
+              automatically — plan your starting XI with the schedule in mind.
+            </Frage>
+            <Frage frage="A player's points look wrong. What now?">
+              Report it to the admin. The data comes from an external provider and is rarely,
+              but not never, wrong. Own goals, for instance, are not delivered by the API at
+              all — the admin enters them manually. Corrections apply retroactively to the
+              leaderboard.
+            </Frage>
+            <Frage frage="How do I change my account name or password?">
+              Tap your name in the top right. There you can change both and delete your account
+              if needed.
+            </Frage>
+            <Frage frage="What does the rating in the statistics mean?">
+              A performance rating from the data provider (roughly 6.0 to 10.0). It is purely a
+              guide for picking players and does <b>not</b> count towards your fantasy points.
+            </Frage>
+          </Abschnitt>
+
+          <p className="text-center text-sm text-brand-deep/60">
+            Still unclear? Ask the admin — or head straight to{" "}
+            <Link href="/stats" className="font-semibold text-brand-magenta underline">
+              the statistics
+            </Link>
+            .
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">

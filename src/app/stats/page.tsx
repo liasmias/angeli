@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
 import StatsTable, { type StatsRow } from "./StatsTable";
+import { getLang } from "@/lib/lang";
+import { getDictionary } from "@/lib/i18n";
 
 export default async function StatsPage() {
   const supabase = await createClient();
+  const lang = await getLang();
+  const t = getDictionary(lang).stats;
 
   const [{ data: players }, { data: points }, { data: gameweeks }, { data: ratingRows }] = await Promise.all([
     supabase
@@ -55,13 +59,11 @@ export default async function StatsPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Statistiken</h1>
+      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">{t.title}</h1>
       <p className="mb-6 text-sm text-brand-deep/60">
-        {latestGameweekWithPoints
-          ? `Punkte aller Spieler — Stand nach Spieltag ${latestGameweekWithPoints.number}.`
-          : "Sobald der erste Spieltag synchronisiert ist, erscheinen hier die Punkte aller Spieler."}
+        {latestGameweekWithPoints ? t.introAfter(latestGameweekWithPoints.number) : t.introEmpty}
       </p>
-      <StatsTable rows={rows} latestGameweekNumber={latestGameweekWithPoints?.number ?? null} />
+      <StatsTable rows={rows} latestGameweekNumber={latestGameweekWithPoints?.number ?? null} lang={lang} />
     </main>
   );
 }

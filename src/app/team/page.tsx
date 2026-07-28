@@ -5,6 +5,8 @@ import { shortenPlayerName } from "@/lib/player-name";
 import GameweekNav from "./GameweekNav";
 import PastGameweek, { type PastPlayer } from "./PastGameweek";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
+import { getLang } from "@/lib/lang";
+import { getDictionary } from "@/lib/i18n";
 
 export default async function TeamPage({
   searchParams,
@@ -13,6 +15,8 @@ export default async function TeamPage({
 }) {
   const { gw } = await searchParams;
   const supabase = await createClient();
+  const lang = await getLang();
+  const t = getDictionary(lang);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -75,7 +79,7 @@ export default async function TeamPage({
   if (!angezeigt) {
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">Mein Team</h1>
+        <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
         <p className="rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">
           Noch keine Spieltage angelegt — ein Admin muss sie zuerst erfassen.
         </p>
@@ -109,7 +113,8 @@ export default async function TeamPage({
 
   const nav = (
     <GameweekNav
-      username={profile?.username ?? "Mein Team"}
+      lang={lang}
+      username={profile?.username ?? t.team.title}
       gameweekNumber={angezeigt.number}
       isPast={!bearbeitbar}
       isLive={laufenderSpieltag?.id === angezeigt.id}
@@ -156,14 +161,15 @@ export default async function TeamPage({
 
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">Mein Team</h1>
+        <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
         {nav}
         {pastPlayers.length === 0 ? (
           <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/60">
-            Für Spieltag {angezeigt.number} wurde keine Aufstellung gespeichert.
+            {t.team.noLineup(angezeigt.number)}
           </p>
         ) : (
           <PastGameweek
+            lang={lang}
             players={pastPlayers}
             benchBoost={(chips ?? []).some((c) => c.chip === "bench_boost")}
             wildcard={(chips ?? []).some((c) => c.chip === "wildcard")}
@@ -249,9 +255,10 @@ export default async function TeamPage({
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">Mein Team</h1>
+      <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
       {nav}
       <TeamBuilder
+        lang={lang}
         players={playerOptions}
         initialSquad={initialSquad}
         settings={{

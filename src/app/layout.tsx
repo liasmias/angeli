@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Space_Grotesk } from "next/font/google";
 import AuthHashError from "@/components/auth-hash-error";
 import Nav from "@/components/nav";
+import { getLang } from "@/lib/lang";
+import { getDictionary } from "@/lib/i18n";
 import "./globals.css";
 
 // Eine einzige Familie für die gesamte App — Abstufung nur über die Stärke.
@@ -18,14 +20,16 @@ export const metadata: Metadata = {
   description: "Fantasy Football für die Schweizer Liga, Saison 26/27",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const lang = await getLang();
+  const t = getDictionary(lang).footer;
   return (
     <html
-      lang="de"
+      lang={lang}
       className={`${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
@@ -36,10 +40,9 @@ export default function RootLayout({
         {children}
         <footer className="mt-auto px-4 py-4 text-center text-[11px] leading-relaxed text-brand-deep/45">
           <p>
-            Inoffizielles, nicht-kommerzielles Fan-Projekt — keine Verbindung zur Swiss Football
-            League oder deren Clubs.{" "}
+            {t.disclaimer}{" "}
             <Link href="/impressum" className="font-semibold underline hover:text-brand-magenta">
-              Impressum &amp; Datenschutz
+              {t.imprint}
             </Link>
           </p>
         </footer>

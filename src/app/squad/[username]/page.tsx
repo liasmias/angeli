@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getGameweekPoints, getRank } from "@/lib/gameweek-summary";
 import { shortenPlayerName } from "@/lib/player-name";
 import GameweekNav from "@/app/team/GameweekNav";
+import { getLang } from "@/lib/lang";
+import { getDictionary } from "@/lib/i18n";
 import PastGameweek, { type PastPlayer } from "@/app/team/PastGameweek";
 
 /**
@@ -23,6 +25,8 @@ export default async function SquadPage({
   const [{ username: rawUsername }, { gw }] = await Promise.all([params, searchParams]);
   const username = decodeURIComponent(rawUsername);
   const supabase = await createClient();
+  const lang = await getLang();
+  const t = getDictionary(lang).leaderboard;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -55,14 +59,13 @@ export default async function SquadPage({
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/leaderboard" className="text-sm font-semibold text-brand-magenta">
-          ← Zurück zur Rangliste
+          {t.back}
         </Link>
         <h1 className="mb-4 mt-2 text-2xl font-bold tracking-tight text-brand-deep">
           {profile.username}
         </h1>
         <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/60">
-          Von {profile.username} ist noch keine Aufstellung öffentlich — Teams werden erst nach
-          der Deadline des jeweiligen Spieltags sichtbar.
+          {t.notPublic(profile.username)}
         </p>
       </main>
     );
@@ -119,12 +122,13 @@ export default async function SquadPage({
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <Link href="/leaderboard" className="text-sm font-semibold text-brand-magenta">
-        ← Zurück zur Rangliste
+        {t.back}
       </Link>
       <h1 className="mb-4 mt-2 text-2xl font-bold tracking-tight text-brand-deep">
         {profile.username}
       </h1>
       <GameweekNav
+        lang={lang}
         username={profile.username}
         gameweekNumber={angezeigt.number}
         isPast
@@ -139,6 +143,7 @@ export default async function SquadPage({
         basePath={`/squad/${encodeURIComponent(profile.username)}`}
       />
       <PastGameweek
+        lang={lang}
         players={players}
         benchBoost={(chips ?? []).some((c) => c.chip === "bench_boost")}
         wildcard={(chips ?? []).some((c) => c.chip === "wildcard")}

@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
+import { getLang } from "@/lib/lang";
+import { getDictionary } from "@/lib/i18n";
 
 const FINISHED = new Set(["FT", "AET", "PEN"]);
 
@@ -12,6 +14,7 @@ interface BestPlayer {
 
 export default async function FixturesPage() {
   const supabase = await createClient();
+  const t = getDictionary(await getLang()).fixtures;
 
   const [{ data: gameweeks }, { data: fixtures }, { data: stats }, { data: points }, { data: players }] =
     await Promise.all([
@@ -62,7 +65,7 @@ export default async function FixturesPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-brand-deep">Spielplan</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-brand-deep">{t.title}</h1>
       <div className="flex flex-col gap-6">
         {ordered.map((gw) => {
           const gwFixtures = (fixtures ?? []).filter((f) => f.gameweek_id === gw.id);
@@ -70,7 +73,7 @@ export default async function FixturesPage() {
           return (
             <section key={gw.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
               <h2 className="brand-gradient px-5 py-2.5 text-sm font-bold text-white">
-                Spieltag {gw.number}
+                {t.gameweek(gw.number)}
               </h2>
               <ul className="divide-y divide-brand-deep/5">
                 {gwFixtures.map((f) => {
@@ -123,12 +126,12 @@ export default async function FixturesPage() {
                         <summary className="cursor-pointer list-none transition-colors hover:bg-brand-deep/5 [&::-webkit-details-marker]:hidden">
                           {matchRow}
                           <div className="pb-2 text-center text-[11px] font-semibold text-brand-magenta group-open:hidden">
-                            Beste Spieler anzeigen ▾
+                            {t.showBest}
                           </div>
                         </summary>
                         <div className="border-t border-brand-deep/5 bg-brand-deep/[0.03] px-5 py-3 text-sm">
                           <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-deep/50">
-                            Beste Spieler
+                            {t.bestPlayers}
                           </div>
                           <div className="mb-3 flex flex-wrap gap-1.5">
                             {best.map((b) => (
@@ -142,7 +145,7 @@ export default async function FixturesPage() {
                           </div>
                           {scorers.length > 0 && (
                             <p className="text-xs text-brand-deep/70">
-                              <span className="font-bold">Tor:</span>{" "}
+                              <span className="font-bold">{t.goal}</span>{" "}
                               {scorers.map((s) => `${s.name}${s.goals > 1 ? ` (${s.goals})` : ""}`).join(", ")}
                             </p>
                           )}

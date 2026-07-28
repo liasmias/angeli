@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Position } from "@/lib/database.types";
+import { getDictionary, type Lang } from "@/lib/i18n";
 
 export interface StatsRow {
   id: number;
@@ -22,10 +23,13 @@ type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating";
 export default function StatsTable({
   rows,
   latestGameweekNumber,
+  lang,
 }: {
   rows: StatsRow[];
   latestGameweekNumber: number | null;
+  lang: Lang;
 }) {
+  const t = getDictionary(lang).stats;
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -78,7 +82,7 @@ export default function StatsTable({
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
               }`}
             >
-              {pos === "ALL" ? "Alle" : pos}
+              {pos === "ALL" ? t.all : pos}
             </button>
           ))}
         </div>
@@ -87,7 +91,7 @@ export default function StatsTable({
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Spieler suchen…"
+            placeholder={t.search}
             className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-sm outline-none focus:border-brand-magenta"
           />
           <select
@@ -95,7 +99,7 @@ export default function StatsTable({
             onChange={(e) => setFilterClub(e.target.value)}
             className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta"
           >
-            <option value="ALL">Club</option>
+            <option value="ALL">{t.club}</option>
             {clubs.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -113,13 +117,13 @@ export default function StatsTable({
               setSortDesc(key !== "name");
             }}
             className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta sm:hidden"
-            aria-label="Sortieren nach"
+            aria-label={t.sortBy}
           >
-            <option value="totalPoints">Punkte ↓</option>
-            <option value="latestPoints">Letzter Spieltag ↓</option>
-            <option value="price">Preis ↓</option>
-            <option value="rating">Rating ↓</option>
-            <option value="name">Name A–Z</option>
+            <option value="totalPoints">{t.sortPoints}</option>
+            <option value="latestPoints">{t.sortLatest}</option>
+            <option value="price">{t.sortPrice}</option>
+            <option value="rating">{t.sortRating}</option>
+            <option value="name">{t.sortName}</option>
           </select>
         </div>
       </div>
@@ -137,19 +141,19 @@ export default function StatsTable({
               <th className="px-2 py-2 sm:px-3">#</th>
               <th className="px-2 py-2 sm:px-3">
                 <button type="button" onClick={() => toggleSort("name")} className="uppercase">
-                  Spieler{sortIndicator("name")}
+                  {t.player}{sortIndicator("name")}
                 </button>
               </th>
-              <th className="hidden px-3 py-2 sm:table-cell">Club</th>
-              <th className="hidden px-3 py-2 sm:table-cell">Pos.</th>
+              <th className="hidden px-3 py-2 sm:table-cell">{t.club}</th>
+              <th className="hidden px-3 py-2 sm:table-cell">{t.pos}</th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
                 <button type="button" onClick={() => toggleSort("price")} className="uppercase">
-                  Preis{sortIndicator("price")}
+                  {t.price}{sortIndicator("price")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title="Bewertung der Datenquelle — zählt nicht für die Punkte">
-                  Rating{sortIndicator("rating")}
+                <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title={t.ratingTitle}>
+                  {t.rating}{sortIndicator("rating")}
                 </button>
               </th>
               {latestGameweekNumber !== null && (
@@ -159,14 +163,14 @@ export default function StatsTable({
                     onClick={() => toggleSort("latestPoints")}
                     className="uppercase"
                   >
-                    GW {latestGameweekNumber}
+                    {t.gwCol(latestGameweekNumber)}
                     {sortIndicator("latestPoints")}
                   </button>
                 </th>
               )}
               <th className="px-2 py-2 text-right sm:px-3">
                 <button type="button" onClick={() => toggleSort("totalPoints")} className="uppercase">
-                  Punkte{sortIndicator("totalPoints")}
+                  {t.points}{sortIndicator("totalPoints")}
                 </button>
               </th>
             </tr>
@@ -218,7 +222,7 @@ export default function StatsTable({
             {visible.length === 0 && (
               <tr>
                 <td colSpan={latestGameweekNumber !== null ? 8 : 7} className="px-3 py-8 text-center text-brand-deep/50">
-                  Keine Spieler gefunden.
+                  {t.noneFound}
                 </td>
               </tr>
             )}

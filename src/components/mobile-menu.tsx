@@ -17,12 +17,22 @@ export interface NavLink {
  * Das Menü schliesst sich bei jedem Seitenwechsel selbst, sonst bliebe es
  * nach einem Klick offen über der neuen Seite liegen.
  */
+export interface MobileMenuLabels {
+  openMenu: string;
+  closeMenu: string;
+  logout: string;
+  login: string;
+  signup: string;
+}
+
 export default function MobileMenu({
   links,
   username,
+  labels,
 }: {
   links: NavLink[];
   username: string | null;
+  labels: MobileMenuLabels;
 }) {
   const [offen, setOffen] = useState(false);
   const pfad = usePathname();
@@ -43,7 +53,7 @@ export default function MobileMenu({
         type="button"
         onClick={() => setOffen((o) => !o)}
         aria-expanded={offen}
-        aria-label={offen ? "Menü schliessen" : "Menü öffnen"}
+        aria-label={offen ? labels.closeMenu : labels.openMenu}
         className="pressable flex h-10 w-10 items-center justify-center rounded-lg hover:bg-white/10"
       >
         {/* Drei Striche, die sich beim Öffnen zum Kreuz drehen. */}
@@ -111,7 +121,7 @@ export default function MobileMenu({
                       type="submit"
                       className="pressable rounded-lg border border-white/30 px-4 py-2.5 text-sm font-semibold text-white"
                     >
-                      Logout
+                      {labels.logout}
                     </button>
                   </form>
                 </div>
@@ -121,13 +131,13 @@ export default function MobileMenu({
                     href="/login"
                     className="flex-1 rounded-lg border border-white/30 px-4 py-2.5 text-center text-sm font-semibold text-white"
                   >
-                    Login
+                    {labels.login}
                   </Link>
                   <Link
                     href="/signup"
                     className="pressable flex-1 rounded-lg bg-brand-accent px-4 py-2.5 text-center text-sm font-bold text-brand-deep"
                   >
-                    Registrieren
+                    {labels.signup}
                   </Link>
                 </div>
               )}

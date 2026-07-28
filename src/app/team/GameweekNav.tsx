@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getDictionary, type Lang } from "@/lib/i18n";
 
 export interface GameweekNavProps {
+  lang: Lang;
   username: string;
   gameweekNumber: number;
   /** Abgeschlossen = Deadline vorbei; sonst läuft die Aufstellungsphase. */
@@ -19,8 +21,7 @@ export interface GameweekNavProps {
 }
 
 /** Ein Pfeil zum Nachbar-Spieltag; als Platzhalter ausgegraut, wenn es keinen gibt. */
-function Arrow({ to, dir, basePath }: { to: number | null; dir: "prev" | "next"; basePath: string }) {
-  const label = dir === "prev" ? "Vorheriger Spieltag" : "Nächster Spieltag";
+function Arrow({ to, dir, basePath, label }: { to: number | null; dir: "prev" | "next"; basePath: string; label: string }) {
   const glyph = dir === "prev" ? "‹" : "›";
   const base =
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-2xl leading-none";
@@ -76,6 +77,7 @@ function Kachel({
 
 export default function GameweekNav(props: GameweekNavProps) {
   const {
+    lang,
     username,
     gameweekNumber,
     isPast,
@@ -90,35 +92,36 @@ export default function GameweekNav(props: GameweekNavProps) {
     basePath = "/team",
   } = props;
 
+  const t = getDictionary(lang).gwnav;
   const deadlineDatum = deadline ? new Date(deadline) : null;
   const status = isLive
-    ? `Spieltag ${gameweekNumber} läuft`
+    ? t.gameweekLive(gameweekNumber)
     : isPast
-      ? `Spieltag ${gameweekNumber} ist abgeschlossen`
-      : `Spieltag ${gameweekNumber}`;
+      ? t.gameweekDone(gameweekNumber)
+      : t.gameweek(gameweekNumber);
 
   return (
     <section className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
       <div className="brand-gradient flex items-center justify-between gap-2 px-2 py-2 sm:px-3">
-        <Arrow to={prevGameweek} dir="prev" basePath={basePath} />
+        <Arrow to={prevGameweek} dir="prev" basePath={basePath} label={t.prevGw} />
         <h2 className="min-w-0 flex-1 truncate text-center text-sm font-bold text-white sm:text-base">
           {status}
         </h2>
-        <Arrow to={nextGameweek} dir="next" basePath={basePath} />
+        <Arrow to={nextGameweek} dir="next" basePath={basePath} label={t.nextGw} />
       </div>
 
       {isLive && (
         <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">
           <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-brand-magenta align-middle" aria-hidden />
-          Live — Punkte aktualisieren sich alle 15 Minuten.
+          {t.liveHint}
         </p>
       )}
 
       {!isPast && deadlineDatum && (
         <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">
-          Deadline:{" "}
+          {t.deadline}{" "}
           <span className="font-semibold text-brand-deep">
-            {deadlineDatum.toLocaleString("de-CH", {
+            {deadlineDatum.toLocaleString(lang === "en" ? "en-GB" : "de-CH", {
               weekday: "short",
               day: "numeric",
               month: "short",
@@ -137,15 +140,15 @@ export default function GameweekNav(props: GameweekNavProps) {
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 p-3 sm:p-4">
         <span className="max-w-full truncate text-lg font-bold text-brand-deep sm:text-xl">{username}</span>
         <div className="flex items-stretch justify-center gap-2">
-          <Kachel wert={String(totalPoints)} label="Gesamtpunkte" />
+          <Kachel wert={String(totalPoints)} label={t.totalPoints} />
           <Kachel
             wert={points === null ? "—" : String(points)}
-            label={`SPT ${gameweekNumber} Pkt.`}
+            label={t.gwPoints(gameweekNumber)}
             hervorgehoben
           />
           <Kachel
             wert={rank === null ? "—" : String(rank)}
-            label={participants > 0 ? `Rang von ${participants}` : "Rang"}
+            label={participants > 0 ? t.rankOf(participants) : t.rank}
           />
         </div>
       </div>
