@@ -62,12 +62,7 @@ export default async function Nav() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6 sm:py-4">
         <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap sm:gap-2.5">
           <Logo className="h-7 w-7 shrink-0 text-white sm:h-8 sm:w-8" />
-          <span className="leading-none">
-            <span className="block text-lg font-bold tracking-tight sm:text-xl">Angeli</span>
-            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 sm:block">
-              Swiss League Fantasy
-            </span>
-          </span>
+          <span className="text-lg font-bold leading-none tracking-tight sm:text-xl">Angeli</span>
         </Link>
 
         {/* Ab sm die vollständige Navigation, darunter das Burger-Menü. */}
