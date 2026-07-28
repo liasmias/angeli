@@ -63,32 +63,61 @@ export async function GET(request: Request) {
   // Fehlende Aufstellungs-Schnappschüsse nachziehen: Der Schnappschuss entsteht
   // sonst nur beim Klick auf "Team speichern" — wer eine Runde lang nichts
   // ändert, hätte gar keine Aufstellung und ginge leer aus. Stattdessen läuft
-  // das zuletzt gespeicherte Team automatisch weiter.
+  // die zuletzt gespielte Aufstellung automatisch weiter.
+  //
+  // Nur für Kader, die an einer FRÜHEREN Runde bereits teilgenommen haben.
+  // Sonst bekäme jemand, der erst jetzt einsteigt, rückwirkend Aufstellungen
+  // für längst gespielte Runden — und damit Punkte, die ihm nicht zustehen.
+  // Kopiert wird aus der letzten echten Aufstellung, nicht aus squad_players:
+  // der aktuelle Kader kann inzwischen für eine spätere Runde umgebaut sein.
   let squadsRolledOver = 0;
-  const { data: alleSquads } = await supabase.from("squads").select("id");
-  for (const s of alleSquads ?? []) {
-    const { count } = await supabase
-      .from("gameweek_squads")
-      .select("*", { count: "exact", head: true })
-      .eq("squad_id", s.id)
-      .eq("gameweek_id", gameweek.id);
-    if (count) continue;
-    const { data: aktuell } = await supabase
-      .from("squad_players")
-      .select("player_id, is_starting, is_captain")
-      .eq("squad_id", s.id);
-    if (!aktuell || aktuell.length === 0) continue;
-    await supabase.from("gameweek_squads").insert(
-      aktuell.map((r) => ({
-        squad_id: s.id,
-        gameweek_id: gameweek.id,
-        player_id: r.player_id,
-        is_starting: r.is_starting,
-        is_captain: r.is_captain,
-        points_earned: null,
-      }))
-    );
-    squadsRolledOver++;
+  const { data: alleGws } = await supabase
+    .from("gameweeks")
+    .select("id, number")
+    .eq("season", settings.season);
+  const frueher = (alleGws ?? []).filter((g) => g.number < gameweek.number);
+  const nummerById = new Map(frueher.map((g) => [g.id, g.number]));
+
+  if (frueher.length > 0) {
+    const { data: alleSquads } = await supabase.from("squads").select("id");
+    for (const s of alleSquads ?? []) {
+      const { count } = await supabase
+        .from("gameweek_squads")
+        .select("*", { count: "exact", head: true })
+        .eq("squad_id", s.id)
+        .eq("gameweek_id", gameweek.id);
+      if (count) continue;
+
+      const { data: vorherige } = await supabase
+        .from("gameweek_squads")
+        .select("gameweek_id, player_id, is_starting, is_captain")
+        .eq("squad_id", s.id)
+        .in(
+          "gameweek_id",
+          frueher.map((g) => g.id)
+        );
+      // Noch nie mitgespielt → nichts nachtragen, sonst gäbe es Punkte
+      // für Runden, in denen dieser Kader gar nicht dabei war.
+      if (!vorherige || vorherige.length === 0) continue;
+
+      const letzteNummer = Math.max(
+        ...vorherige.map((r) => nummerById.get(r.gameweek_id) ?? 0)
+      );
+      const quelle = vorherige.filter(
+        (r) => nummerById.get(r.gameweek_id) === letzteNummer
+      );
+      await supabase.from("gameweek_squads").insert(
+        quelle.map((r) => ({
+          squad_id: s.id,
+          gameweek_id: gameweek.id,
+          player_id: r.player_id,
+          is_starting: r.is_starting,
+          is_captain: r.is_captain,
+          points_earned: null,
+        }))
+      );
+      squadsRolledOver++;
+    }
   }
 
   const { data: clubs } = await supabase.from("clubs").select("id, api_football_team_id");
