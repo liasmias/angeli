@@ -233,6 +233,20 @@ export async function GET(request: Request) {
     }
   }
 
+  // Heartbeat für die Admin-Statusanzeige — nur nach einem vollständigen
+  // Lauf, damit ein stehengebliebener Zeitstempel echte Ausfälle verrät.
+  // Tolerant gegenüber fehlender Spalte (Migration 0011 noch nicht gelaufen).
+  await supabase
+    .from("league_settings")
+    .update({
+      last_sync_at: new Date().toISOString(),
+      last_sync_note: `GW ${gameweek.number}: ${statsSynced} Statistiken, ${liveSpiele} live, ${beendeteSpiele} beendet`,
+    })
+    .eq("id", 1)
+    .then(({ error }) => {
+      if (error) console.warn("Heartbeat nicht geschrieben:", error.message);
+    });
+
   return NextResponse.json({
     gameweek: gameweek.number,
     lockedByDeadline: (newlyLocked ?? []).map((g) => g.number),

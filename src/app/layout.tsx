@@ -5,6 +5,7 @@ import AuthHashError from "@/components/auth-hash-error";
 import Nav from "@/components/nav";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 // Eine einzige Familie für die gesamte App — Abstufung nur über die Stärke.
@@ -27,6 +28,16 @@ export default async function RootLayout({
 }>) {
   const lang = await getLang();
   const t = getDictionary(lang).footer;
+
+  // Admin-Ankündigung — ein Banner auf jeder Seite, solange Text gesetzt ist.
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from("league_settings")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+  const announcement = settings?.announcement ?? null;
+
   return (
     <html
       lang={lang}
@@ -34,6 +45,11 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Nav />
+        {announcement && (
+          <div className="bg-amber-100 px-4 py-2.5 text-center text-sm font-semibold text-amber-900">
+            📣 {announcement}
+          </div>
+        )}
         {/* Fehler aus E-Mail-Links kommen als URL-Fragment und können nur
             im Browser ausgewertet werden — daher hier, auf jeder Seite. */}
         <AuthHashError />

@@ -5,6 +5,45 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import type { NullableStatFields } from "@/lib/database.types";
 
+/**
+ * Stösst den Sync sofort an, statt auf den 15-Minuten-Cron zu warten.
+ * Ruft denselben Endpoint auf wie pg_cron — eine zweite Implementation
+ * würde früher oder später vom echten Sync abweichen.
+ */
+export async function triggerSync(): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  try {
+    const res = await fetch(`${base}/api/cron/sync`, {
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      cache: "no-store",
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) return { ok: false, message: `Sync fehlgeschlagen (${res.status}).` };
+    revalidatePath("/admin");
+    const teile = [
+      body?.gameweek !== undefined ? `Spieltag ${body.gameweek}` : null,
+      body?.statsSynced !== undefined ? `${body.statsSynced} Statistiken` : null,
+      body?.deadlinesAdjusted ? `${body.deadlinesAdjusted} Deadlines angepasst` : null,
+      body?.squadsRolledOver ? `${body.squadsRolledOver} Teams nachgezogen` : null,
+    ].filter(Boolean);
+    return { ok: true, message: `Sync erfolgreich — ${teile.join(", ") || "keine Änderungen"}.` };
+  } catch {
+    return { ok: false, message: "Sync nicht erreichbar — Deployment prüfen." };
+  }
+}
+
+/** Banner-Text für alle Mitglieder; leer speichern blendet ihn aus. */
+export async function saveAnnouncement(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const text = String(formData.get("announcement") ?? "").trim();
+  await supabase
+    .from("league_settings")
+    .update({ announcement: text === "" ? null : text })
+    .eq("id", 1);
+  revalidatePath("/", "layout");
+}
+
 export async function toggleGameweekLock(gameweekId: number, lock: boolean, _formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("gameweeks").update({ is_locked: lock }).eq("id", gameweekId);

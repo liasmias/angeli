@@ -39,6 +39,9 @@ type LeagueSettingsRow = {
   def_slots: number;
   mid_slots: number;
   fwd_slots: number;
+  last_sync_at: string | null;
+  last_sync_note: string | null;
+  announcement: string | null;
 };
 
 type ClubsRow = {
