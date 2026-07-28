@@ -37,7 +37,7 @@ const de = {
     login: "Einloggen",
     toTeam: "Zu meinem Team",
     leaderboard: "Rangliste",
-    startBadge: "Start ab Spieltag 2/3 möglich!",
+    startBadge: "Start ab Spieltag 2-5 möglich!",
     startModalTitle: "Später einsteigen? Kein Problem.",
     startModalText:
       "Du kannst auch nach dem Saisonstart jederzeit mitmachen — deine erste Runde ist immer transferfrei, du baust dein Team also ohne Strafpunkte auf. Steigst du zwischen Runde 3 und 5 ein, wird dir zusätzlich der Durchschnitt der Punkte aller bereits Spielenden gutgeschrieben. Du startest damit nicht bei null, sondern aus der Mitte der Rangliste. Melde dich dafür nach der Registrierung kurz beim Admin — er trägt die Gutschrift ein.",
@@ -254,7 +254,7 @@ const en: typeof de = {
     login: "Log in",
     toTeam: "To my team",
     leaderboard: "Leaderboard",
-    startBadge: "Join from gameweek 2/3!",
+    startBadge: "Join from gameweek 2-5!",
     startModalTitle: "Joining late? No problem.",
     startModalText:
       "You can join any time after the season has started — your first round is always transfer-free, so you build your team without penalty points. If you join between rounds 3 and 5, you are additionally credited the average points of everyone already playing. That means you start from the middle of the leaderboard, not from zero. Just message the admin after signing up — they enter the credit.",
