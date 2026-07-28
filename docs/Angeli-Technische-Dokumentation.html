@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Angeli — Swiss League Fantasy: Technische Dokumentation</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  @page { @bottom-center { content: counter(page); } }
+
+  :root {
+    --deep: #0a2e19;
+    --grass: #1f8b44;
+    --lime: #8ef2a8;
+    --accent: #ff7dff;
+    --magenta: #c21fc2;
+    --danger: #d81e2c;
+    --ink: #16241c;
+    --muted: #5d6b63;
+    --line: #d9e2dc;
+    --bg-soft: #f2f6f3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    font-size: 9.6pt;
+    line-height: 1.5;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  h1, h2, h3, h4 { letter-spacing: -0.015em; margin: 0; }
+  h1 { font-size: 26pt; font-weight: 800; line-height: 1.08; }
+  h2 {
+    font-size: 15pt; font-weight: 800; color: var(--deep);
+    margin: 20pt 0 8pt; padding-bottom: 4pt;
+    border-bottom: 2.5pt solid var(--grass);
+    break-after: avoid;
+  }
+  h3 {
+    font-size: 11.2pt; font-weight: 700; color: var(--deep);
+    margin: 14pt 0 5pt; break-after: avoid;
+  }
+  h4 {
+    font-size: 9.8pt; font-weight: 700; color: var(--grass);
+    margin: 10pt 0 3pt; text-transform: uppercase;
+    letter-spacing: 0.05em; break-after: avoid;
+  }
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 15pt; }
+  li { margin-bottom: 3pt; }
+  b, strong { font-weight: 700; color: var(--deep); }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 8.4pt; background: var(--bg-soft);
+    padding: 0.5pt 3pt; border-radius: 2pt; color: var(--deep);
+  }
+
+  /* Gefaste Ecken wie in der App */
+  .chamfer {
+    clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px),
+      calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+  }
+
+  /* ---------- Titelseite ---------- */
+  .cover {
+    height: 297mm; display: flex; flex-direction: column;
+    justify-content: space-between; break-after: page;
+    background: linear-gradient(115deg, #0a2e19 0%, #145c30 60%, #082616 100%);
+    color: #fff; margin: -18mm -16mm 0; padding: 30mm 18mm 26mm;
+  }
+  .cover-badge {
+    display: inline-block; background: var(--accent); color: var(--deep);
+    font-weight: 800; font-size: 9pt; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 4pt 11pt; border-radius: 99pt;
+  }
+  .cover h1 { font-size: 46pt; margin: 14pt 0 0; }
+  .cover .sub {
+    font-size: 19pt; font-weight: 700; margin-top: 5pt;
+    background: linear-gradient(90deg, var(--accent), var(--lime));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .cover .lead {
+    font-size: 11pt; line-height: 1.55; color: rgba(255,255,255,.82);
+    max-width: 118mm; margin-top: 16pt;
+  }
+  .cover-meta {
+    display: flex; gap: 7mm; font-size: 8.6pt;
+    color: rgba(255,255,255,.6); border-top: 1pt solid rgba(255,255,255,.2);
+    padding-top: 8pt;
+  }
+  .cover-meta b { color: #fff; display: block; font-size: 9.6pt; margin-bottom: 1pt; }
+
+  /* ---------- Bausteine ---------- */
+  .box {
+    background: var(--bg-soft); border-left: 3pt solid var(--grass);
+    padding: 8pt 11pt; margin: 9pt 0; break-inside: avoid;
+  }
+  .box.warn { border-left-color: var(--danger); background: #fdf1f2; }
+  .box.note { border-left-color: var(--magenta); background: #fcf2fc; }
+  .box p:last-child { margin-bottom: 0; }
+  .box .label {
+    font-size: 7.6pt; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--grass); margin-bottom: 3pt;
+  }
+  .box.warn .label { color: var(--danger); }
+  .box.note .label { color: var(--magenta); }
+
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 8.6pt; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th {
+    background: var(--deep); color: #fff; text-align: left;
+    padding: 4.5pt 7pt; font-weight: 700; font-size: 8pt;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  td { padding: 4pt 7pt; border-bottom: 0.6pt solid var(--line); vertical-align: top; }
+  tr:nth-child(even) td { background: #fafcfb; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pos { color: var(--grass); font-weight: 700; }
+  .neg { color: var(--danger); font-weight: 700; }
+
+  figure { margin: 11pt 0; break-inside: avoid; }
+  figcaption {
+    font-size: 7.8pt; color: var(--muted); margin-top: 4pt;
+    padding-left: 2pt; border-left: 2pt solid var(--line);
+  }
+  svg { display: block; max-width: 100%; }
+
+  .page-break { break-before: page; }
+  .avoid-break { break-inside: avoid; }
+
+  .toc-item {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 3.5pt 0; border-bottom: 0.6pt dotted var(--line);
+  }
+  .toc-item .n { font-weight: 800; color: var(--grass); width: 16pt; flex-shrink: 0; }
+  .toc-item .t { flex: 1; }
+  .toc-item .d { color: var(--muted); font-size: 8.4pt; }
+</style>
+</head>
+<body>
+
+<!-- ============ TITELSEITE ============ -->
+<section class="cover">
+  <div>
+    <svg width="46" height="44" viewBox="0 0 319.9 302.69" fill="#fff" style="margin-bottom:16pt">
+      <path d="M319.9,0v17.22H20.08v285.47H0V8.28C0,3.71,3.71,0,8.28,0h311.62Z"/>
+      <path d="M9.45,20.15v20.88l44.78,13.28v59.97l-44.78,13.28v20.88l165.25-50.55c3.45-1.05,5.8-4.24,5.8-7.84v-11.63c0-3.54-2.31-6.66-5.69-7.7L9.45,20.15ZM73.84,108.47v-48.34l81.5,24.17-81.5,24.17Z"/>
+    </svg>
+    <span class="cover-badge">Technische Dokumentation</span>
+    <h1>Angeli</h1>
+    <div class="sub">Swiss League Fantasy</div>
+    <p class="lead">
+      Vollständige Beschreibung von Aufbau, Spielregeln, Datenmodell und Betrieb —
+      so detailliert, dass sich das Spiel daraus von Grund auf nachbauen liesse.
+      Inklusive der Fehler, die beim ersten Bau gemacht wurden, und wie sie
+      vermieden werden.
+    </p>
+  </div>
+  <div class="cover-meta">
+    <div><b>Saison</b>2026/27, Schweizer Liga</div>
+    <div><b>Stand</b>Juli 2026</div>
+    <div><b>Umfang</b>~8’350 Zeilen, 15 Migrationen</div>
+    <div><b>Live</b>angeli-fantasy.org</div>
+  </div>
+</section>
+
+<!-- ============ INHALT ============ -->
+<h2 style="margin-top:0">Inhalt</h2>
+<div class="toc-item"><span class="n">1</span><span class="t">Was das Spiel ist</span><span class="d">Grundidee, Spielschleife</span></div>
+<div class="toc-item"><span class="n">2</span><span class="t">Systemarchitektur</span><span class="d">Dienste, Kosten, Datenfluss</span></div>
+<div class="toc-item"><span class="n">3</span><span class="t">Datenmodell</span><span class="d">16 Tabellen, Beziehungen</span></div>
+<div class="toc-item"><span class="n">4</span><span class="t">Spielregeln im Detail</span><span class="d">Kader, Punkte, Transfers, Chips</span></div>
+<div class="toc-item"><span class="n">5</span><span class="t">Der Spieltag-Lebenszyklus</span><span class="d">Deadline, Live, Abschluss</span></div>
+<div class="toc-item"><span class="n">6</span><span class="t">Automatiken</span><span class="d">Rollover, Einwechslung, Binde</span></div>
+<div class="toc-item"><span class="n">7</span><span class="t">Sicherheitsmodell</span><span class="d">RLS, Schreibpfade, Angriffe</span></div>
+<div class="toc-item"><span class="n">8</span><span class="t">Administration</span><span class="d">Werkzeuge, Überwachung</span></div>
+<div class="toc-item"><span class="n">9</span><span class="t">Fallstricke</span><span class="d">Gefundene Fehler, Lehren</span></div>
+<div class="toc-item"><span class="n">10</span><span class="t">Nachbau-Anleitung</span><span class="d">Reihenfolge, Prüfpunkte</span></div>
+
+<!-- ============ 1 ============ -->
+<h2>1 &nbsp;Was das Spiel ist</h2>
+
+<p>
+  <b>Angeli</b> ist ein Fantasy-Football-Spiel für die Schweizer Liga, gebaut als
+  Ersatz für die eingestellte 20min-Fantasy-Liga. Mitglieder stellen aus echten
+  Ligaspielern ein Team zusammen und sammeln Punkte danach, wie diese Spieler in
+  echten Partien abschneiden. Das Vorbild ist Fantasy Premier League.
+</p>
+
+<h3>Die Spielschleife</h3>
+<figure>
+  <svg viewBox="0 0 700 172" width="700" height="172" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="a1" markerWidth="9" markerHeight="9" refX="7.5" refY="3.2" orient="auto">
+        <path d="M0,0 L7.5,3.2 L0,6.4 Z" fill="#1f8b44"/>
+      </marker>
+    </defs>
+    <g>
+      <rect x="4" y="34" width="122" height="60" rx="0" fill="#0a2e19"/>
+      <text x="65" y="58" fill="#8ef2a8" font-size="10.5" font-weight="bold" text-anchor="middle">1 · Aufstellen</text>
+      <text x="65" y="73" fill="#ffffff" font-size="8.5" text-anchor="middle" opacity=".8">Elf wählen, Captain,</text>
+      <text x="65" y="84" fill="#ffffff" font-size="8.5" text-anchor="middle" opacity=".8">Transfers, Chips</text>
+    </g>
+    <line x1="130" y1="64" x2="164" y2="64" stroke="#1f8b44" stroke-width="1.8" marker-end="url(#a1)"/>
+    <g>
+      <rect x="168" y="34" width="122" height="60" fill="#c21fc2"/>
+      <text x="229" y="58" fill="#fff" font-size="10.5" font-weight="bold" text-anchor="middle">2 · Deadline</text>
+      <text x="229" y="73" fill="#fff" font-size="8.5" text-anchor="middle" opacity=".85">1 Std. vor Anpfiff</text>
+      <text x="229" y="84" fill="#fff" font-size="8.5" text-anchor="middle" opacity=".85">Aufstellung friert ein</text>
+    </g>
+    <line x1="294" y1="64" x2="328" y2="64" stroke="#1f8b44" stroke-width="1.8" marker-end="url(#a1)"/>
+    <g>
+      <rect x="332" y="34" width="122" height="60" fill="#1f8b44"/>
+      <text x="393" y="58" fill="#fff" font-size="10.5" font-weight="bold" text-anchor="middle">3 · Live</text>
+      <text x="393" y="73" fill="#fff" font-size="8.5" text-anchor="middle" opacity=".9">Punkte alle 15 Min.</text>
+      <text x="393" y="84" fill="#fff" font-size="8.5" text-anchor="middle" opacity=".9">aus der Liga-API</text>
+    </g>
+    <line x1="458" y1="64" x2="492" y2="64" stroke="#1f8b44" stroke-width="1.8" marker-end="url(#a1)"/>
+    <g>
+      <rect x="496" y="34" width="122" height="60" fill="#0a2e19"/>
+      <text x="557" y="52" fill="#8ef2a8" font-size="10.5" font-weight="bold" text-anchor="middle">4 · Abschluss</text>
+      <text x="557" y="67" fill="#ffffff" font-size="8.5" text-anchor="middle" opacity=".8">Einwechslungen,</text>
+      <text x="557" y="78" fill="#ffffff" font-size="8.5" text-anchor="middle" opacity=".8">Binde, Rangliste</text>
+    </g>
+    <path d="M618,64 L648,64 L648,140 L65,140 L65,98" fill="none" stroke="#1f8b44"
+      stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#a1)"/>
+    <text x="356" y="153" fill="#5d6b63" font-size="8" text-anchor="middle">
+      nächster Spieltag — 22 Runden pro Saison
+    </text>
+  </svg>
+  <figcaption>
+    Die vier Phasen jeder Runde. Nur Phase 1 erfordert eine Handlung des Mitglieds;
+    2 bis 4 laufen vollständig automatisch.
+  </figcaption>
+</figure>
+
+<h3>Bewusste Designentscheidungen</h3>
+<table>
+  <tr><th style="width:32%">Entscheidung</th><th>Begründung</th></tr>
+  <tr><td><b>Kein Geld im Spiel</b></td><td>Keine Einsätze, keine Geldpreise — hält das Projekt ausserhalb des Schweizer Geldspielgesetzes.</td></tr>
+  <tr><td><b>Punkte nie gespeichert, immer berechnet</b></td><td>Die Rangliste ist eine Datenbank-View über die Rohdaten. Es gibt keinen Punktestand, der von der Realität abweichen könnte.</td></tr>
+  <tr><td><b>Budget als Differenz, nicht als Konto</b></td><td>Restbudget = Obergrenze minus Summe der aktuellen Spielerpreise. Kein Kontostand, der inkonsistent werden kann.</td></tr>
+  <tr><td><b>Alle Schreibvorgänge über den Server</b></td><td>Der Browser darf Spielstandtabellen nicht beschreiben. Sonst liesse sich jede Validierung per direktem API-Aufruf umgehen.</td></tr>
+  <tr><td><b>Späteinstieg ausdrücklich vorgesehen</b></td><td>Erste Runde transferfrei, zwischen Runde 3 und 5 zusätzlich Punkte-Gutschrift in Höhe des Durchschnitts.</td></tr>
+</table>
+
+<!-- ============ 2 ============ -->
+<h2>2 &nbsp;Systemarchitektur</h2>
+
+<p>
+  Fünf Dienste, alle im Gratis- oder Kleinsttarif. Die Gesamtkosten liegen bei
+  etwa 20–30&nbsp;CHF pro Monat, praktisch vollständig für den Datenzugang.
+</p>
+
+<figure>
+  <svg viewBox="0 0 700 340" width="700" height="340" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="a2" markerWidth="8" markerHeight="8" refX="6.8" refY="2.9" orient="auto">
+        <path d="M0,0 L6.8,2.9 L0,5.8 Z" fill="#5d6b63"/>
+      </marker>
+      <marker id="a3" markerWidth="8" markerHeight="8" refX="6.8" refY="2.9" orient="auto">
+        <path d="M0,0 L6.8,2.9 L0,5.8 Z" fill="#c21fc2"/>
+      </marker>
+    </defs>
+
+    <!-- Browser -->
+    <rect x="8" y="16" width="150" height="86" fill="#fff" stroke="#0a2e19" stroke-width="1.6"/>
+    <text x="83" y="36" font-size="10.5" font-weight="bold" fill="#0a2e19" text-anchor="middle">Browser</text>
+    <text x="83" y="52" font-size="8" fill="#5d6b63" text-anchor="middle">Mitglied / Admin</text>
+    <line x1="24" y1="60" x2="142" y2="60" stroke="#d9e2dc"/>
+    <text x="83" y="74" font-size="7.6" fill="#16241c" text-anchor="middle">React-Komponenten,</text>
+    <text x="83" y="85" font-size="7.6" fill="#16241c" text-anchor="middle">anon-Key, Session-Cookie</text>
+
+    <!-- Vercel -->
+    <rect x="216" y="10" width="182" height="152" fill="#0a2e19"/>
+    <text x="307" y="30" font-size="10.5" font-weight="bold" fill="#8ef2a8" text-anchor="middle">Vercel · Next.js 16</text>
+    <rect x="228" y="40" width="158" height="30" fill="rgba(255,255,255,.1)"/>
+    <text x="307" y="52" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">Server Components</text>
+    <text x="307" y="63" font-size="7.4" fill="#fff" text-anchor="middle" opacity=".75">Seiten rendern, Daten lesen</text>
+    <rect x="228" y="75" width="158" height="30" fill="rgba(255,255,255,.1)"/>
+    <text x="307" y="87" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">Server Actions</text>
+    <text x="307" y="98" font-size="7.4" fill="#fff" text-anchor="middle" opacity=".75">Validieren &amp; schreiben</text>
+    <rect x="228" y="110" width="158" height="40" fill="#c21fc2"/>
+    <text x="307" y="124" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">/api/cron/sync</text>
+    <text x="307" y="136" font-size="7.4" fill="#fff" text-anchor="middle" opacity=".85">Herzstück: alle 15 Min.</text>
+    <text x="307" y="146" font-size="7.4" fill="#fff" text-anchor="middle" opacity=".85">Bearer-Token geschützt</text>
+
+    <!-- Supabase -->
+    <rect x="456" y="10" width="182" height="152" fill="#fff" stroke="#1f8b44" stroke-width="1.6"/>
+    <text x="547" y="30" font-size="10.5" font-weight="bold" fill="#0a2e19" text-anchor="middle">Supabase</text>
+    <rect x="468" y="40" width="158" height="30" fill="#f2f6f3"/>
+    <text x="547" y="52" font-size="8" fill="#0a2e19" text-anchor="middle" font-weight="bold">PostgreSQL + RLS</text>
+    <text x="547" y="63" font-size="7.4" fill="#5d6b63" text-anchor="middle">16 Tabellen, 1 View</text>
+    <rect x="468" y="75" width="158" height="30" fill="#f2f6f3"/>
+    <text x="547" y="87" font-size="8" fill="#0a2e19" text-anchor="middle" font-weight="bold">Auth</text>
+    <text x="547" y="98" font-size="7.4" fill="#5d6b63" text-anchor="middle">E-Mail + Passwort</text>
+    <rect x="468" y="110" width="158" height="40" fill="#f2f6f3"/>
+    <text x="547" y="124" font-size="8" fill="#0a2e19" text-anchor="middle" font-weight="bold">pg_cron + pg_net</text>
+    <text x="547" y="136" font-size="7.4" fill="#5d6b63" text-anchor="middle">Taktgeber, ruft den</text>
+    <text x="547" y="146" font-size="7.4" fill="#5d6b63" text-anchor="middle">Sync-Endpunkt auf</text>
+
+    <!-- Externe -->
+    <rect x="8" y="196" width="150" height="52" fill="#fff" stroke="#c21fc2" stroke-width="1.4"/>
+    <text x="83" y="215" font-size="9.5" font-weight="bold" fill="#c21fc2" text-anchor="middle">API-Football</text>
+    <text x="83" y="229" font-size="7.4" fill="#5d6b63" text-anchor="middle">Plan Pro · 7500 Anfragen/Tag</text>
+    <text x="83" y="240" font-size="7.4" fill="#5d6b63" text-anchor="middle">Resultate, Statistiken</text>
+
+    <rect x="216" y="196" width="182" height="52" fill="#fff" stroke="#d9e2dc" stroke-width="1.4"/>
+    <text x="307" y="215" font-size="9.5" font-weight="bold" fill="#0a2e19" text-anchor="middle">Cloudflare</text>
+    <text x="307" y="229" font-size="7.4" fill="#5d6b63" text-anchor="middle">DNS · Turnstile-Bot-Schutz</text>
+    <text x="307" y="240" font-size="7.4" fill="#5d6b63" text-anchor="middle">bei Registrierung und Login</text>
+
+    <rect x="456" y="196" width="182" height="52" fill="#fff" stroke="#d9e2dc" stroke-width="1.4"/>
+    <text x="547" y="215" font-size="9.5" font-weight="bold" fill="#0a2e19" text-anchor="middle">Resend</text>
+    <text x="547" y="229" font-size="7.4" fill="#5d6b63" text-anchor="middle">SMTP für Supabase-Auth</text>
+    <text x="547" y="240" font-size="7.4" fill="#5d6b63" text-anchor="middle">Passwort-Zurücksetzen</text>
+
+    <!-- Verbindungen -->
+    <line x1="158" y1="58" x2="212" y2="58" stroke="#5d6b63" stroke-width="1.4" marker-end="url(#a2)"/>
+    <line x1="398" y1="58" x2="452" y2="58" stroke="#5d6b63" stroke-width="1.4" marker-end="url(#a2)"/>
+    <path d="M456,130 L424,130 L424,175 L307,175 L307,130" fill="none" stroke="#c21fc2"
+      stroke-width="1.6" marker-end="url(#a3)"/>
+    <text x="368" y="171" font-size="7.2" fill="#c21fc2" text-anchor="middle" font-weight="bold">HTTP alle 15 Min.</text>
+    <path d="M270,162 L270,182 L120,182 L120,192" fill="none" stroke="#5d6b63" stroke-width="1.3" marker-end="url(#a2)"/>
+    <path d="M83,102 L83,120 L200,120 L200,192" fill="none" stroke="#5d6b63" stroke-width="1.3" marker-end="url(#a2)"/>
+    <path d="M600,162 L600,192" fill="none" stroke="#5d6b63" stroke-width="1.3" marker-end="url(#a2)"/>
+
+    <!-- Legende -->
+    <rect x="8" y="272" width="630" height="56" fill="#f2f6f3"/>
+    <text x="20" y="289" font-size="8" font-weight="bold" fill="#0a2e19">Wichtig für den Nachbau</text>
+    <text x="20" y="303" font-size="7.6" fill="#16241c">Der Dienstschlüssel (service role) und der API-Schlüssel liegen ausschliesslich auf dem Server. Der Browser kennt nur den</text>
+    <text x="20" y="314" font-size="7.6" fill="#16241c">öffentlichen anon-Key, der durch Row Level Security streng begrenzt ist. Der Sync läuft serverseitig — deshalb greifen</text>
+    <text x="20" y="325" font-size="7.6" fill="#16241c">Domain- oder CORS-Beschränkungen von Daten-APIs hier gar nicht erst.</text>
+  </svg>
+  <figcaption>
+    Gesamtarchitektur. Der einzige bewegliche Teil im Dauerbetrieb ist der
+    Sync-Endpunkt; alles andere reagiert nur auf Anfragen.
+  </figcaption>
+</figure>
+
+<h3>Warum pg_cron statt Vercel-Cron</h3>
+<div class="box">
+  <div class="label">Kostenfalle</div>
+  <p>
+    Vercels Gratistarif erlaubt nur <b>einen Cron-Lauf pro Tag</b>. Für Live-Punkte
+    während laufender Spiele ist das unbrauchbar. Lösung: <code>pg_cron</code> in
+    Supabase übernimmt den 15-Minuten-Takt und ruft den Endpunkt per
+    <code>pg_net</code> über HTTP auf. Der Vercel-Cron bleibt als täglicher
+    Rückfall bestehen. Kosten dafür: null.
+  </p>
+</div>
+<!-- ============ 3 DATENMODELL ============ -->
+<h2 class="page-break">3 &nbsp;Datenmodell</h2>
+
+<p>
+  16 Tabellen und eine View. Die Aufteilung folgt einem Grundsatz: <b>Stammdaten</b>
+  (Clubs, Spieler, Spieltage) sind für alle lesbar, <b>Spielstände</b> (Kader,
+  Aufstellungen, Transfers) gehören je einem Mitglied und sind für den Browser
+  schreibgeschützt.
+</p>
+
+<figure>
+  <svg viewBox="0 0 700 430" width="700" height="430" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="rel" markerWidth="7" markerHeight="7" refX="6" refY="2.6" orient="auto">
+        <path d="M0,0 L6,2.6 L0,5.2 Z" fill="#8a978f"/>
+      </marker>
+    </defs>
+
+    <!-- Spalte 1: Stammdaten -->
+    <text x="14" y="14" font-size="8" font-weight="bold" fill="#1f8b44" letter-spacing="1">STAMMDATEN · öffentlich lesbar</text>
+    <rect x="10" y="22" width="150" height="40" fill="#fff" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="20" y="37" font-size="9" font-weight="bold" fill="#0a2e19">league_settings</text>
+    <text x="20" y="50" font-size="7" fill="#5d6b63">Einzelzeile: Budget, Kader-</text>
+    <text x="20" y="58" font-size="7" fill="#5d6b63">grössen, Transferkosten</text>
+
+    <rect x="10" y="70" width="150" height="34" fill="#fff" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="20" y="85" font-size="9" font-weight="bold" fill="#0a2e19">clubs</text>
+    <text x="20" y="97" font-size="7" fill="#5d6b63">12 Vereine, api_football_id</text>
+
+    <rect x="10" y="112" width="150" height="46" fill="#fff" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="20" y="127" font-size="9" font-weight="bold" fill="#0a2e19">players</text>
+    <text x="20" y="139" font-size="7" fill="#5d6b63">~365 Spieler · Position, Preis,</text>
+    <text x="20" y="148" font-size="7" fill="#5d6b63">is_active, api_football_id</text>
+
+    <rect x="10" y="166" width="150" height="40" fill="#fff" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="20" y="181" font-size="9" font-weight="bold" fill="#0a2e19">gameweeks</text>
+    <text x="20" y="193" font-size="7" fill="#5d6b63">22 Runden · deadline,</text>
+    <text x="20" y="201" font-size="7" fill="#5d6b63">is_locked</text>
+
+    <rect x="10" y="214" width="150" height="40" fill="#fff" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="20" y="229" font-size="9" font-weight="bold" fill="#0a2e19">fixtures</text>
+    <text x="20" y="241" font-size="7" fill="#5d6b63">132 Partien · kickoff,</text>
+    <text x="20" y="249" font-size="7" fill="#5d6b63">status, Tore</text>
+
+    <!-- Spalte 2: Leistungsdaten -->
+    <text x="196" y="14" font-size="8" font-weight="bold" fill="#c21fc2" letter-spacing="1">LEISTUNG · nur Server schreibt</text>
+    <rect x="192" y="22" width="160" height="52" fill="#fcf2fc" stroke="#c21fc2" stroke-width="1.3"/>
+    <text x="202" y="37" font-size="9" font-weight="bold" fill="#0a2e19">player_stats</text>
+    <text x="202" y="49" font-size="7" fill="#5d6b63">Rohdaten je Spieler+Runde:</text>
+    <text x="202" y="58" font-size="7" fill="#5d6b63">Minuten, Tore, Assists, Karten,</text>
+    <text x="202" y="67" font-size="7" fill="#5d6b63">Paraden, Gegentore, rating</text>
+
+    <rect x="192" y="82" width="160" height="42" fill="#fcf2fc" stroke="#c21fc2" stroke-width="1.3"/>
+    <text x="202" y="97" font-size="9" font-weight="bold" fill="#0a2e19">player_stats_overrides</text>
+    <text x="202" y="109" font-size="7" fill="#5d6b63">Admin-Korrekturen; jedes Feld</text>
+    <text x="202" y="118" font-size="7" fill="#5d6b63">einzeln überschreibbar (NULL = API)</text>
+
+    <rect x="192" y="132" width="160" height="46" fill="#fcf2fc" stroke="#c21fc2" stroke-width="1.3"/>
+    <text x="202" y="147" font-size="9" font-weight="bold" fill="#0a2e19">fantasy_points</text>
+    <text x="202" y="159" font-size="7" fill="#5d6b63">Berechnetes Ergebnis je Spieler</text>
+    <text x="202" y="168" font-size="7" fill="#5d6b63">+ breakdown (JSON je Kategorie)</text>
+
+    <!-- Spalte 3: Mitglieder -->
+    <text x="388" y="14" font-size="8" font-weight="bold" fill="#0a2e19" letter-spacing="1">MITGLIEDER &amp; SPIELSTAND</text>
+    <rect x="384" y="22" width="150" height="40" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="37" font-size="9" font-weight="bold" fill="#0a2e19">profiles</text>
+    <text x="394" y="49" font-size="7" fill="#5d6b63">username, role, is_blocked</text>
+    <text x="394" y="57" font-size="7" fill="#5d6b63">1:1 zu auth.users (Trigger)</text>
+
+    <rect x="384" y="70" width="150" height="34" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="85" font-size="9" font-weight="bold" fill="#0a2e19">squads</text>
+    <text x="394" y="97" font-size="7" fill="#5d6b63">1 pro Mitglied (Trigger)</text>
+
+    <rect x="384" y="112" width="150" height="46" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="127" font-size="9" font-weight="bold" fill="#0a2e19">squad_players</text>
+    <text x="394" y="139" font-size="7" fill="#5d6b63">AKTUELLER Kader, 15 Zeilen</text>
+    <text x="394" y="148" font-size="7" fill="#5d6b63">is_starting, is_captain, bench_order</text>
+
+    <rect x="384" y="166" width="150" height="58" fill="#0a2e19"/>
+    <text x="394" y="181" font-size="9" font-weight="bold" fill="#8ef2a8">gameweek_squads</text>
+    <text x="394" y="193" font-size="7" fill="#fff" opacity=".85">EINGEFRORENE Aufstellung</text>
+    <text x="394" y="202" font-size="7" fill="#fff" opacity=".85">je Runde + points_earned</text>
+    <text x="394" y="211" font-size="7" fill="#fff" opacity=".85">auto_subbed, is_vice_captain</text>
+    <text x="394" y="220" font-size="7" fill="#ff7dff">→ Grundlage der Rangliste</text>
+
+    <rect x="384" y="232" width="150" height="34" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="247" font-size="9" font-weight="bold" fill="#0a2e19">transfers</text>
+    <text x="394" y="259" font-size="7" fill="#5d6b63">je Zeile 1 Transfer + Kosten</text>
+
+    <rect x="384" y="274" width="150" height="34" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="289" font-size="9" font-weight="bold" fill="#0a2e19">chip_usages</text>
+    <text x="394" y="301" font-size="7" fill="#5d6b63">Wildcard / Bench Boost</text>
+
+    <rect x="384" y="316" width="150" height="34" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="331" font-size="9" font-weight="bold" fill="#0a2e19">point_adjustments</text>
+    <text x="394" y="343" font-size="7" fill="#5d6b63">Admin-Gutschriften, mit Grund</text>
+
+    <rect x="384" y="358" width="150" height="34" fill="#f2f6f3" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="394" y="373" font-size="9" font-weight="bold" fill="#0a2e19">reports</text>
+    <text x="394" y="385" font-size="7" fill="#5d6b63">Meldungen an die Admins</text>
+
+    <!-- View -->
+    <rect x="560" y="166" width="132" height="82" fill="#ff7dff"/>
+    <text x="626" y="184" font-size="9.5" font-weight="bold" fill="#0a2e19" text-anchor="middle">standings</text>
+    <text x="626" y="196" font-size="7" fill="#0a2e19" text-anchor="middle">VIEW · security_invoker</text>
+    <line x1="572" y1="202" x2="680" y2="202" stroke="rgba(0,0,0,.2)"/>
+    <text x="572" y="214" font-size="6.8" fill="#0a2e19">Startelf-Punkte</text>
+    <text x="572" y="223" font-size="6.8" fill="#0a2e19">+ Captain nochmals</text>
+    <text x="572" y="232" font-size="6.8" fill="#0a2e19">− Transferkosten</text>
+    <text x="572" y="241" font-size="6.8" fill="#0a2e19">+ Gutschriften</text>
+
+    <!-- Beziehungen -->
+    <line x1="160" y1="135" x2="188" y2="55" stroke="#8a978f" stroke-width="1" marker-end="url(#rel)"/>
+    <line x1="160" y1="186" x2="188" y2="60" stroke="#8a978f" stroke-width="1" marker-end="url(#rel)"/>
+    <line x1="352" y1="155" x2="380" y2="196" stroke="#8a978f" stroke-width="1" marker-end="url(#rel)"/>
+    <line x1="534" y1="200" x2="556" y2="200" stroke="#8a978f" stroke-width="1.4" marker-end="url(#rel)"/>
+    <line x1="534" y1="249" x2="548" y2="249" stroke="#8a978f" stroke-width="1"/>
+    <path d="M548,249 L548,215 L556,215" fill="none" stroke="#8a978f" stroke-width="1" marker-end="url(#rel)"/>
+    <line x1="534" y1="333" x2="548" y2="333" stroke="#8a978f" stroke-width="1"/>
+    <path d="M548,333 L548,232 L556,232" fill="none" stroke="#8a978f" stroke-width="1" marker-end="url(#rel)"/>
+
+    <text x="14" y="410" font-size="7.4" fill="#5d6b63">
+      Der entscheidende Trick: <tspan font-weight="bold" fill="#0a2e19">squad_players</tspan> ist der lebende Kader,
+      <tspan font-weight="bold" fill="#0a2e19">gameweek_squads</tspan> die eingefrorene Kopie je Runde.
+    </text>
+    <text x="14" y="421" font-size="7.4" fill="#5d6b63">
+      Nur Letztere zählt für Punkte — dadurch ändert ein Transfer heute nie das Ergebnis von letzter Woche.
+    </text>
+  </svg>
+  <figcaption>
+    Datenmodell mit Schreibrechten. Grün = für alle lesbar, Magenta = nur Server,
+    Grau = mitgliedsgebunden. Die Rangliste ist eine reine Sicht auf die Rohdaten.
+  </figcaption>
+</figure>
+
+<h3>Die zentrale Trennung: lebender Kader vs. eingefrorene Aufstellung</h3>
+<p>
+  Dies ist die wichtigste Entwurfsentscheidung des ganzen Systems und der Punkt,
+  an dem ein Nachbau am ehesten scheitert.
+</p>
+<table>
+  <tr><th style="width:24%"></th><th>squad_players</th><th>gameweek_squads</th></tr>
+  <tr><td><b>Inhalt</b></td><td>Der Kader, wie er <i>jetzt</i> aussieht</td><td>Kopie der Aufstellung <i>je Runde</i></td></tr>
+  <tr><td><b>Zeilen</b></td><td>Genau 15 pro Mitglied</td><td>15 pro Mitglied <i>und</i> Runde</td></tr>
+  <tr><td><b>Wird geändert</b></td><td>Bei jedem Speichern</td><td>Beim Speichern für die offene Runde; danach nur noch durch Automatiken</td></tr>
+  <tr><td><b>Zählt für Punkte</b></td><td>Nein</td><td><b>Ja — ausschliesslich</b></td></tr>
+  <tr><td><b>Sichtbar für andere</b></td><td>Nie</td><td>Erst nach Ablauf der Deadline</td></tr>
+</table>
+
+<div class="box warn">
+  <div class="label">Fallstrick beim Nachbau</div>
+  <p>
+    Es ist verlockend, die Aufstellung einer vergangenen Runde aus
+    <code>squad_players</code> zu rekonstruieren. Das ist falsch: Sobald jemand für
+    die nächste Runde umbaut, verändert sich dieser Datensatz. Alles, was rückwirkend
+    zählt, muss zum Zeitpunkt des Deadline-Ablaufs kopiert worden sein.
+  </p>
+</div>
+
+<h3>Tabellen im Einzelnen</h3>
+<table>
+  <tr><th style="width:22%">Tabelle</th><th style="width:44%">Zweck</th><th>Besonderheit</th></tr>
+  <tr><td><code>league_settings</code></td><td>Alle Stellschrauben in einer Zeile</td><td>Auch Sync-Heartbeat und Ankündigungs-Banner</td></tr>
+  <tr><td><code>clubs</code></td><td>12 Vereine</td><td><code>short_name</code> ist zugleich Dateiname des Trikot-Bildes</td></tr>
+  <tr><td><code>players</code></td><td>Kaderspieler aller Clubs</td><td><code>is_active</code> statt Löschen — Abgänge bleiben in alten Aufstellungen gültig</td></tr>
+  <tr><td><code>gameweeks</code></td><td>22 Runden mit Deadline</td><td><code>is_locked</code> wird automatisch gesetzt, ist aber vom Admin überschreibbar</td></tr>
+  <tr><td><code>fixtures</code></td><td>132 Partien</td><td><code>status</code> aus der API steuert Live-Erkennung</td></tr>
+  <tr><td><code>profiles</code></td><td>Mitgliedsdaten</td><td>Per Trigger aus <code>auth.users</code> erzeugt; enthält bewusst <b>keine</b> E-Mail</td></tr>
+  <tr><td><code>squads</code></td><td>Ein Kader je Mitglied</td><td>Ebenfalls per Trigger erzeugt</td></tr>
+  <tr><td><code>player_stats</code></td><td>Rohdaten aus der API</td><td>Eindeutig je (Spieler, Runde); wird bei jedem Sync überschrieben</td></tr>
+  <tr><td><code>fantasy_points</code></td><td>Errechnete Punkte</td><td><code>breakdown</code> als JSON — Grundlage des Spieler-Popups</td></tr>
+  <tr><td><code>transfers</code></td><td>Eine Zeile je Transfer</td><td>Guthaben wird <b>daraus abgeleitet</b>, nicht in einem Zähler geführt</td></tr>
+</table>
+
+<!-- ============ 4 SPIELREGELN ============ -->
+<h2>4 &nbsp;Spielregeln im Detail</h2>
+
+<h3>4.1 Kader und Budget</h3>
+<table>
+  <tr><th style="width:38%">Regel</th><th>Wert</th></tr>
+  <tr><td>Kadergrösse</td><td><b>15 Spieler</b> — 2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer</td></tr>
+  <tr><td>Startelf</td><td><b>11 Spieler</b>, die übrigen 4 auf der Bank</td></tr>
+  <tr><td>Budget</td><td><b>100 Mio.</b> als Basis</td></tr>
+  <tr><td>Preisspanne</td><td>4.0 – 10.0, in 0.5er-Schritten</td></tr>
+  <tr><td>Formation</td><td>Genau 1 TW; mind. 3 DEF, 3 MID, 1 ST; höchstens 5 DEF, 5 MID, 3 ST</td></tr>
+</table>
+
+<div class="box note">
+  <div class="label">Budget-Besonderheit</div>
+  <p>
+    Das Restbudget ist <b>keine gespeicherte Zahl</b>, sondern die Differenz
+    zwischen Obergrenze und der Summe der aktuellen Spielerpreise. Die persönliche
+    Obergrenze ist <code>max(100, Wert des gespeicherten Teams)</code>: Steigen
+    Preise gehaltener Spieler, wächst der Spielraum mit — niemand wird durch eine
+    Preisanpassung handlungsunfähig. Mehr Wert einkaufen als vorhanden geht dennoch nicht.
+  </p>
+</div>
+
+<h3>4.2 Punktetabelle</h3>
+<table>
+  <tr><th>Ereignis</th><th class="num" style="width:14%">Punkte</th><th style="width:38%">Bedingung</th></tr>
+  <tr><td>Einsatz bis 59 Minuten</td><td class="num pos">+1</td><td>—</td></tr>
+  <tr><td>Einsatz ab 60 Minuten</td><td class="num pos">+2</td><td>—</td></tr>
+  <tr><td>Tor eines Torhüters oder Verteidigers</td><td class="num pos">+6</td><td>je Tor</td></tr>
+  <tr><td>Tor eines Mittelfeldspielers</td><td class="num pos">+5</td><td>je Tor</td></tr>
+  <tr><td>Tor eines Stürmers</td><td class="num pos">+4</td><td>je Tor</td></tr>
+  <tr><td>Assist</td><td class="num pos">+3</td><td>je Assist, alle Positionen</td></tr>
+  <tr><td>Ohne Gegentor (TW, DEF)</td><td class="num pos">+4</td><td>nur ab 60 Minuten</td></tr>
+  <tr><td>Je 2 Paraden eines Torhüters</td><td class="num pos">+1</td><td>abgerundet</td></tr>
+  <tr><td>Gehaltener Elfmeter</td><td class="num pos">+5</td><td>—</td></tr>
+  <tr><td>Je 2 Gegentore (TW, DEF)</td><td class="num neg">−1</td><td><b>nur ab 60 Minuten</b>, abgerundet</td></tr>
+  <tr><td>Gelbe Karte</td><td class="num neg">−1</td><td>—</td></tr>
+  <tr><td>Verursachter Elfmeter</td><td class="num neg">−2</td><td>—</td></tr>
+  <tr><td>Eigentor</td><td class="num neg">−2</td><td>API liefert dies nicht — Admin trägt nach</td></tr>
+  <tr><td>Rote Karte</td><td class="num neg">−3</td><td>—</td></tr>
+</table>
+
+<div class="box warn">
+  <div class="label">Die 60-Minuten-Schwelle beim Gegentor-Abzug</div>
+  <p>
+    Beim Vorbild zählen nur Gegentore, die fallen, <i>während</i> ein Spieler auf dem
+    Platz steht. Die Datenquelle liefert das für Feldspieler nicht — sie kennt nur die
+    Team-Gegentore. Ohne Schwelle kassierte ein in der 73. Minute eingewechselter
+    Verteidiger den vollen Abzug für Tore, die vor seiner Einwechslung fielen; sein
+    Einsatzpunkt wurde dadurch regelmässig auf null aufgefressen. Die Kopplung an
+    dieselbe 60-Minuten-Schwelle wie beim Zu-Null löst das sauber und ist erklärbar.
+  </p>
+</div>
+
+<h3>4.3 Captain und Vize-Captain</h3>
+<ul>
+  <li>Der <b>Captain</b> bringt die doppelte Punktzahl — <b>auch im Minus</b>.</li>
+  <li>Spielt er <b>keine Minute</b>, übernimmt der <b>Vize-Captain</b> die Verdopplung — sofern dieser selbst gespielt hat.</li>
+  <li>Beide müssen in der Startelf stehen und dürfen nicht dieselbe Person sein.</li>
+</ul>
+
+<h3>4.4 Transfers</h3>
+<ul>
+  <li><b>1 Gratis-Transfer</b> pro Spieltag; jeder weitere kostet <b>4 Punkte</b>.</li>
+  <li>Nicht genutzte Transfers <b>sammeln sich an</b>, maximal 5.</li>
+  <li>In der <b>ersten eigenen Runde</b> sind Transfers unbegrenzt und gratis.</li>
+</ul>
+
+<div class="box">
+  <div class="label">Warum das Guthaben nicht gezählt, sondern hergeleitet wird</div>
+  <p>
+    Ein Zählerfeld <code>free_transfers_remaining</code> war die ursprüngliche
+    Lösung — und ein Fehler: Es wurde bei jedem Speichern zurückgesetzt, wodurch
+    jeder Transfer gratis war, solange man einzeln speicherte. Heute wird das
+    Guthaben aus der Transferhistorie berechnet:
+  </p>
+  <p style="margin-top:5pt; font-family:monospace; font-size:8.4pt; background:#fff; padding:5pt 8pt;">
+    guthaben(n+1) = min(cap, max(0, guthaben(n) − genutzt(n)) + zuwachs)
+  </p>
+  <p style="margin-top:5pt">
+    Gebuchte Transfers lassen sich nicht überschreiben, ein Zählerfeld schon.
+  </p>
+</div>
+
+<h3>4.5 Chips</h3>
+<table>
+  <tr><th style="width:22%">Chip</th><th>Wirkung</th><th style="width:26%">Verfügbarkeit</th></tr>
+  <tr><td><b>🃏 Wildcard</b></td><td>Beliebig viele Transfers in dieser Runde, ohne Punktabzug</td><td rowspan="2">Je <b>einmal pro Saison</b>. Bis zur Deadline zurücknehmbar, danach verbraucht.</td></tr>
+  <tr><td><b>🚀 Bench Boost</b></td><td>Auch die Punkte der vier Bankspieler zählen</td></tr>
+</table>
+<!-- ============ 5 LEBENSZYKLUS ============ -->
+<h2 class="page-break">5 &nbsp;Der Spieltag-Lebenszyklus</h2>
+
+<p>
+  Jede Runde durchläuft vier Zustände. Der Übergang geschieht ausschliesslich
+  durch den Sync-Endpunkt — es gibt keinen manuellen Schritt, der zwingend nötig wäre.
+</p>
+
+<figure>
+  <svg viewBox="0 0 700 300" width="700" height="300" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="s1" markerWidth="9" markerHeight="9" refX="7.5" refY="3.2" orient="auto">
+        <path d="M0,0 L7.5,3.2 L0,6.4 Z" fill="#0a2e19"/>
+      </marker>
+    </defs>
+
+    <!-- Zeitachse -->
+    <line x1="30" y1="66" x2="672" y2="66" stroke="#d9e2dc" stroke-width="2"/>
+
+    <!-- Zustand 1 -->
+    <circle cx="90" cy="66" r="7" fill="#1f8b44"/>
+    <rect x="20" y="82" width="140" height="66" fill="#fff" stroke="#1f8b44" stroke-width="1.4"/>
+    <text x="30" y="98" font-size="9" font-weight="bold" fill="#0a2e19">OFFEN</text>
+    <text x="30" y="111" font-size="7.2" fill="#5d6b63">is_locked = false</text>
+    <text x="30" y="120" font-size="7.2" fill="#5d6b63">deadline in der Zukunft</text>
+    <line x1="30" y1="126" x2="150" y2="126" stroke="#f0f4f1"/>
+    <text x="30" y="138" font-size="7.2" fill="#16241c">Aufstellen, Transfers,</text>
+    <text x="30" y="146" font-size="7.2" fill="#16241c">Chips — alles erlaubt</text>
+
+    <!-- Zustand 2 -->
+    <circle cx="248" cy="66" r="7" fill="#c21fc2"/>
+    <text x="248" y="46" font-size="8" font-weight="bold" fill="#c21fc2" text-anchor="middle">DEADLINE</text>
+    <text x="248" y="34" font-size="7" fill="#5d6b63" text-anchor="middle">1 Std. vor Anpfiff</text>
+    <rect x="178" y="82" width="140" height="66" fill="#fcf2fc" stroke="#c21fc2" stroke-width="1.4"/>
+    <text x="188" y="98" font-size="9" font-weight="bold" fill="#0a2e19">GESPERRT</text>
+    <text x="188" y="111" font-size="7.2" fill="#5d6b63">Sync setzt is_locked</text>
+    <line x1="188" y1="118" x2="308" y2="118" stroke="#f0f4f1"/>
+    <text x="188" y="130" font-size="7.2" fill="#16241c">Rollover: fehlende</text>
+    <text x="188" y="138" font-size="7.2" fill="#16241c">Aufstellungen werden aus</text>
+    <text x="188" y="146" font-size="7.2" fill="#16241c">der Vorrunde kopiert</text>
+
+    <!-- Zustand 3 -->
+    <circle cx="406" cy="66" r="7" fill="#1f8b44"/>
+    <rect x="336" y="82" width="140" height="66" fill="#f2f6f3" stroke="#1f8b44" stroke-width="1.4"/>
+    <text x="346" y="98" font-size="9" font-weight="bold" fill="#0a2e19">LÄUFT</text>
+    <text x="346" y="111" font-size="7.2" fill="#5d6b63">mind. 1 Partie nicht FT</text>
+    <line x1="346" y1="118" x2="466" y2="118" stroke="#e3ebe6"/>
+    <text x="346" y="130" font-size="7.2" fill="#16241c">Live-Punkte alle 15 Min.</text>
+    <text x="346" y="138" font-size="7.2" fill="#16241c">/team zeigt diese Runde</text>
+    <text x="346" y="146" font-size="7.2" fill="#16241c">als Standardansicht</text>
+
+    <!-- Zustand 4 -->
+    <circle cx="564" cy="66" r="7" fill="#0a2e19"/>
+    <rect x="494" y="82" width="140" height="66" fill="#0a2e19"/>
+    <text x="504" y="98" font-size="9" font-weight="bold" fill="#8ef2a8">ABGESCHLOSSEN</text>
+    <text x="504" y="111" font-size="7.2" fill="#fff" opacity=".75">alle Partien FT</text>
+    <line x1="504" y1="118" x2="624" y2="118" stroke="rgba(255,255,255,.15)"/>
+    <text x="504" y="130" font-size="7.2" fill="#fff" opacity=".9">Binde weitergeben,</text>
+    <text x="504" y="138" font-size="7.2" fill="#fff" opacity=".9">dann Einwechslungen.</text>
+    <text x="504" y="146" font-size="7.2" fill="#ff7dff">Ansicht springt zur Folgerunde</text>
+
+    <!-- Pfeile -->
+    <line x1="164" y1="115" x2="174" y2="115" stroke="#0a2e19" stroke-width="1.4" marker-end="url(#s1)"/>
+    <line x1="322" y1="115" x2="332" y2="115" stroke="#0a2e19" stroke-width="1.4" marker-end="url(#s1)"/>
+    <line x1="480" y1="115" x2="490" y2="115" stroke="#0a2e19" stroke-width="1.4" marker-end="url(#s1)"/>
+
+    <!-- Sync-Balken -->
+    <rect x="20" y="178" width="614" height="30" fill="#c21fc2"/>
+    <text x="327" y="192" font-size="8.6" font-weight="bold" fill="#fff" text-anchor="middle">
+      Sync-Endpunkt · alle 15 Minuten · durchläuft immer denselben Ablauf
+    </text>
+    <text x="327" y="203" font-size="7.4" fill="#fff" text-anchor="middle" opacity=".85">
+      sperren → Rollover → Daten holen → Punkte rechnen → Binde &amp; Einwechslung → Deadlines pflegen → Heartbeat
+    </text>
+
+    <!-- Wichtiger Hinweis -->
+    <rect x="20" y="222" width="614" height="62" fill="#f2f6f3"/>
+    <text x="32" y="239" font-size="8.2" font-weight="bold" fill="#0a2e19">Reihenfolge ist bedeutsam</text>
+    <text x="32" y="253" font-size="7.6" fill="#16241c">Die Binde wandert VOR den Einwechslungen — sonst könnte die Verdopplung auf einem Spieler landen, der gleich</text>
+    <text x="32" y="264" font-size="7.6" fill="#16241c">darauf die Bank drückt. Einwechslungen laufen erst, wenn ALLE Partien beendet sind; sonst würde jemand getauscht,</text>
+    <text x="32" y="275" font-size="7.6" fill="#16241c">dessen Spiel noch aussteht. Beides ist über eine Markierung wiederholbar gemacht (auto_subbed).</text>
+  </svg>
+  <figcaption>
+    Zustandsübergänge einer Runde. Alle Übergänge sind zeitgesteuert und laufen
+    ohne Zutun — der Admin kann sie überschreiben, muss aber nicht eingreifen.
+  </figcaption>
+</figure>
+
+<h3>Was der Sync-Endpunkt genau tut</h3>
+<table>
+  <tr><th style="width:6%">#</th><th style="width:30%">Schritt</th><th>Beschreibung</th></tr>
+  <tr><td>1</td><td>Runden sperren</td><td>Alle Spieltage mit abgelaufener Deadline erhalten <code>is_locked = true</code>.</td></tr>
+  <tr><td>2</td><td>Rollover</td><td>Kader ohne Aufstellung für diese Runde erhalten eine Kopie ihrer <b>letzten</b> Aufstellung — aber nur, wenn sie an einer früheren Runde teilgenommen haben.</td></tr>
+  <tr><td>3</td><td>Partien holen</td><td>Resultate und Status der aktuellen Runde von der API; <code>cache: "no-store"</code>, sonst kämen veraltete Daten.</td></tr>
+  <tr><td>4</td><td>Statistiken holen</td><td>Je Partie mit Daten die Spielerstatistiken. Gegentore werden <b>aus dem Resultat abgeleitet</b>, nicht aus dem Spielerfeld.</td></tr>
+  <tr><td>5</td><td>Punkte rechnen</td><td>Für jeden berührten Spieler: Rohdaten + Admin-Korrekturen → Punkte + Aufschlüsselung.</td></tr>
+  <tr><td>6</td><td>Binde &amp; Einwechslung</td><td>Nur wenn alle Partien beendet sind.</td></tr>
+  <tr><td>7</td><td>Deadlines pflegen</td><td>Für offene Runden: Deadline = erster Anpfiff minus 1 Stunde. Spielverschiebungen korrigieren sich damit selbst.</td></tr>
+  <tr><td>8</td><td>Heartbeat</td><td>Zeitstempel und Kurzbericht in <code>league_settings</code> — Grundlage der Admin-Ampel.</td></tr>
+</table>
+
+<!-- ============ 6 AUTOMATIKEN ============ -->
+<h2 class="page-break">6 &nbsp;Die drei Automatiken</h2>
+
+<h3>6.1 Rollover — Aufstellung läuft weiter</h3>
+<p>
+  Wer eine Runde lang nichts ändert, soll nicht leer ausgehen. Beim Sperren einer
+  Runde wird für jeden Kader ohne Aufstellung eine Kopie angelegt.
+</p>
+<div class="box warn">
+  <div class="label">Der Fehler, der hier gemacht wurde</div>
+  <p>
+    Die erste Fassung kopierte für <b>jeden</b> Kader ohne Aufstellung — auch für
+    Neueinsteiger. Wer nach Runde 1 dazukam und ein Team speicherte, bekam beim
+    nächsten Sync rückwirkend eine Runde-1-Aufstellung <b>samt deren Punkten</b>.
+    Ein Mitglied erhielt so 73 Punkte für eine Runde, in der es gar nicht dabei war.
+  </p>
+  <p>
+    <b>Korrekte Regel:</b> Rollover nur für Kader, die an einer <i>früheren</i> Runde
+    bereits teilgenommen haben (erkennbar an einer vorhandenen Aufstellung). Kopiert
+    wird aus der letzten echten Aufstellung, nicht aus dem aktuellen Kader.
+  </p>
+</div>
+
+<h3>6.2 Automatische Einwechslung</h3>
+<figure>
+  <svg viewBox="0 0 700 250" width="700" height="250" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="f1" markerWidth="8" markerHeight="8" refX="6.8" refY="2.9" orient="auto">
+        <path d="M0,0 L6.8,2.9 L0,5.8 Z" fill="#0a2e19"/>
+      </marker>
+    </defs>
+
+    <rect x="230" y="6" width="240" height="26" fill="#0a2e19"/>
+    <text x="350" y="23" font-size="9" font-weight="bold" fill="#8ef2a8" text-anchor="middle">Startelf-Spieler mit 0 Minuten?</text>
+
+    <line x1="350" y1="32" x2="350" y2="48" stroke="#0a2e19" stroke-width="1.4" marker-end="url(#f1)"/>
+
+    <rect x="230" y="52" width="240" height="26" fill="#fff" stroke="#0a2e19" stroke-width="1.3"/>
+    <text x="350" y="69" font-size="8.4" fill="#0a2e19" text-anchor="middle">Ist es der Torhüter?</text>
+
+    <!-- Torhüter-Zweig -->
+    <path d="M230,65 L150,65 L150,96" fill="none" stroke="#0a2e19" stroke-width="1.3" marker-end="url(#f1)"/>
+    <text x="188" y="61" font-size="7.4" font-weight="bold" fill="#1f8b44" text-anchor="middle">ja</text>
+    <rect x="40" y="100" width="220" height="42" fill="#f2f6f3" stroke="#1f8b44" stroke-width="1.3"/>
+    <text x="150" y="116" font-size="8.2" font-weight="bold" fill="#0a2e19" text-anchor="middle">Nur der Bank-Torhüter</text>
+    <text x="150" y="129" font-size="7.4" fill="#5d6b63" text-anchor="middle">Hat er selbst gespielt? → rein.</text>
+    <text x="150" y="138" font-size="7.4" fill="#5d6b63" text-anchor="middle">Sonst: kein Tausch.</text>
+
+    <!-- Feldspieler-Zweig -->
+    <path d="M470,65 L550,65 L550,96" fill="none" stroke="#0a2e19" stroke-width="1.3" marker-end="url(#f1)"/>
+    <text x="512" y="61" font-size="7.4" font-weight="bold" fill="#c21fc2" text-anchor="middle">nein</text>
+    <rect x="440" y="100" width="220" height="42" fill="#fcf2fc" stroke="#c21fc2" stroke-width="1.3"/>
+    <text x="550" y="116" font-size="8.2" font-weight="bold" fill="#0a2e19" text-anchor="middle">Bankplätze 1 → 2 → 3</text>
+    <text x="550" y="129" font-size="7.4" fill="#5d6b63" text-anchor="middle">Der erste, der gespielt hat UND</text>
+    <text x="550" y="138" font-size="7.4" fill="#5d6b63" text-anchor="middle">die Formation gültig lässt.</text>
+
+    <!-- Bank-Darstellung -->
+    <text x="40" y="176" font-size="8" font-weight="bold" fill="#0a2e19">Die Bank ist geordnet:</text>
+    <rect x="180" y="162" width="72" height="34" fill="#0a2e19"/>
+    <text x="216" y="176" font-size="7.6" fill="#8ef2a8" text-anchor="middle" font-weight="bold">Torhüter</text>
+    <text x="216" y="189" font-size="7" fill="#fff" text-anchor="middle" opacity=".7">Platz fix</text>
+    <line x1="258" y1="162" x2="258" y2="196" stroke="#d9e2dc" stroke-width="1.5"/>
+    <rect x="266" y="162" width="72" height="34" fill="#ff7dff"/>
+    <text x="302" y="176" font-size="7.6" fill="#0a2e19" text-anchor="middle" font-weight="bold">1.</text>
+    <text x="302" y="189" font-size="7" fill="#0a2e19" text-anchor="middle">zuerst</text>
+    <rect x="344" y="162" width="72" height="34" fill="#ffc9ff"/>
+    <text x="380" y="176" font-size="7.6" fill="#0a2e19" text-anchor="middle" font-weight="bold">2.</text>
+    <rect x="422" y="162" width="72" height="34" fill="#ffe4ff"/>
+    <text x="458" y="176" font-size="7.6" fill="#0a2e19" text-anchor="middle" font-weight="bold">3.</text>
+    <text x="510" y="182" font-size="7.4" fill="#5d6b63">← vom Mitglied festgelegt</text>
+
+    <rect x="40" y="210" width="620" height="34" fill="#f2f6f3"/>
+    <text x="52" y="224" font-size="7.6" fill="#16241c"><tspan font-weight="bold">Beispiel:</tspan> Bankplatz 1 ist ein Mittelfeldspieler, ausgefallen ist ein Verteidiger. Stehen nach dem Tausch noch 3 Verteidiger,</text>
+    <text x="52" y="236" font-size="7.6" fill="#16241c">darf er rein. Wären es nur noch 2, wird er übersprungen und Platz 2 geprüft. Mehrfachausfälle werden nacheinander behandelt.</text>
+  </svg>
+  <figcaption>
+    Entscheidungsbaum der automatischen Einwechslung. Die Logik liegt als reine
+    Funktion vor (<code>lib/auto-subs.ts</code>) und ist damit ohne Datenbank prüfbar.
+  </figcaption>
+</figure>
+
+<div class="box">
+  <div class="label">Prüfszenarien, die ein Nachbau bestehen muss</div>
+  <p>
+    Alle spielen → kein Tausch. Ein Verteidiger fällt aus → Bankplatz 1. Torhüter
+    fällt aus → nur der Bank-Torhüter. Bank-Torhüter spielte auch nicht → kein
+    Tausch. Bei exakt 3 Verteidigern: ein Mittelfeldspieler auf Platz 1 wird
+    übersprungen. Zwei Verteidiger fallen aus, nur einer ist auf der Bank → der
+    zweite wird durch einen Mittelfeldspieler ersetzt, falls die Formation es
+    hergibt. Bankspieler ohne Einsatz werden übersprungen. Drei Ausfälle → alle drei
+    Bankplätze der Reihe nach.
+  </p>
+</div>
+
+<h3>6.3 Bindenübergabe</h3>
+<p>
+  Spielt der Captain keine Minute und der Vize schon, wandert die Markierung
+  <code>is_captain</code> auf den Vize — <b>bevor</b> die Einwechslungen laufen.
+  Weil Rangliste, Spieltagspunkte, Feldanzeige und Punkte-Popup alle an derselben
+  Markierung hängen, stimmt danach alles Nachgelagerte von selbst. Es gibt keine
+  zweite Stelle, an der die Verdopplung nachgezogen werden müsste.
+</p>
+
+<!-- ============ 7 SICHERHEIT ============ -->
+<h2>7 &nbsp;Sicherheitsmodell</h2>
+
+<p>
+  Die Leitfrage lautete: <i>Was könnte jemand tun, der die Oberfläche umgeht und
+  direkt mit der Datenbank-API spricht?</i> Der öffentliche anon-Schlüssel steht in
+  jedem Browser-Bundle — er ist kein Geheimnis.
+</p>
+
+<figure>
+  <svg viewBox="0 0 700 226" width="700" height="226" font-family="Helvetica,Arial,sans-serif">
+    <defs>
+      <marker id="ok" markerWidth="8" markerHeight="8" refX="6.8" refY="2.9" orient="auto">
+        <path d="M0,0 L6.8,2.9 L0,5.8 Z" fill="#1f8b44"/>
+      </marker>
+      <marker id="no" markerWidth="8" markerHeight="8" refX="6.8" refY="2.9" orient="auto">
+        <path d="M0,0 L6.8,2.9 L0,5.8 Z" fill="#d81e2c"/>
+      </marker>
+    </defs>
+
+    <rect x="14" y="30" width="130" height="60" fill="#fff" stroke="#0a2e19" stroke-width="1.4"/>
+    <text x="79" y="50" font-size="9" font-weight="bold" fill="#0a2e19" text-anchor="middle">Browser</text>
+    <text x="79" y="65" font-size="7.4" fill="#5d6b63" text-anchor="middle">anon-Key</text>
+    <text x="79" y="76" font-size="7.4" fill="#5d6b63" text-anchor="middle">öffentlich bekannt</text>
+
+    <!-- erlaubter Weg -->
+    <path d="M144,48 L246,48" stroke="#1f8b44" stroke-width="1.8" marker-end="url(#ok)"/>
+    <text x="195" y="42" font-size="7.4" font-weight="bold" fill="#1f8b44" text-anchor="middle">Server Action</text>
+    <rect x="250" y="26" width="176" height="44" fill="#0a2e19"/>
+    <text x="338" y="43" font-size="8.4" font-weight="bold" fill="#8ef2a8" text-anchor="middle">Validierung</text>
+    <text x="338" y="56" font-size="7.2" fill="#fff" text-anchor="middle" opacity=".8">Budget · Formation · Deadline</text>
+    <text x="338" y="65" font-size="7.2" fill="#fff" text-anchor="middle" opacity=".8">Captain · Vize · Transferkosten</text>
+    <path d="M426,48 L500,48" stroke="#1f8b44" stroke-width="1.8" marker-end="url(#ok)"/>
+    <text x="463" y="42" font-size="7.4" font-weight="bold" fill="#1f8b44" text-anchor="middle">service role</text>
+    <rect x="504" y="26" width="182" height="44" fill="#f2f6f3" stroke="#1f8b44" stroke-width="1.4"/>
+    <text x="595" y="43" font-size="8.4" font-weight="bold" fill="#0a2e19" text-anchor="middle">Datenbank</text>
+    <text x="595" y="58" font-size="7.2" fill="#5d6b63" text-anchor="middle">Schreibvorgang ausgeführt</text>
+
+    <!-- blockierter Weg -->
+    <path d="M144,120 L500,120" stroke="#d81e2c" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#no)"/>
+    <text x="322" y="114" font-size="7.4" font-weight="bold" fill="#d81e2c" text-anchor="middle">direkter REST-Aufruf an die Datenbank</text>
+    <rect x="504" y="98" width="182" height="44" fill="#fdf1f2" stroke="#d81e2c" stroke-width="1.4"/>
+    <text x="595" y="115" font-size="8.4" font-weight="bold" fill="#d81e2c" text-anchor="middle">RLS blockiert</text>
+    <text x="595" y="130" font-size="7.2" fill="#5d6b63" text-anchor="middle">keine Schreib-Policy vorhanden</text>
+
+    <rect x="14" y="158" width="672" height="60" fill="#f2f6f3"/>
+    <text x="26" y="175" font-size="8.2" font-weight="bold" fill="#0a2e19">Der Kniff</text>
+    <text x="26" y="189" font-size="7.6" fill="#16241c">Für die Spielstandtabellen existiert schlicht <tspan font-family="monospace">keine</tspan> Schreib-Policy. Ohne passende Policy verweigert Row Level Security</text>
+    <text x="26" y="200" font-size="7.6" fill="#16241c">jeden Zugriff — der Browser kann also gar nichts schreiben. Der Dienstschlüssel umgeht RLS und wird ausschliesslich</text>
+    <text x="26" y="211" font-size="7.6" fill="#16241c">serverseitig verwendet, nach Prüfung von Anmeldung und Spielregeln.</text>
+  </svg>
+  <figcaption>
+    Es gibt genau einen Schreibweg: durch die serverseitige Validierung. Der
+    direkte Weg ist nicht abgesichert, sondern schlicht nicht vorhanden.
+  </figcaption>
+</figure>
+
+<h3>Ergebnisse des Angriffstests</h3>
+<p>
+  Mit einer echten Nutzersitzung wurden dreizehn Angriffe gefahren. Zwölf wurden
+  blockiert, einer legte eine echte Lücke offen.
+</p>
+<table>
+  <tr><th>Angriff</th><th style="width:34%">Ergebnis</th></tr>
+  <tr><td>Eigene Punkte auf 999 setzen</td><td class="pos">blockiert</td></tr>
+  <tr><td>Kader direkt beschreiben (Validierung umgehen)</td><td class="pos">blockiert</td></tr>
+  <tr><td>Fremde Aufstellung manipulieren</td><td class="pos">blockiert</td></tr>
+  <tr><td>Transferkosten löschen</td><td class="pos">blockiert</td></tr>
+  <tr><td>Sich selbst Punkte gutschreiben</td><td class="pos">blockiert</td></tr>
+  <tr><td>Spielerpreis senken</td><td class="pos">blockiert</td></tr>
+  <tr><td>Sich selbst zum Admin machen</td><td class="pos">blockiert</td></tr>
+  <tr><td>Deadline verschieben</td><td class="pos">blockiert</td></tr>
+  <tr><td>Chip nachträglich zurücknehmen</td><td class="pos">blockiert</td></tr>
+  <tr><td>Rohstatistiken fälschen</td><td class="pos">blockiert</td></tr>
+  <tr><td>Fremde E-Mail auslesen</td><td class="pos">blockiert (nicht in der Tabelle)</td></tr>
+  <tr><td>Passwort-Login direkt gegen die API</td><td class="pos">blockiert (Bot-Schutz)</td></tr>
+  <tr style="background:#fdf1f2"><td><b>Aktuelle Aufstellung anderer auslesen</b></td><td class="neg"><b>gelang — sogar ohne Login</b></td></tr>
+</table>
+
+<div class="box warn">
+  <div class="label">Die gefundene Lücke</div>
+  <p>
+    Lesezugriff war mit <code>using (true)</code> für alle offen. Die Oberfläche zeigt
+    fremde Teams erst nach der Deadline — die API lieferte sie jedoch sofort. Damit
+    liess sich vor der Deadline die Aufstellung der Konkurrenz abschreiben.
+  </p>
+  <p>
+    <b>Behoben durch:</b> <code>squad_players</code> nur für Besitzer und Admins;
+    <code>gameweek_squads</code> zusätzlich für alle, sobald die Deadline der
+    betreffenden Runde abgelaufen ist. Die Rangliste bleibt korrekt, weil sie nur
+    Punkte summiert — und die gibt es ausschliesslich für vergangene Runden.
+  </p>
+</div>
+
+<div class="box note">
+  <div class="label">Lehre für den Nachbau</div>
+  <p>
+    Eine Regel, die nur in der Oberfläche durchgesetzt wird, ist keine Regel. Jede
+    Sichtbarkeits- und Schreibbeschränkung muss zusätzlich in der Datenbank stehen —
+    und zwar so, dass sie auch für den nicht angemeldeten Zugriff gilt.
+  </p>
+</div>
+<!-- ============ 8 ADMINISTRATION ============ -->
+<h2 class="page-break">8 &nbsp;Administration</h2>
+
+<p>
+  Der laufende Betrieb erfordert im Normalfall <b>keinen</b> Eingriff. Die
+  Admin-Werkzeuge dienen der Fehlerkorrektur und der Sichtbarkeit.
+</p>
+
+<table>
+  <tr><th style="width:26%">Werkzeug</th><th>Zweck</th><th style="width:22%">Häufigkeit</th></tr>
+  <tr><td><b>Sync-Ampel</b></td><td>Zeitstempel des letzten Laufs; rot ab 35 Minuten Stille. Verrät stille Ausfälle, bevor Mitglieder sich beschweren.</td><td>passiv</td></tr>
+  <tr><td><b>Jetzt synchronisieren</b></td><td>Stösst denselben Endpunkt an wie der Zeitgeber — kein zweiter Codepfad.</td><td>bei Bedarf</td></tr>
+  <tr><td><b>Ankündigungs-Banner</b></td><td>Freitext, erscheint auf jeder Seite für alle. Leeren blendet aus.</td><td>im Störfall</td></tr>
+  <tr><td><b>Statistik-Korrektur</b></td><td>Jeder Rohwert je Spieler und Runde überschreibbar, mit Notiz. Danach „Alle Punkte neu berechnen“.</td><td>selten</td></tr>
+  <tr><td><b>Punkt-Anpassung</b></td><td>Gutschrift oder Abzug mit Begründung — u.&nbsp;a. für Späteinsteiger.</td><td>bei Neuzugängen</td></tr>
+  <tr><td><b>Spielerverwaltung</b></td><td>Anlegen, umbenennen, Club/Position/Preis ändern, deaktivieren.</td><td>Transferfenster</td></tr>
+  <tr><td><b>Mitgliederverwaltung</b></td><td>Sperren, entsperren, zum Admin ernennen.</td><td>selten</td></tr>
+  <tr><td><b>Posteingang</b></td><td>Meldungen aus dem Profil, mit Erledigt-Markierung.</td><td>laufend</td></tr>
+</table>
+
+<div class="box">
+  <div class="label">Schutzvorkehrungen im Admin-Bereich</div>
+  <p>
+    Ein Admin kann sich nicht selbst degradieren, der letzte verbleibende Admin ist
+    geschützt, gesperrte Konten lassen sich nicht befördern, und Admin-Konten können
+    sich nicht selbst löschen. Spieler-IDs und die API-Kennung sind im Formular
+    bewusst nicht bearbeitbar — eine falsche Kennung würde stillschweigend falsche
+    Punkte synchronisieren.
+  </p>
+</div>
+
+<h3>Wiederkehrende Aufgaben im Jahresverlauf</h3>
+<table>
+  <tr><th style="width:26%">Wann</th><th>Was</th></tr>
+  <tr><td>Vor Saisonstart</td><td>Kader aller Clubs prüfen, Preise festlegen. <b>Preisänderungen möglichst vor den ersten gespeicherten Teams</b> — sie wirken sofort auf alle.</td></tr>
+  <tr><td>Nach jedem Spieltag</td><td>Stichprobe: Resultate und beste Spieler plausibel? Bei Bedarf korrigieren.</td></tr>
+  <tr><td>Winterpause</td><td>Zugänge anlegen, Abgänge deaktivieren (nicht löschen).</td></tr>
+  <tr><td>Bei Neuzugängen</td><td>In den ersten 5 Runden: Punkteschnitt gutschreiben.</td></tr>
+  <tr><td>Datenabo</td><td>Laufzeit im Blick behalten — läuft es aus, endet der Sync stumm (die Ampel zeigt es).</td></tr>
+</table>
+
+<!-- ============ 9 FALLSTRICKE ============ -->
+<h2>9 &nbsp;Fallstricke und Lehren</h2>
+
+<p>
+  Diese Fehler wurden beim Bau tatsächlich gemacht und gefunden. Sie sind der
+  wertvollste Teil dieser Dokumentation: Jeder davon war in einem Test unauffällig
+  und wäre im Betrieb teuer geworden.
+</p>
+
+<table>
+  <tr><th style="width:26%">Fehler</th><th style="width:37%">Auswirkung</th><th>Lösung</th></tr>
+  <tr>
+    <td><b>Zeitzone</b></td>
+    <td>Server rechnet in UTC. Alle Zeiten erschienen zwei Stunden zu früh — die Deadline lag real <i>nach</i> dem Anpfiff.</td>
+    <td>Jede Datumsausgabe explizit mit <code>timeZone: "Europe/Zurich"</code>.</td>
+  </tr>
+  <tr>
+    <td><b>Gegentore aus dem Spielerfeld</b></td>
+    <td>Die API liefert dieses Feld nur für Torhüter zuverlässig; bei Feldspielern kam <code>null</code> und wurde als 0 gelesen — <b>jeder</b> Verteidiger bekam +4 für Zu-Null.</td>
+    <td>Gegentore aus dem Spielresultat ableiten.</td>
+  </tr>
+  <tr>
+    <td><b>Zwischenspeicher der API</b></td>
+    <td>Ein Antwort-Cache von 60 Sekunden lieferte veraltete Daten; zwei von sechs Partien blieben dauerhaft auf „nicht begonnen“.</td>
+    <td><code>cache: "no-store"</code> bei allen Live-Abfragen.</td>
+  </tr>
+  <tr>
+    <td><b>Transferzähler</b></td>
+    <td>Ein Zählerfeld wurde bei jedem Speichern zurückgesetzt — alle Transfers waren faktisch gratis.</td>
+    <td>Guthaben aus der Transferhistorie herleiten.</td>
+  </tr>
+  <tr>
+    <td><b>Deadline nur manuell</b></td>
+    <td>Ohne Admin-Klick blieb die Runde offen; Teams liessen sich während laufender Spiele ändern.</td>
+    <td>Automatische Sperrung im Sync <b>und</b> serverseitige Deadline-Prüfung beim Speichern.</td>
+  </tr>
+  <tr>
+    <td><b>Schreibrechte für Besitzer</b></td>
+    <td>Wer seinen eigenen Kader direkt beschreiben durfte, konnte die gesamte Validierung umgehen — inklusive selbst gesetzter Punktzahlen.</td>
+    <td>Alle Schreib-Policies entfernen; ausschliesslich serverseitig schreiben.</td>
+  </tr>
+  <tr>
+    <td><b>Leserechte für alle</b></td>
+    <td>Aktuelle Aufstellungen waren über die API abrufbar — auch ohne Login. Abschreiben vor der Deadline war möglich.</td>
+    <td>Lesen an Besitz und abgelaufene Deadline knüpfen.</td>
+  </tr>
+  <tr>
+    <td><b>Rollover ohne Vorgeschichte</b></td>
+    <td>Neueinsteiger erhielten rückwirkend Aufstellungen und Punkte für Runden, in denen sie nicht dabei waren.</td>
+    <td>Rollover nur bei vorhandener früherer Aufstellung.</td>
+  </tr>
+  <tr>
+    <td><b>Gegentor-Abzug bei Kurzeinsätzen</b></td>
+    <td>Ein für 17 Minuten eingewechselter Verteidiger kassierte den vollen Abzug für Tore, die vorher fielen — sein Einsatzpunkt wurde auf 0 aufgefressen.</td>
+    <td>Abzug erst ab 60 Minuten.</td>
+  </tr>
+  <tr>
+    <td><b>Formation nicht geprüft</b></td>
+    <td>Eine gespeicherte Elf enthielt 0 Stürmer.</td>
+    <td>Geteiltes Regelmodul, von Oberfläche <i>und</i> Server genutzt; zusätzlich eine Machbarkeitsprüfung, die Sackgassen verhindert.</td>
+  </tr>
+  <tr>
+    <td><b>Zeitstempel bei Aktualisierung</b></td>
+    <td>Ein Standardwert <code>now()</code> greift nur beim Einfügen, nicht beim Aktualisieren — die Anzeige zeigte dauerhaft den Erstimport.</td>
+    <td>Zeitstempel ausdrücklich mitschreiben.</td>
+  </tr>
+  <tr>
+    <td><b>Typ-Explosion</b></td>
+    <td>Verschachtelte Typen liessen jede Datenbankabfrage stillschweigend zu <code>never</code> werden — Fehlermeldungen zeigten auf völlig andere Stellen.</td>
+    <td>Zeilentypen flach halten, keine Schnittmengen-Typen.</td>
+  </tr>
+</table>
+
+<div class="box note">
+  <div class="label">Übergreifende Lehre</div>
+  <p>
+    Sechs der zwölf Fehler betrafen <b>Regeln, die nur an einer Stelle standen</b> —
+    entweder nur in der Oberfläche oder nur an einem von zwei Rechenwegen. Was
+    doppelt gilt, muss aus einer gemeinsamen Quelle kommen. Was verbindlich ist,
+    gehört auf den Server. Und was in der Datenbank steht, muss die Datenbank selbst
+    schützen.
+  </p>
+</div>
+
+<!-- ============ 10 NACHBAU ============ -->
+<h2 class="page-break">10 &nbsp;Anleitung für einen Nachbau</h2>
+
+<p>
+  Empfohlene Reihenfolge. Jede Stufe ist für sich lauffähig und prüfbar — das ist
+  wichtiger als Geschwindigkeit, weil Fehler in der Punktelogik später kaum
+  auffallen.
+</p>
+
+<figure>
+  <svg viewBox="0 0 700 260" width="700" height="260" font-family="Helvetica,Arial,sans-serif">
+    <line x1="46" y1="24" x2="46" y2="232" stroke="#d9e2dc" stroke-width="2.5"/>
+
+    <circle cx="46" cy="34" r="9" fill="#0a2e19"/>
+    <text x="46" y="38" font-size="8.5" font-weight="bold" fill="#8ef2a8" text-anchor="middle">1</text>
+    <text x="68" y="31" font-size="9.5" font-weight="bold" fill="#0a2e19">Datenmodell und Stammdaten</text>
+    <text x="68" y="44" font-size="7.8" fill="#5d6b63">Tabellen anlegen, Clubs und Spieler importieren, Spieltage mit Deadlines. Noch keine Oberfläche.</text>
+
+    <circle cx="46" cy="72" r="9" fill="#0a2e19"/>
+    <text x="46" y="76" font-size="8.5" font-weight="bold" fill="#8ef2a8" text-anchor="middle">2</text>
+    <text x="68" y="69" font-size="9.5" font-weight="bold" fill="#0a2e19">Punktelogik als reine Funktion</text>
+    <text x="68" y="82" font-size="7.8" fill="#5d6b63">Rohdaten hinein, Punkte plus Aufschlüsselung heraus. Gegen die Regeltabelle von Hand prüfen —</text>
+    <text x="68" y="92" font-size="7.8" fill="#5d6b63">idealerweise gegen eine unabhängig geschriebene zweite Implementation.</text>
+
+    <circle cx="46" cy="120" r="9" fill="#0a2e19"/>
+    <text x="46" y="124" font-size="8.5" font-weight="bold" fill="#8ef2a8" text-anchor="middle">3</text>
+    <text x="68" y="117" font-size="9.5" font-weight="bold" fill="#0a2e19">Datenanbindung und Zeitgeber</text>
+    <text x="68" y="130" font-size="7.8" fill="#5d6b63">Sync-Endpunkt mit Sperrlogik. Erst wenn eine vergangene Runde korrekt gerechnet wird, weitergehen.</text>
+
+    <circle cx="46" cy="158" r="9" fill="#c21fc2"/>
+    <text x="46" y="162" font-size="8.5" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
+    <text x="68" y="155" font-size="9.5" font-weight="bold" fill="#0a2e19">Anmeldung und Rechtemodell</text>
+    <text x="68" y="168" font-size="7.8" fill="#5d6b63">Row Level Security VOR der Oberfläche einrichten — nachträglich abzudichten ist deutlich mühsamer.</text>
+
+    <circle cx="46" cy="196" r="9" fill="#1f8b44"/>
+    <text x="46" y="200" font-size="8.5" font-weight="bold" fill="#fff" text-anchor="middle">5</text>
+    <text x="68" y="193" font-size="9.5" font-weight="bold" fill="#0a2e19">Oberfläche</text>
+    <text x="68" y="206" font-size="7.8" fill="#5d6b63">Team-Aufstellung, Rangliste, Statistiken. Validierung aus demselben Modul wie der Server.</text>
+
+    <circle cx="46" cy="228" r="9" fill="#1f8b44"/>
+    <text x="46" y="232" font-size="8.5" font-weight="bold" fill="#fff" text-anchor="middle">6</text>
+    <text x="68" y="225" font-size="9.5" font-weight="bold" fill="#0a2e19">Automatiken und Admin-Werkzeuge</text>
+    <text x="68" y="238" font-size="7.8" fill="#5d6b63">Rollover, Einwechslung, Bindenübergabe, Überwachung. Zuletzt, weil sie das Fundament voraussetzen.</text>
+  </svg>
+  <figcaption>
+    Baureihenfolge. Die Stufen 2 und 4 sind die kritischen — beide lassen sich
+    prüfen, ohne dass eine Oberfläche existiert.
+  </figcaption>
+</figure>
+
+<h3>Prüfpunkte vor dem ersten echten Spieltag</h3>
+<table>
+  <tr><th style="width:6%"></th><th>Prüfung</th></tr>
+  <tr><td>☐</td><td>Punkte eines vergangenen Spieltags stimmen mit einer <b>von Hand gerechneten</b> Aufstellung überein — alle 15 Spieler einzeln.</td></tr>
+  <tr><td>☐</td><td>Captain-Verdopplung greift auch bei negativer Punktzahl.</td></tr>
+  <tr><td>☐</td><td>Nach Ablauf der Deadline lässt sich <b>nichts</b> mehr speichern — auch nicht mit veralteter Seite im Browser.</td></tr>
+  <tr><td>☐</td><td>Fremde Aufstellungen sind vor der Deadline nicht abrufbar — auch nicht über die API, auch nicht ohne Login.</td></tr>
+  <tr><td>☐</td><td>Ein direkter Schreibversuch auf Kader und Punkte wird abgewiesen.</td></tr>
+  <tr><td>☐</td><td>Ein Neueinsteiger erhält keine Punkte für Runden vor seinem Beitritt.</td></tr>
+  <tr><td>☐</td><td>Transferkosten werden von der Gesamtpunktzahl abgezogen.</td></tr>
+  <tr><td>☐</td><td>Eine ungültige Formation lässt sich nicht speichern.</td></tr>
+  <tr><td>☐</td><td>Alle angezeigten Zeiten stimmen mit der lokalen Zeitzone überein.</td></tr>
+  <tr><td>☐</td><td>Fällt der Zeitgeber aus, wird das sichtbar.</td></tr>
+</table>
+
+<h3>Was in der Praxis am meisten Zeit gespart hat</h3>
+<ul>
+  <li><b>Regeln an einer Stelle definieren</b> und von beiden Seiten importieren. Jede zweite Kopie driftet.</li>
+  <li><b>Reine Funktionen für Spiellogik.</b> Punkteberechnung und Einwechslung ohne Datenbankzugriff — dadurch in Sekunden gegen Dutzende Szenarien prüfbar statt durch mühsames Simulieren.</li>
+  <li><b>Werte aus der Datenbank in Regeltexten anzeigen.</b> Die Regelseite liest Budget und Kadergrössen aus den Einstellungen — sie kann gar nicht veralten.</li>
+  <li><b>Vor jedem Eingriff sichern, danach vergleichen.</b> Ein Abzug gegen den Vorher-Stand beweist, dass ein Test nichts hinterlassen hat.</li>
+  <li><b>Empirisch prüfen statt behaupten.</b> „Die Transferkosten werden abgezogen“ war so lange falsch, bis es jemand nachgerechnet hat.</li>
+</ul>
+
+<div class="box">
+  <div class="label">Aufwandsschätzung</div>
+  <p>
+    Der beschriebene Umfang entspricht rund <b>8’350 Zeilen</b> Anwendungscode in 68
+    Dateien plus 15 Datenbank-Migrationen. Der überwiegende Aufwand lag nicht im
+    Schreiben, sondern im <b>Finden der zwölf Fallstricke</b> aus Kapitel 9 — wer sie
+    kennt, kommt deutlich schneller ans Ziel.
+  </p>
+</div>
+
+<div style="margin-top:22pt; padding-top:10pt; border-top:2pt solid var(--grass); font-size:8pt; color:var(--muted);">
+  <p style="margin:0">
+    <b style="color:var(--deep)">Angeli — Swiss League Fantasy</b> · Technische Dokumentation · Stand Juli 2026<br>
+    Inoffizielles, nicht-kommerzielles Fan-Projekt ohne Verbindung zur Swiss Football League oder deren Clubs.
+  </p>
+</div>
+
+</body>
+</html>
