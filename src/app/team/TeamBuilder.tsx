@@ -282,7 +282,32 @@ export default function TeamBuilder({
 
   const starters = (pos: Position) =>
     squad.filter((s) => s.isStarting && playersById.get(s.playerId)?.position === pos);
+  // Bank: Torhüter fix auf Platz 1, danach die Feldspieler in der Reihenfolge,
+  // in der sie bei einer automatischen Einwechslung nachrücken.
   const bench = squad.filter((s) => !s.isStarting);
+  const benchGk = bench.filter((s) => playersById.get(s.playerId)?.position === "GK");
+  const benchFeld = bench.filter((s) => playersById.get(s.playerId)?.position !== "GK");
+
+  /** Verschiebt einen Feldspieler auf der Bank um eine Position. */
+  function moveBench(playerId: number, richtung: -1 | 1) {
+    setSquad((prev) => {
+      const feld = prev.filter(
+        (s) => !s.isStarting && playersById.get(s.playerId)?.position !== "GK"
+      );
+      const i = feld.findIndex((s) => s.playerId === playerId);
+      const j = i + richtung;
+      if (i < 0 || j < 0 || j >= feld.length) return prev;
+      // Die beiden Einträge in der Gesamtliste tauschen — die Reihenfolge
+      // dort ist es, die beim Speichern zu bench_order wird.
+      const aId = feld[i].playerId;
+      const bId = feld[j].playerId;
+      const next = [...prev];
+      const ai = next.findIndex((s) => s.playerId === aId);
+      const bi = next.findIndex((s) => s.playerId === bId);
+      [next[ai], next[bi]] = [next[bi], next[ai]];
+      return next;
+    });
+  }
 
   function togglePlayer(player: PlayerOption) {
     setSquad((prev) => {
@@ -560,33 +585,81 @@ export default function TeamBuilder({
           </div>
         </div>
 
-        {/* Bank */}
-        <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4">
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
+        {/* Bank — Torhüter fix zuerst, danach die Einwechsel-Reihenfolge. */}
+        <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4 sm:px-5 sm:py-5">
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
             {t.bank}
           </div>
-          <div className="flex items-start gap-1.5 sm:gap-5">
-            {bench.length === 0 && (
-              <p className="text-sm text-white/50">
-                {t.emptyBench}
-              </p>
-            )}
-            {bench.map((pick) => {
-              const player = playersById.get(pick.playerId);
-              if (!player) return null;
-              return (
-                <PlayerCard
-                  key={pick.playerId}
-                  t={t}
-                  player={player}
-                  pick={pick}
-                  onCaptain={() => setCaptain(pick.playerId)}
-                  onToggleStarting={() => toggleStarting(pick.playerId)}
-                  onRemove={() => removePlayer(pick.playerId)}
-                />
-              );
-            })}
-          </div>
+          <p className="mb-4 text-[11px] leading-snug text-white/45">{t.benchOrderHint}</p>
+          {bench.length === 0 ? (
+            <p className="text-sm text-white/50">{t.emptyBench}</p>
+          ) : (
+            <div className="flex items-start justify-center gap-2 sm:gap-6">
+              {benchGk.map((pick) => {
+                const player = playersById.get(pick.playerId);
+                if (!player) return null;
+                return (
+                  <div key={pick.playerId} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                    <span className="rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70">
+                      {t.positions.GK}
+                    </span>
+                    <PlayerCard
+                      t={t}
+                      player={player}
+                      pick={pick}
+                      onCaptain={() => setCaptain(pick.playerId)}
+                      onToggleStarting={() => toggleStarting(pick.playerId)}
+                      onRemove={() => removePlayer(pick.playerId)}
+                    />
+                  </div>
+                );
+              })}
+              {benchGk.length > 0 && benchFeld.length > 0 && (
+                <span className="mt-6 h-16 w-px shrink-0 bg-white/15" aria-hidden />
+              )}
+              {benchFeld.map((pick, i) => {
+                const player = playersById.get(pick.playerId);
+                if (!player) return null;
+                return (
+                  <div key={pick.playerId} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                    <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[9px] font-bold text-brand-accent">
+                      {i + 1}.
+                    </span>
+                    <PlayerCard
+                      t={t}
+                      player={player}
+                      pick={pick}
+                      onCaptain={() => setCaptain(pick.playerId)}
+                      onToggleStarting={() => toggleStarting(pick.playerId)}
+                      onRemove={() => removePlayer(pick.playerId)}
+                    />
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveBench(pick.playerId, -1)}
+                        disabled={i === 0}
+                        aria-label={t.benchEarlier(player.name)}
+                        title={t.benchEarlier(player.name)}
+                        className="pressable h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white disabled:opacity-25 sm:h-6 sm:w-6"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveBench(pick.playerId, 1)}
+                        disabled={i === benchFeld.length - 1}
+                        aria-label={t.benchLater(player.name)}
+                        title={t.benchLater(player.name)}
+                        className="pressable h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white disabled:opacity-25 sm:h-6 sm:w-6"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Chips */}

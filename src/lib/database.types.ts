@@ -164,6 +164,7 @@ type SquadPlayersRow = {
   is_captain: boolean;
   is_vice_captain: boolean;
   purchase_price: number;
+  bench_order: number;
 };
 
 type GameweekSquadsRow = {
@@ -174,6 +175,8 @@ type GameweekSquadsRow = {
   is_starting: boolean;
   is_captain: boolean;
   points_earned: number | null;
+  bench_order: number;
+  auto_subbed: boolean;
 };
 
 type TransfersRow = {
@@ -330,13 +333,17 @@ export interface Database {
       };
       squad_players: {
         Row: SquadPlayersRow;
-        Insert: SquadPlayersRow;
+        Insert: Omit<SquadPlayersRow, "bench_order"> & { bench_order?: number };
         Update: Partial<SquadPlayersRow>;
         Relationships: [];
       };
       gameweek_squads: {
         Row: GameweekSquadsRow;
-        Insert: Omit<GameweekSquadsRow, "id"> & { id?: number };
+        Insert: Omit<GameweekSquadsRow, "id" | "bench_order" | "auto_subbed"> & {
+          id?: number;
+          bench_order?: number;
+          auto_subbed?: boolean;
+        };
         Update: Partial<GameweekSquadsRow>;
         Relationships: [];
       };

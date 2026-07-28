@@ -137,6 +137,21 @@ export async function saveSquad(
   // Gratis, wenn: erster Kader überhaupt, Einstiegsrunde oder Wildcard aktiv.
   const costFree = isFirstSquad || budget.unlimited || !!wildcard;
 
+  // Bank-Reihenfolge: Torhüter bekommt fix Platz 0, die Feldspieler
+  // 1..3 in der vom Client gelieferten Reihenfolge. Sie bestimmt, wer bei
+  // einer automatischen Einwechslung zuerst nachrückt.
+  let naechsterBankplatz = 1;
+  const benchOrderById = new Map<number, number>();
+  for (const s of squad) {
+    if (s.isStarting) {
+      benchOrderById.set(s.playerId, 0);
+    } else if (positionById.get(s.playerId) === "GK") {
+      benchOrderById.set(s.playerId, 0);
+    } else {
+      benchOrderById.set(s.playerId, naechsterBankplatz++);
+    }
+  }
+
   // --- persist squad ---
   await supabase.from("squad_players").delete().eq("squad_id", squadRow.id);
   const squadPlayerRows = squad.map((s) => ({
@@ -146,6 +161,7 @@ export async function saveSquad(
     is_captain: s.isCaptain,
     is_vice_captain: false,
     purchase_price: priceById.get(s.playerId) ?? 0,
+    bench_order: benchOrderById.get(s.playerId) ?? 0,
   }));
   const { error: insertError } = await supabase.from("squad_players").insert(squadPlayerRows);
   if (insertError) return { error: "Speichern fehlgeschlagen: " + insertError.message };
@@ -178,6 +194,7 @@ export async function saveSquad(
     player_id: s.playerId,
     is_starting: s.isStarting,
     is_captain: s.isCaptain,
+    bench_order: benchOrderById.get(s.playerId) ?? 0,
     points_earned: null,
   }));
   await supabase.from("gameweek_squads").insert(snapshotRows);

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
+import { computeAutoSubs } from "@/lib/auto-subs";
+import type { Position } from "@/lib/database.types";
 
 // Status-Codes von API-Football.
 //
@@ -90,7 +92,7 @@ export async function GET(request: Request) {
 
       const { data: vorherige } = await supabase
         .from("gameweek_squads")
-        .select("gameweek_id, player_id, is_starting, is_captain")
+        .select("gameweek_id, player_id, is_starting, is_captain, bench_order")
         .eq("squad_id", s.id)
         .in(
           "gameweek_id",
@@ -113,6 +115,7 @@ export async function GET(request: Request) {
           player_id: r.player_id,
           is_starting: r.is_starting,
           is_captain: r.is_captain,
+          bench_order: r.bench_order,
           points_earned: null,
         }))
       );
@@ -205,6 +208,65 @@ export async function GET(request: Request) {
     await recomputePlayerPoints(supabase, playerId, gameweek.id);
   }
 
+  // Automatische Einwechslungen — erst wenn ALLE Partien der Runde beendet
+  // sind, sonst würde ein Spieler getauscht, dessen Partie noch aussteht.
+  let autoSubs = 0;
+  if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
+    const { data: aufstellungen } = await supabase
+      .from("gameweek_squads")
+      .select("squad_id, player_id, is_starting, bench_order, auto_subbed, players(position)")
+      .eq("gameweek_id", gameweek.id);
+
+    const { data: minutenRows } = await supabase
+      .from("player_stats")
+      .select("player_id, minutes")
+      .eq("gameweek_id", gameweek.id);
+    const minutenByPlayer = new Map((minutenRows ?? []).map((m) => [m.player_id, m.minutes]));
+
+    type AufstellungsZeile = NonNullable<typeof aufstellungen>[number];
+    const proKader = new Map<number, AufstellungsZeile[]>();
+    for (const r of aufstellungen ?? []) {
+      const liste = proKader.get(r.squad_id) ?? [];
+      liste.push(r);
+      proKader.set(r.squad_id, liste);
+    }
+
+    for (const [squadId, zeilen] of proKader) {
+      // Schon getauscht — nicht erneut anfassen.
+      if (zeilen.some((z) => z.auto_subbed)) continue;
+
+      const subs = computeAutoSubs(
+        zeilen.map((z) => {
+          const pl = Array.isArray(z.players) ? z.players[0] : z.players;
+          return {
+            playerId: z.player_id,
+            position: (pl?.position ?? "MID") as Position,
+            isStarting: z.is_starting,
+            benchOrder: z.bench_order,
+            minutes: minutenByPlayer.get(z.player_id) ?? 0,
+          };
+        })
+      );
+      if (subs.length === 0) continue;
+
+      for (const s of subs) {
+        await supabase
+          .from("gameweek_squads")
+          .update({ is_starting: false, auto_subbed: true })
+          .eq("squad_id", squadId)
+          .eq("gameweek_id", gameweek.id)
+          .eq("player_id", s.outPlayerId);
+        await supabase
+          .from("gameweek_squads")
+          .update({ is_starting: true, auto_subbed: true })
+          .eq("squad_id", squadId)
+          .eq("gameweek_id", gameweek.id)
+          .eq("player_id", s.inPlayerId);
+      }
+      autoSubs += subs.length;
+    }
+  }
+
   // Deadlines pflegen: immer 1 Stunde vor dem ersten Anpfiff der Runde.
   // Für die nächste offene Runde kommen die Anspielzeiten frisch von der API —
   // Spielverschiebungen korrigieren die Deadline damit von selbst. Spätere
@@ -284,6 +346,7 @@ export async function GET(request: Request) {
     spiele: { live: liveSpiele, beendet: beendeteSpiele, offen: offeneSpiele },
     statsSynced,
     playersRecomputed: touchedPlayerIds.size,
+    autoSubs,
     deadlinesAdjusted,
   });
 }

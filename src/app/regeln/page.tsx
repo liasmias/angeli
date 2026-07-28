@@ -146,6 +146,31 @@ export default async function RegelnPage() {
             </p>
           </Abschnitt>
 
+          <Abschnitt titel="Automatic substitutions">
+            <p>
+              If a player in your starting XI <b>does not play at all</b> (0 minutes), a bench
+              player automatically comes on after the matches — so you never lose a slot.
+            </p>
+            <ul className="ml-4 list-disc space-y-1">
+              <li>
+                On the bench the <b>goalkeeper is fixed in slot 1</b>, followed by your outfield
+                players in the order <b>1, 2, 3</b> that you choose yourself.
+              </li>
+              <li>
+                The <b>first bench player</b> comes on with whom your formation stays valid (at
+                least {MIN_STARTERS.DEF} defenders, {MIN_STARTERS.MID} midfielders and{" "}
+                {MIN_STARTERS.FWD} forward). If the first does not fit, the second comes on,
+                otherwise the third.
+              </li>
+              <li>A <b>goalkeeper</b> can only be replaced by the bench goalkeeper.</li>
+              <li>A bench player who <b>did not play either</b> does not come on.</li>
+            </ul>
+            <p className="rounded-lg bg-brand-deep/5 p-3">
+              Substitutions only happen once <b>all matches of the round have finished</b> — until
+              then the live points show your original lineup.
+            </p>
+          </Abschnitt>
+
           <Abschnitt titel="Transfers">
             <ul className="ml-4 list-disc space-y-1">
               <li>
@@ -294,6 +319,31 @@ export default async function RegelnPage() {
           <p>
             Dein <b>Captain</b> bringt die doppelte Punktzahl — auch im Minus. Bankspieler zählen
             nicht, ausser du setzt den Bench Boost ein.
+          </p>
+        </Abschnitt>
+
+        <Abschnitt titel="Automatische Einwechslung">
+          <p>
+            Kommt ein Spieler deiner Startelf <b>gar nicht zum Einsatz</b> (0 Minuten), rückt nach
+            Spielende automatisch ein Bankspieler nach — du verlierst also keinen Platz.
+          </p>
+          <ul className="ml-4 list-disc space-y-1">
+            <li>
+              Auf der Bank steht der <b>Torhüter fix auf Platz 1</b>, danach folgen deine
+              Feldspieler in der Reihenfolge <b>1., 2., 3.</b>, die du selbst festlegst.
+            </li>
+            <li>
+              Es rückt der <b>erste Bankspieler</b> nach, mit dem deine Formation gültig bleibt
+              (mindestens {MIN_STARTERS.DEF} Verteidiger, {MIN_STARTERS.MID} Mittelfeldspieler und{" "}
+              {MIN_STARTERS.FWD} Stürmer). Passt der erste nicht, kommt der zweite, sonst der
+              dritte.
+            </li>
+            <li>Ein <b>Torhüter</b> kann nur durch den Bank-Torhüter ersetzt werden.</li>
+            <li>Wer auf der Bank <b>selbst nicht gespielt</b> hat, rückt nicht nach.</li>
+          </ul>
+          <p className="rounded-lg bg-brand-deep/5 p-3">
+            Die Einwechslung passiert erst, wenn <b>alle Partien der Runde beendet</b> sind — bis
+            dahin zeigen die Live-Punkte deine ursprüngliche Aufstellung.
           </p>
         </Abschnitt>
 
