@@ -30,7 +30,7 @@ export function UsernameFormular({ lang, aktuell }: { lang: Lang; aktuell: strin
   const t = getDictionary(lang).profil;
   const [state, action, pending] = useActionState(changeUsername, undefined);
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm">
+    <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.usernameTitle}</h2>
       <p className="mb-4 text-sm text-brand-deep/60">
         {t.usernameHint}
@@ -63,7 +63,7 @@ export function PasswortFormular({ lang }: { lang: Lang }) {
   const t = getDictionary(lang).profil;
   const [state, action, pending] = useActionState(changePassword, undefined);
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm">
+    <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.passwordTitle}</h2>
       <p className="mb-4 text-sm text-brand-deep/60">
         {t.passwordHint}
@@ -115,7 +115,7 @@ export function LoeschenFormular({ lang, username }: { lang: Lang; username: str
   const t = getDictionary(lang).profil;
   const [state, action, pending] = useActionState(deleteAccount, undefined);
   return (
-    <section className="rounded-xl border-2 border-brand-danger/20 bg-white p-5 shadow-sm">
+    <section className="chamfer border-2 border-brand-danger/20 bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-danger">{t.deleteTitle}</h2>
       <p className="mb-4 text-sm text-brand-deep/60">
         {t.deleteHint}

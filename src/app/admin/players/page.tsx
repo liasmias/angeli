@@ -38,7 +38,7 @@ export default async function AdminPlayersPage() {
         sofort im Team-Builder; bereits gekaufte Spieler behalten ihren Kaufpreis.
       </p>
 
-      <details className="mb-6 rounded-xl bg-white p-4 shadow-sm">
+      <details className="mb-6 chamfer bg-white p-4 shadow-sm">
         <summary className="cursor-pointer font-bold text-brand-deep">
           + Neuen Spieler erfassen
         </summary>

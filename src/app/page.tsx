@@ -68,7 +68,7 @@ export default async function Home() {
         {t.cards.map((f) => (
           <div
             key={f.title}
-            className="rounded-xl border border-brand-deep/10 bg-white p-6 shadow-sm"
+            className="chamfer border border-brand-deep/10 bg-white p-6 shadow-sm"
           >
             <h2 className="mb-2 font-bold text-brand-deep">{f.title}</h2>
             <p className="text-sm text-brand-deep/70">{f.text}</p>

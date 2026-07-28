@@ -5,7 +5,7 @@ export const metadata = {
 
 function Abschnitt({ titel, children }: { titel: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm">
+    <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-3 text-lg font-bold text-brand-deep">{titel}</h2>
       <div className="flex flex-col gap-3 text-sm leading-relaxed text-brand-deep/80">
         {children}

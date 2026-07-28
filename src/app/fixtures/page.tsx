@@ -71,7 +71,7 @@ export default async function FixturesPage() {
           const gwFixtures = (fixtures ?? []).filter((f) => f.gameweek_id === gw.id);
           if (gwFixtures.length === 0) return null;
           return (
-            <section key={gw.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <section key={gw.id} className="overflow-hidden chamfer bg-white shadow-sm">
               <h2 className="brand-gradient px-5 py-2.5 text-sm font-bold text-white">
                 {t.gameweek(gw.number)}
               </h2>
@@ -165,7 +165,7 @@ export default async function FixturesPage() {
           );
         })}
         {(fixtures ?? []).length === 0 && (
-          <p className="rounded-xl bg-white px-5 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
+          <p className="chamfer bg-white px-5 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
             Noch keine Spiele importiert.
           </p>
         )}

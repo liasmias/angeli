@@ -51,6 +51,33 @@ h2 {
     linear-gradient(115deg, var(--brand-deep) 0%, #145c30 60%, #082616 100%);
 }
 
+/* ===== Gefaste Ecken (Chamfer) =====
+   Fenster/Karten bekommen statt Rundungen einen Fasenschnitt — vier
+   abgeschnittene Ecken, geometrisch ein Achteck. Moderne Browser können
+   das nativ über `corner-shape: bevel` (Ränder und Schatten bleiben dabei
+   intakt); ältere bekommen denselben Schnitt per clip-path, dort entfällt
+   der Schatten bauartbedingt. */
+.chamfer {
+  --fase: 12px;
+  clip-path: polygon(
+    var(--fase) 0,
+    calc(100% - var(--fase)) 0,
+    100% var(--fase),
+    100% calc(100% - var(--fase)),
+    calc(100% - var(--fase)) 100%,
+    var(--fase) 100%,
+    0 calc(100% - var(--fase)),
+    0 var(--fase)
+  );
+}
+@supports (corner-shape: bevel) {
+  .chamfer {
+    clip-path: none;
+    corner-shape: bevel;
+    border-radius: var(--fase);
+  }
+}
+
 /* ===== Micro-Interactions ===== */
 
 /* Wachsen beim Hover, Schrumpfen beim Klick — für Buttons & Karten */
@@ -113,7 +140,18 @@ h2 {
 /* Rasen mit Streifen + Mittellinie/-kreis + Strafräumen */
 .pitch {
   position: relative;
-  border-radius: 0.75rem;
+  /* Gefaste Ecken wie alle Fenster — siehe .chamfer. */
+  --fase: 12px;
+  clip-path: polygon(
+    var(--fase) 0,
+    calc(100% - var(--fase)) 0,
+    100% var(--fase),
+    100% calc(100% - var(--fase)),
+    calc(100% - var(--fase)) 100%,
+    var(--fase) 100%,
+    0 calc(100% - var(--fase)),
+    0 var(--fase)
+  );
   overflow: hidden;
   background:
     repeating-linear-gradient(

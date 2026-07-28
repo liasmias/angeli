@@ -25,7 +25,7 @@ export default function SyncStatus({
 
   return (
     <section
-      className={`mb-6 rounded-xl border-2 p-4 ${
+      className={`mb-6 chamfer border-2 p-4 ${
         gesund ? "border-emerald-200 bg-emerald-50" : "border-brand-danger/30 bg-brand-danger/5"
       }`}
     >

@@ -10,7 +10,7 @@ export default function PasswortVergessenPage() {
 
   return (
     <main className="brand-gradient-hero flex flex-1 items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+      <div className="w-full max-w-sm chamfer bg-white p-8 shadow-xl">
         <h1 className="mb-2 text-2xl font-bold tracking-tight text-brand-deep">
           Passwort vergessen
         </h1>

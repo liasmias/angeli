@@ -101,7 +101,7 @@ export default function GameweekNav(props: GameweekNavProps) {
       : t.gameweek(gameweekNumber);
 
   return (
-    <section className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
+    <section className="mb-4 overflow-hidden chamfer bg-white shadow-sm">
       <div className="brand-gradient flex items-center justify-between gap-2 px-2 py-2 sm:px-3">
         <Arrow to={prevGameweek} dir="prev" basePath={basePath} label={t.prevGw} />
         <h2 className="min-w-0 flex-1 truncate text-center text-sm font-bold text-white sm:text-base">

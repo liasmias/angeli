@@ -75,7 +75,7 @@ export default async function AdminUsersPage() {
           return (
             <section
               key={p.id}
-              className={`rounded-xl p-4 shadow-sm ${p.is_blocked ? "bg-brand-danger/5" : "bg-white"}`}
+              className={`chamfer p-4 shadow-sm ${p.is_blocked ? "bg-brand-danger/5" : "bg-white"}`}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -216,7 +216,7 @@ export default async function AdminUsersPage() {
           );
         })}
         {total === 0 && (
-          <p className="rounded-xl bg-white px-4 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
+          <p className="chamfer bg-white px-4 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
             Noch keine Mitglieder registriert.
           </p>
         )}

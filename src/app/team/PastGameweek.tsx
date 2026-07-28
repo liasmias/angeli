@@ -96,7 +96,7 @@ export default function PastGameweek({
         </div>
       </div>
 
-      <div className="mt-3 rounded-xl bg-brand-deep/95 px-4 py-4">
+      <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4">
         <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
           {t.bench} {benchBoost && <span className="text-brand-accent">{t.benchCounted}</span>}
         </div>

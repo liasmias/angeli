@@ -102,7 +102,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
     <div className="flex flex-col gap-4">
       {/* Favoriten: die markierten Teams kompakt zuoberst, saisonlang vergleichbar. */}
       {favoriteRows.length > 0 && (
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="overflow-hidden chamfer bg-white shadow-sm">
           <div className="flex items-center gap-2 bg-brand-deep px-5 py-3 text-sm font-bold text-white">
             <span className="text-amber-400">★</span> {t.favorites}
           </div>
@@ -122,7 +122,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
         className="rounded-lg border border-brand-deep/15 bg-white px-3 py-2 text-sm outline-none focus:border-brand-magenta"
       />
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+      <div className="overflow-hidden chamfer bg-white shadow-sm">
         <div className="brand-gradient flex items-center justify-between px-5 py-3 text-sm font-bold text-white">
           <span>{t.team}</span>
           <span>{t.points}</span>

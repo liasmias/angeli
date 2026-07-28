@@ -68,7 +68,7 @@ export default function StatsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+    <div className="overflow-hidden chamfer bg-white shadow-sm">
       <div className="flex flex-col gap-2 border-b border-brand-deep/10 p-3 sm:flex-row sm:items-center">
         <div className="flex gap-1">
           {(["ALL", ...POSITIONS] as const).map((pos) => (

@@ -430,7 +430,7 @@ export default function TeamBuilder({
       <section className="min-w-0 flex-1">
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        <div className="mb-3 rounded-lg bg-white px-3 py-2 shadow-sm">
+        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
             <span className="whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.budget} </span>
@@ -561,7 +561,7 @@ export default function TeamBuilder({
         </div>
 
         {/* Bank */}
-        <div className="mt-3 rounded-xl bg-brand-deep/95 px-4 py-4">
+        <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4">
           <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
             {t.bank}
           </div>
@@ -598,7 +598,7 @@ export default function TeamBuilder({
             return (
               <div
                 key={c.chip}
-                className={`rounded-xl border-2 p-3 transition-colors ${
+                className={`chamfer border-2 p-3 transition-colors ${
                   c.activeNow
                     ? "border-brand-accent bg-brand-accent/10"
                     : verbraucht
@@ -670,7 +670,7 @@ export default function TeamBuilder({
 
       {/* ===== Spielermarkt ===== */}
       <aside ref={marketRef} className="w-full shrink-0 scroll-mt-4 lg:w-[22rem]">
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm lg:sticky lg:top-4">
+        <div className="overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4">
           <div className="brand-gradient px-4 py-3 text-sm font-bold text-white">
             {t.pickPlayers}
           </div>
