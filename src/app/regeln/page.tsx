@@ -141,8 +141,9 @@ export default async function RegelnPage() {
               </table>
             </div>
             <p>
-              Your <b>captain</b> scores double — including negatives. Bench players do not
-              count, unless you play the Bench Boost.
+              Your <b>captain</b> scores double — including negatives. If they do not play at
+              all, your <b>vice-captain</b> takes the armband. Bench players do not count, unless
+              you play the Bench Boost.
             </p>
           </Abschnitt>
 
@@ -164,6 +165,10 @@ export default async function RegelnPage() {
               </li>
               <li>A <b>goalkeeper</b> can only be replaced by the bench goalkeeper.</li>
               <li>A bench player who <b>did not play either</b> does not come on.</li>
+              <li>
+                If your <b>captain</b> does not play a single minute, the <b>vice-captain</b>
+                takes the double score — provided they played themselves.
+              </li>
             </ul>
             <p className="rounded-lg bg-brand-deep/5 p-3">
               Substitutions only happen once <b>all matches of the round have finished</b> — until
@@ -317,8 +322,9 @@ export default async function RegelnPage() {
             </table>
           </div>
           <p>
-            Dein <b>Captain</b> bringt die doppelte Punktzahl — auch im Minus. Bankspieler zählen
-            nicht, ausser du setzt den Bench Boost ein.
+            Dein <b>Captain</b> bringt die doppelte Punktzahl — auch im Minus. Kommt er gar nicht
+            zum Einsatz, übernimmt dein <b>Vize-Captain</b> die Binde. Bankspieler zählen nicht,
+            ausser du setzt den Bench Boost ein.
           </p>
         </Abschnitt>
 
@@ -340,6 +346,10 @@ export default async function RegelnPage() {
             </li>
             <li>Ein <b>Torhüter</b> kann nur durch den Bank-Torhüter ersetzt werden.</li>
             <li>Wer auf der Bank <b>selbst nicht gespielt</b> hat, rückt nicht nach.</li>
+            <li>
+              Spielt dein <b>Captain</b> keine Minute, übernimmt der <b>Vize-Captain</b> die
+              doppelte Wertung — sofern er selbst gespielt hat.
+            </li>
           </ul>
           <p className="rounded-lg bg-brand-deep/5 p-3">
             Die Einwechslung passiert erst, wenn <b>alle Partien der Runde beendet</b> sind — bis

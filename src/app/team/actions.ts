@@ -59,6 +59,14 @@ export async function saveSquad(
   if (captains.length !== 1) return { error: "Genau ein Kapitän muss gewählt werden." };
   if (!captains[0].isStarting) return { error: "Der Kapitän muss in der Startelf stehen." };
 
+  // Vize-Captain: übernimmt die Binde, wenn der Captain nicht spielt.
+  const vices = squad.filter((s) => s.isViceCaptain);
+  if (vices.length !== 1) return { error: "Genau ein Vize-Captain muss gewählt werden." };
+  if (!vices[0].isStarting) return { error: "Der Vize-Captain muss in der Startelf stehen." };
+  if (vices[0].playerId === captains[0].playerId) {
+    return { error: "Captain und Vize-Captain müssen verschiedene Spieler sein." };
+  }
+
   const playerIds = squad.map((s) => s.playerId);
   const { data: playerRows } = await supabase.from("players").select("id, position, price").in("id", playerIds);
   if (!playerRows || playerRows.length !== playerIds.length) return { error: "Ungültige Spielerauswahl." };
@@ -159,7 +167,7 @@ export async function saveSquad(
     player_id: s.playerId,
     is_starting: s.isStarting,
     is_captain: s.isCaptain,
-    is_vice_captain: false,
+    is_vice_captain: s.isViceCaptain,
     purchase_price: priceById.get(s.playerId) ?? 0,
     bench_order: benchOrderById.get(s.playerId) ?? 0,
   }));
@@ -194,6 +202,7 @@ export async function saveSquad(
     player_id: s.playerId,
     is_starting: s.isStarting,
     is_captain: s.isCaptain,
+    is_vice_captain: s.isViceCaptain,
     bench_order: benchOrderById.get(s.playerId) ?? 0,
     points_earned: null,
   }));

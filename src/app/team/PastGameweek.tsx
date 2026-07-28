@@ -14,6 +14,7 @@ export interface PastPlayer {
   position: Position;
   isStarting: boolean;
   isCaptain: boolean;
+  isViceCaptain: boolean;
   pointsEarned: number | null;
   /** Bankplatz: 0 = Torhüter, 1..3 = Feldspieler in Einwechsel-Reihenfolge. */
   benchOrder: number;
@@ -195,9 +196,13 @@ function Karte({
       title={marke ? `${p.name} — ${marke}` : p.name}
       className="pressable relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center"
     >
-      {p.isCaptain && (
-        <span className="absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
-          C
+      {(p.isCaptain || p.isViceCaptain) && (
+        <span
+          className={`absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+            p.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
+          }`}
+        >
+          {p.isCaptain ? "C" : "V"}
         </span>
       )}
       {marke && (

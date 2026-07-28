@@ -41,6 +41,8 @@ export interface SquadPick {
   playerId: number;
   isStarting: boolean;
   isCaptain: boolean;
+  /** Übernimmt die Binde, falls der Captain nicht zum Einsatz kommt. */
+  isViceCaptain: boolean;
 }
 
 interface Settings {
@@ -64,6 +66,7 @@ function PlayerCard({
   player,
   pick,
   onCaptain,
+  onVice,
   onToggleStarting,
   onRemove,
   t,
@@ -71,15 +74,20 @@ function PlayerCard({
   player: PlayerOption;
   pick: SquadPick;
   onCaptain: () => void;
+  onVice: () => void;
   onToggleStarting: () => void;
   onRemove: () => void;
   t: BuilderDict;
 }) {
   return (
     <div className="pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
-      {pick.isCaptain && (
-        <span className="pop-in absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
-          C
+      {(pick.isCaptain || pick.isViceCaptain) && (
+        <span
+          className={`pop-in absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+            pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
+          }`}
+        >
+          {pick.isCaptain ? "C" : "V"}
         </span>
       )}
       <div className="flex w-full flex-col items-center transition-transform duration-150 group-hover:scale-105">
@@ -110,6 +118,19 @@ function PlayerCard({
           }`}
         >
           C
+        </button>
+        <button
+          type="button"
+          onClick={onVice}
+          title={t.viceTitle}
+          aria-label={t.makeVice(player.name)}
+          className={`pressable h-5 w-5 rounded text-[9px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:rounded-md sm:text-xs ${
+            pick.isViceCaptain
+              ? "bg-brand-deep text-brand-accent"
+              : "bg-white text-brand-deep hover:bg-brand-deep hover:text-brand-accent"
+          }`}
+        >
+          V
         </button>
         <button
           type="button"
@@ -328,7 +349,7 @@ export default function TeamBuilder({
       // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das
       // hergibt — sonst auf die Bank.
       const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
-      return [...prev, { playerId: player.id, isStarting: autoStart, isCaptain: false }];
+      return [...prev, { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false }];
     });
   }
 
@@ -377,6 +398,34 @@ export default function TeamBuilder({
       return prev.map((s) => ({
         ...s,
         isCaptain: s.playerId === playerId,
+        // Captain und Vize dürfen nicht dieselbe Person sein.
+        isViceCaptain: s.playerId === playerId ? false : s.isViceCaptain,
+        isStarting: s.playerId === playerId ? true : s.isStarting,
+      }));
+    });
+  }
+
+  /** Vize-Captain setzen — muss in der Startelf stehen und darf nicht der
+   *  Captain sein. */
+  function setVice(playerId: number) {
+    setSquad((prev) => {
+      const pick = prev.find((s) => s.playerId === playerId);
+      const pos = playersById.get(playerId)?.position;
+      if (!pick || !pos) return prev;
+      if (pick.isCaptain) {
+        setToast({ kind: "error", text: t.errViceIsCaptain });
+        return prev;
+      }
+      if (!pick.isStarting) {
+        const check = canStart(starterCounts(prev), pos, settings.startingSize);
+        if (!check.ok) {
+          setToast({ kind: "error", text: `${t.errViceStart} ${check.reason}` });
+          return prev;
+        }
+      }
+      return prev.map((s) => ({
+        ...s,
+        isViceCaptain: s.playerId === playerId,
         isStarting: s.playerId === playerId ? true : s.isStarting,
       }));
     });
@@ -399,6 +448,10 @@ export default function TeamBuilder({
     }
     if (!hasCaptain) {
       setToast({ kind: "error", text: t.errNoCaptain });
+      return;
+    }
+    if (!squad.some((s) => s.isViceCaptain)) {
+      setToast({ kind: "error", text: t.errNoVice });
       return;
     }
     startTransition(async () => {
@@ -561,6 +614,7 @@ export default function TeamBuilder({
                         player={player}
                         pick={pick}
                         onCaptain={() => setCaptain(pick.playerId)}
+                      onVice={() => setVice(pick.playerId)}
                         onToggleStarting={() => toggleStarting(pick.playerId)}
                         onRemove={() => removePlayer(pick.playerId)}
                       />
@@ -608,6 +662,7 @@ export default function TeamBuilder({
                       player={player}
                       pick={pick}
                       onCaptain={() => setCaptain(pick.playerId)}
+                      onVice={() => setVice(pick.playerId)}
                       onToggleStarting={() => toggleStarting(pick.playerId)}
                       onRemove={() => removePlayer(pick.playerId)}
                     />
@@ -630,6 +685,7 @@ export default function TeamBuilder({
                       player={player}
                       pick={pick}
                       onCaptain={() => setCaptain(pick.playerId)}
+                      onVice={() => setVice(pick.playerId)}
                       onToggleStarting={() => toggleStarting(pick.playerId)}
                       onRemove={() => removePlayer(pick.playerId)}
                     />

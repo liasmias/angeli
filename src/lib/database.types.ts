@@ -177,6 +177,7 @@ type GameweekSquadsRow = {
   points_earned: number | null;
   bench_order: number;
   auto_subbed: boolean;
+  is_vice_captain: boolean;
 };
 
 type TransfersRow = {
@@ -339,10 +340,11 @@ export interface Database {
       };
       gameweek_squads: {
         Row: GameweekSquadsRow;
-        Insert: Omit<GameweekSquadsRow, "id" | "bench_order" | "auto_subbed"> & {
+        Insert: Omit<GameweekSquadsRow, "id" | "bench_order" | "auto_subbed" | "is_vice_captain"> & {
           id?: number;
           bench_order?: number;
           auto_subbed?: boolean;
+          is_vice_captain?: boolean;
         };
         Update: Partial<GameweekSquadsRow>;
         Relationships: [];

@@ -95,7 +95,7 @@ export default async function SquadPage({
     supabase
       .from("gameweek_squads")
       .select(
-        "player_id, is_starting, is_captain, points_earned, bench_order, auto_subbed, players(first_name, last_name, position, clubs(short_name, name))"
+        "player_id, is_starting, is_captain, is_vice_captain, points_earned, bench_order, auto_subbed, players(first_name, last_name, position, clubs(short_name, name))"
       )
       .eq("squad_id", squad.id)
       .eq("gameweek_id", angezeigt.id),
@@ -122,6 +122,7 @@ export default async function SquadPage({
       position: p?.position ?? "MID",
       isStarting: r.is_starting,
       isCaptain: r.is_captain,
+      isViceCaptain: r.is_vice_captain,
       pointsEarned: r.points_earned,
       benchOrder: r.bench_order,
       autoSubbed: r.auto_subbed,

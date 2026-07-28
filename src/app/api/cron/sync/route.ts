@@ -92,7 +92,7 @@ export async function GET(request: Request) {
 
       const { data: vorherige } = await supabase
         .from("gameweek_squads")
-        .select("gameweek_id, player_id, is_starting, is_captain, bench_order")
+        .select("gameweek_id, player_id, is_starting, is_captain, is_vice_captain, bench_order")
         .eq("squad_id", s.id)
         .in(
           "gameweek_id",
@@ -115,6 +115,7 @@ export async function GET(request: Request) {
           player_id: r.player_id,
           is_starting: r.is_starting,
           is_captain: r.is_captain,
+          is_vice_captain: r.is_vice_captain,
           bench_order: r.bench_order,
           points_earned: null,
         }))
@@ -211,10 +212,11 @@ export async function GET(request: Request) {
   // Automatische Einwechslungen — erst wenn ALLE Partien der Runde beendet
   // sind, sonst würde ein Spieler getauscht, dessen Partie noch aussteht.
   let autoSubs = 0;
+  let captainSwaps = 0;
   if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
     const { data: aufstellungen } = await supabase
       .from("gameweek_squads")
-      .select("squad_id, player_id, is_starting, bench_order, auto_subbed, players(position)")
+      .select("squad_id, player_id, is_starting, is_captain, is_vice_captain, bench_order, auto_subbed, players(position)")
       .eq("gameweek_id", gameweek.id);
 
     const { data: minutenRows } = await supabase
@@ -234,6 +236,33 @@ export async function GET(request: Request) {
     for (const [squadId, zeilen] of proKader) {
       // Schon getauscht — nicht erneut anfassen.
       if (zeilen.some((z) => z.auto_subbed)) continue;
+
+      // Binde weitergeben, BEVOR getauscht wird: Spielt der Captain keine
+      // Minute, übernimmt der Vize — sofern er selbst gespielt hat. Danach
+      // greift die doppelte Wertung überall von selbst, weil sie an
+      // `is_captain` hängt.
+      const captain = zeilen.find((z) => z.is_captain);
+      const vize = zeilen.find((z) => z.is_vice_captain);
+      if (
+        captain &&
+        vize &&
+        (minutenByPlayer.get(captain.player_id) ?? 0) === 0 &&
+        (minutenByPlayer.get(vize.player_id) ?? 0) > 0
+      ) {
+        await supabase
+          .from("gameweek_squads")
+          .update({ is_captain: false })
+          .eq("squad_id", squadId)
+          .eq("gameweek_id", gameweek.id)
+          .eq("player_id", captain.player_id);
+        await supabase
+          .from("gameweek_squads")
+          .update({ is_captain: true, is_vice_captain: false })
+          .eq("squad_id", squadId)
+          .eq("gameweek_id", gameweek.id)
+          .eq("player_id", vize.player_id);
+        captainSwaps++;
+      }
 
       const subs = computeAutoSubs(
         zeilen.map((z) => {
@@ -347,6 +376,7 @@ export async function GET(request: Request) {
     statsSynced,
     playersRecomputed: touchedPlayerIds.size,
     autoSubs,
+    captainSwaps,
     deadlinesAdjusted,
   });
 }
