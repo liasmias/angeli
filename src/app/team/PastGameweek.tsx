@@ -15,6 +15,10 @@ export interface PastPlayer {
   isStarting: boolean;
   isCaptain: boolean;
   pointsEarned: number | null;
+  /** Bankplatz: 0 = Torhüter, 1..3 = Feldspieler in Einwechsel-Reihenfolge. */
+  benchOrder: number;
+  /** Nach Spielende automatisch getauscht (rein oder raus). */
+  autoSubbed: boolean;
   /** Statistik und Punkte-Aufschlüsselung fürs Popup. */
   detail?: PlayerDetail;
 }
@@ -177,6 +181,9 @@ function Karte({
   t: TeamDict;
   onOpen: () => void;
 }) {
+  // Getauschte Spieler kennzeichnen — sonst wundert man sich, warum jemand
+  // auf der Bank Punkte bringt oder ein Startspieler plötzlich dort steht.
+  const marke = p.autoSubbed ? (p.isStarting ? t.autoSubbedIn : t.autoSubbedOut) : null;
   // Der Captain zählt doppelt — deshalb hier auch doppelt anzeigen.
   const zaehlt = p.isStarting || benchBoost;
   const punkte = p.pointsEarned === null ? null : p.pointsEarned * (p.isCaptain ? 2 : 1);
@@ -185,12 +192,21 @@ function Karte({
     <button
       type="button"
       onClick={onOpen}
-      title={p.name}
+      title={marke ? `${p.name} — ${marke}` : p.name}
       className="pressable relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center"
     >
       {p.isCaptain && (
         <span className="absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-brand-accent ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs">
           C
+        </span>
+      )}
+      {marke && (
+        <span
+          className={`absolute -left-1 top-0 z-10 rounded px-1 py-0.5 text-[8px] font-bold uppercase leading-none ring-1 ring-white/40 sm:text-[9px] ${
+            p.isStarting ? "bg-emerald-500 text-white" : "bg-brand-danger text-white"
+          }`}
+        >
+          {p.isStarting ? "↑" : "↓"}
         </span>
       )}
       <div className={`flex w-full flex-col items-center ${zaehlt ? "" : "opacity-60"}`}>
@@ -226,7 +242,10 @@ export default function PastGameweek({
 
   const starters = (pos: Position) =>
     players.filter((p) => p.isStarting && p.position === pos);
-  const bench = players.filter((p) => !p.isStarting);
+  // Bank in Einwechsel-Reihenfolge: Torhüter zuerst, dann 1..3.
+  const bench = players
+    .filter((p) => !p.isStarting)
+    .sort((a, b) => a.benchOrder - b.benchOrder);
 
   return (
     <>
