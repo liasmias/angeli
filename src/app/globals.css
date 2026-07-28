@@ -78,6 +78,21 @@ h2 {
   }
 }
 
+/* Sanftes Grössen-Pulsieren für den Späteinsteiger-Sticker — Opazität
+   bleibt konstant, damit der Text jederzeit lesbar ist. */
+@keyframes badge-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.07;
+  }
+}
+.pulse-badge {
+  animation: badge-pulse 1.8s ease-in-out infinite;
+}
+
 /* ===== Micro-Interactions ===== */
 
 /* Wachsen beim Hover, Schrumpfen beim Klick — für Buttons & Karten */

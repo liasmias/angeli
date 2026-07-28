@@ -2,17 +2,20 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
+import StartHinweis from "@/components/start-hinweis";
 
 export default async function Home() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const t = getDictionary(await getLang()).home;
+  const lang = await getLang();
+  const t = getDictionary(lang).home;
 
   return (
     <main className="flex-1">
-      <section className="brand-gradient-hero text-white">
+      <section className="brand-gradient-hero relative text-white">
+        <StartHinweis lang={lang} />
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-6 py-24 sm:py-32">
           <span className="rounded-full bg-brand-accent px-4 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
             {t.season}
