@@ -6,9 +6,10 @@ import { useState } from "react";
  * Trikots liegen als PNG in public/jerseys/<KÜRZEL>.png — einfach ersetzen für
  * eigene Designs.
  *
- * `fluid` skaliert das Trikot mit der Kartenbreite statt fester Pixelgrösse.
- * Auf dem Spielfeld nötig, damit auch fünf Spieler nebeneinander in eine
- * Reihe passen.
+ * `fluid` skaliert das Trikot mit der Viewport-Breite statt fester
+ * Pixelgrösse — bewusst nicht mit der Kartenbreite: Die Karten sind je nach
+ * Reihenbesetzung (1 Torhüter vs. 5 Verteidiger) unterschiedlich breit,
+ * die Trikots sollen aber in allen Reihen gleich gross sein.
  */
 export default function Jersey({
   club,
@@ -21,7 +22,7 @@ export default function Jersey({
 }) {
   const [failed, setFailed] = useState(false);
   const className = fluid
-    ? "aspect-square w-[62%] max-w-16 select-none drop-shadow-sm"
+    ? "aspect-square w-[clamp(2.25rem,11vw,4rem)] select-none drop-shadow-sm"
     : "select-none drop-shadow-sm";
   const dimensions = fluid ? {} : { width: size, height: size };
 
