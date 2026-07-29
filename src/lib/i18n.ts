@@ -45,7 +45,7 @@ const de = {
     cards: [
       {
         title: "100 Mio. Budget für 15 Spieler",
-        text: "2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer — wie beim grossen Vorbild.",
+        text: "2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer.",
       },
       {
         title: "Captain & Transfers",
@@ -297,7 +297,7 @@ const en: typeof de = {
     cards: [
       {
         title: "100m budget for 15 players",
-        text: "2 goalkeepers, 5 defenders, 5 midfielders, 3 forwards — just like the big original.",
+        text: "2 goalkeepers, 5 defenders, 5 midfielders, 3 forwards.",
       },
       {
         title: "Captain & transfers",
