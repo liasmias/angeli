@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
 import type { Position } from "@/lib/database.types";
 import {
+  MAX_PER_CLUB,
   MIN_STARTERS,
   canStart,
   emptyCounts,
@@ -344,6 +345,15 @@ export default function TeamBuilder({
       }
       if (spent + player.price > effectiveCap + 1e-9) {
         setToast({ kind: "error", text: t.errTooExpensive });
+        return prev;
+      }
+      // Höchstens MAX_PER_CLUB Spieler desselben Clubs — der Server prüft
+      // dieselbe Regel beim Speichern nochmals.
+      const gleicherClub = prev.filter(
+        (s) => playersById.get(s.playerId)?.club === player.club
+      ).length;
+      if (gleicherClub >= MAX_PER_CLUB) {
+        setToast({ kind: "error", text: t.errClubFull(MAX_PER_CLUB, player.club) });
         return prev;
       }
       // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das

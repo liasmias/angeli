@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
+import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
 import { getLang } from "@/lib/lang";
 
 export const metadata = {
@@ -108,6 +108,9 @@ export default async function RegelnPage() {
               <li>
                 {s?.gk_slots ?? 2} goalkeepers, {s?.def_slots ?? 5} defenders, {s?.mid_slots ?? 5}{" "}
                 midfielders, {s?.fwd_slots ?? 3} forwards
+              </li>
+              <li>
+                At most <b>{MAX_PER_CLUB} players from the same club</b>
               </li>
               <li>
                 <b>{elf} of them start</b>, the rest sit on the bench
@@ -288,6 +291,9 @@ export default async function RegelnPage() {
             <li>
               {s?.gk_slots ?? 2} Torhüter, {s?.def_slots ?? 5} Verteidiger, {s?.mid_slots ?? 5}{" "}
               Mittelfeldspieler, {s?.fwd_slots ?? 3} Stürmer
+            </li>
+            <li>
+              Höchstens <b>{MAX_PER_CLUB} Spieler desselben Clubs</b>
             </li>
             <li>
               Davon stehen <b>{elf} in der Startelf</b>, die übrigen auf der Bank

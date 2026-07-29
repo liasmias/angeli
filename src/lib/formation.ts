@@ -9,6 +9,9 @@ import type { Position } from "@/lib/database.types";
 export const MIN_STARTERS: Record<Position, number> = { GK: 1, DEF: 3, MID: 3, FWD: 1 };
 export const MAX_STARTERS: Record<Position, number> = { GK: 1, DEF: 5, MID: 5, FWD: 3 };
 
+/** Höchstens so viele Spieler desselben Clubs im Kader. */
+export const MAX_PER_CLUB = 3;
+
 export const POSITION_LABEL: Record<Position, string> = {
   GK: "Torhüter",
   DEF: "Verteidiger",

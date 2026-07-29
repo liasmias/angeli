@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { emptyCounts, validateFormation } from "@/lib/formation";
+import { MAX_PER_CLUB, emptyCounts, validateFormation } from "@/lib/formation";
 import { getTransferBudget } from "@/lib/transfers";
 import type { SquadPick } from "./TeamBuilder";
 
@@ -68,8 +68,27 @@ export async function saveSquad(
   }
 
   const playerIds = squad.map((s) => s.playerId);
-  const { data: playerRows } = await supabase.from("players").select("id, position, price").in("id", playerIds);
+  const { data: playerRows } = await supabase
+    .from("players")
+    .select("id, position, price, club_id, clubs(short_name)")
+    .in("id", playerIds);
   if (!playerRows || playerRows.length !== playerIds.length) return { error: "Ungültige Spielerauswahl." };
+
+  // Höchstens MAX_PER_CLUB Spieler desselben Clubs — sonst liesse sich der
+  // halbe Kader mit einem Spitzenteam füllen.
+  const proClub = new Map<number, { name: string; count: number }>();
+  for (const p of playerRows) {
+    if (p.club_id == null) continue;
+    const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
+    const eintrag = proClub.get(p.club_id) ?? { name: club?.short_name ?? "?", count: 0 };
+    eintrag.count++;
+    proClub.set(p.club_id, eintrag);
+  }
+  for (const { name, count } of proClub.values()) {
+    if (count > MAX_PER_CLUB) {
+      return { error: `Höchstens ${MAX_PER_CLUB} Spieler pro Club erlaubt (${name}: ${count}).` };
+    }
+  }
 
   const priceById = new Map(playerRows.map((p) => [p.id, Number(p.price)]));
   const positionById = new Map(playerRows.map((p) => [p.id, p.position]));
