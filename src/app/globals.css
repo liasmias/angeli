@@ -93,6 +93,26 @@ h2 {
   animation: badge-pulse 1.8s ease-in-out infinite;
 }
 
+/* Endlosband der Club-Trikots auf der Startseite. Die Liste liegt doppelt
+   im DOM; bei −50% ist die zweite Hälfte deckungsgleich mit dem Start —
+   die Schleife hat dadurch keinen sichtbaren Sprung. */
+@keyframes jersey-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.jersey-marquee {
+  animation: jersey-marquee 45s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jersey-marquee {
+    animation: none;
+  }
+}
+
 /* ===== Micro-Interactions ===== */
 
 /* Wachsen beim Hover, Schrumpfen beim Klick — für Buttons & Karten */

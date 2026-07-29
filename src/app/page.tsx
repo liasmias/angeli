@@ -4,6 +4,9 @@ import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 import StartHinweis from "@/components/start-hinweis";
 
+/* Die zwölf Clubs der Saison — Dateinamen in public/jerseys/. */
+const TRIKOTS = ["BAS", "GC", "LS", "LUG", "LUZ", "SFC", "SG", "SIO", "THU", "VAD", "YB", "ZUR"];
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -64,6 +67,24 @@ export default async function Home() {
               </>
             )}
           </div>
+        </div>
+      </section>
+
+      <section aria-hidden className="overflow-hidden border-b border-brand-deep/10 bg-white py-4">
+        <div className="jersey-marquee flex w-max items-center gap-10">
+          {[...TRIKOTS, ...TRIKOTS].map((code, i) => (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={`${code}-${i}`}
+              src={`/jerseys/${code}.png`}
+              alt=""
+              width={56}
+              height={56}
+              loading="lazy"
+              draggable={false}
+              className="select-none"
+            />
+          ))}
         </div>
       </section>
 
