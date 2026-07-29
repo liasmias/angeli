@@ -189,8 +189,7 @@ export default async function RegelnPage() {
                 Unused transfers <b>bank up</b>, to a maximum of {maxBank}.
               </li>
               <li>
-                In your <b>first round</b> transfers are unlimited and free — you should be able
-                to build your team without penalty, whenever you join.
+                In your <b>first round</b> transfers are unlimited.
               </li>
             </ul>
           </Abschnitt>
@@ -372,8 +371,7 @@ export default async function RegelnPage() {
               Nicht genutzte Transfers <b>sammeln sich an</b>, bis maximal {maxBank}.
             </li>
             <li>
-              In deiner <b>ersten Runde</b> sind Transfers unbegrenzt und gratis — du sollst dein
-              Team ohne Strafe aufbauen können, egal wann du einsteigst.
+              In deiner <b>ersten Runde</b> sind Transfers unbegrenzt.
             </li>
           </ul>
         </Abschnitt>
