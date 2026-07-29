@@ -27,12 +27,14 @@ export default async function TeamPage({
     return <main className="p-6">Bitte einloggen.</main>;
   }
 
-  const [{ data: settings }, { data: squad }, { data: profile }, { data: allGameweeks }] =
+  // Alles, was nur vom Nutzer abhängt, in einer Welle — auch der Rang.
+  const [{ data: settings }, { data: squad }, { data: profile }, { data: allGameweeks }, rangInfo] =
     await Promise.all([
       supabase.from("league_settings").select("*").eq("id", 1).single(),
       supabase.from("squads").select("id, free_transfers_remaining").eq("user_id", user.id).single(),
       supabase.from("profiles").select("username").eq("id", user.id).single(),
       supabase.from("gameweeks").select("id, number, deadline, is_locked").order("number"),
+      getRank(supabase, user.id),
     ]);
 
   if (!settings || !squad) {
@@ -53,15 +55,17 @@ export default async function TeamPage({
   const letzteVergangene = [...gameweeks]
     .reverse()
     .find((g) => new Date(g.deadline).getTime() <= jetzt);
+  // Läuft parallel zur Aufstellungs-Historie — beide hängen nur von der
+  // ersten Abfragewelle ab.
+  const [{ data: fx }, { data: snapshotGws }] = await Promise.all([
+    letzteVergangene
+      ? supabase.from("fixtures").select("status").eq("gameweek_id", letzteVergangene.id)
+      : Promise.resolve({ data: null }),
+    supabase.from("gameweek_squads").select("gameweek_id").eq("squad_id", squad.id),
+  ]);
   let laufenderSpieltag: (typeof gameweeks)[number] | null = null;
-  if (letzteVergangene) {
-    const { data: fx } = await supabase
-      .from("fixtures")
-      .select("status")
-      .eq("gameweek_id", letzteVergangene.id);
-    if ((fx ?? []).length > 0 && (fx ?? []).some((f) => !BEENDET.has(f.status ?? ""))) {
-      laufenderSpieltag = letzteVergangene;
-    }
+  if (letzteVergangene && (fx ?? []).length > 0 && (fx ?? []).some((f) => !BEENDET.has(f.status ?? ""))) {
+    laufenderSpieltag = letzteVergangene;
   }
 
   // Angezeigt wird: der per ?gw= gewählte Spieltag, sonst die laufende Runde,
@@ -92,10 +96,6 @@ export default async function TeamPage({
 
   // Nur Spieltage anbieten, die auch etwas zu zeigen haben: vergangene mit
   // gespeicherter Aufstellung, plus der aktuell offene.
-  const { data: snapshotGws } = await supabase
-    .from("gameweek_squads")
-    .select("gameweek_id")
-    .eq("squad_id", squad.id);
   const mitAufstellung = new Set((snapshotGws ?? []).map((r) => r.gameweek_id));
   const navigierbar = gameweeks.filter(
     (g) =>
@@ -107,12 +107,10 @@ export default async function TeamPage({
   const prevGameweek = idx > 0 ? navigierbar[idx - 1].number : null;
   const nextGameweek = idx >= 0 && idx < navigierbar.length - 1 ? navigierbar[idx + 1].number : null;
 
-  const [punkte, rangInfo] = await Promise.all([
-    getGameweekPoints(supabase, squad.id, angezeigt.id),
-    getRank(supabase, user.id),
-  ]);
+  // Die Spieltagspunkte laufen in der Abfragewelle des jeweiligen Zweigs mit.
+  const punkteAbfrage = getGameweekPoints(supabase, squad.id, angezeigt.id);
 
-  const nav = (
+  const nav = (punkte: number | null) => (
     <GameweekNav
       lang={lang}
       username={profile?.username ?? t.team.title}
@@ -131,7 +129,8 @@ export default async function TeamPage({
 
   // ---------- Vergangener Spieltag: nur ansehen ----------
   if (!bearbeitbar) {
-    const [{ data: snapshot }, { data: chips }] = await Promise.all([
+    const [punkte, { data: snapshot }, { data: chips }] = await Promise.all([
+      punkteAbfrage,
       supabase
         .from("gameweek_squads")
         .select(
@@ -173,7 +172,7 @@ export default async function TeamPage({
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
-        {nav}
+        {nav(punkte)}
         {pastPlayers.length === 0 ? (
           <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/60">
             {t.team.noLineup(angezeigt.number)}
@@ -192,8 +191,11 @@ export default async function TeamPage({
   }
 
   // ---------- Offener Spieltag: bearbeiten ----------
-  const [{ data: players }, { data: pointRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
+  // Budget hängt nur von bereits geladenen Daten ab — läuft mit in der Welle.
+  const [punkte, budget, { data: players }, { data: pointRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
     await Promise.all([
+      punkteAbfrage,
+      getTransferBudget(supabase, squad.id, angezeigt, settings),
       supabase
         .from("players")
         .select("id, first_name, last_name, position, price, is_active, club_id, clubs(name, short_name)")
@@ -232,10 +234,6 @@ export default async function TeamPage({
     }
   }
 
-  // Aus der Transferhistorie hergeleitet (inkl. angesparter Transfers) —
-  // nicht aus einem Zählerfeld, das beim Speichern überschrieben werden kann.
-  const budget = await getTransferBudget(supabase, squad.id, angezeigt, settings);
-
   const chipState = (["wildcard", "bench_boost"] as const).map((chip) => {
     const row = (chipRows ?? []).find((c) => c.chip === chip);
     const gwRow = row ? (Array.isArray(row.gameweeks) ? row.gameweeks[0] : row.gameweeks) : null;
@@ -269,7 +267,7 @@ export default async function TeamPage({
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
-      {nav}
+      {nav(punkte)}
       <TeamBuilder
         lang={lang}
         players={playerOptions}
