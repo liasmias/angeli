@@ -16,16 +16,21 @@ export default async function StatsPage() {
       .eq("is_active", true),
     supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
-    supabase.from("player_stats").select("player_id, rating"),
+    supabase.from("player_stats").select("player_id, rating, goals, assists"),
   ]);
 
   const latestGameweekWithPoints = (gameweeks ?? []).find((gw) =>
     (points ?? []).some((p) => p.gameweek_id === gw.id)
   );
 
-  // Durchschnittliches Rating ueber alle Spieltage, in denen es eines gab.
+  // Durchschnittliches Rating ueber alle Spieltage, in denen es eines gab —
+  // dazu Saisonsummen fuer Tore und Assists.
   const ratingSumme = new Map<number, { summe: number; anzahl: number }>();
+  const toreSumme = new Map<number, number>();
+  const assistsSumme = new Map<number, number>();
   for (const r of ratingRows ?? []) {
+    toreSumme.set(r.player_id, (toreSumme.get(r.player_id) ?? 0) + (r.goals ?? 0));
+    assistsSumme.set(r.player_id, (assistsSumme.get(r.player_id) ?? 0) + (r.assists ?? 0));
     if (r.rating === null) continue;
     const e = ratingSumme.get(r.player_id) ?? { summe: 0, anzahl: 0 };
     ratingSumme.set(r.player_id, { summe: e.summe + Number(r.rating), anzahl: e.anzahl + 1 });
@@ -50,6 +55,8 @@ export default async function StatsPage() {
       club: club?.short_name ?? club?.name ?? "—",
       totalPoints: totalsByPlayer.get(p.id) ?? 0,
       latestPoints: latestByPlayer.get(p.id) ?? null,
+      goals: toreSumme.get(p.id) ?? 0,
+      assists: assistsSumme.get(p.id) ?? 0,
       rating: (() => {
         const e = ratingSumme.get(p.id);
         return e ? e.summe / e.anzahl : null;

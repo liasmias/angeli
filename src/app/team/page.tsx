@@ -192,7 +192,7 @@ export default async function TeamPage({
 
   // ---------- Offener Spieltag: bearbeiten ----------
   // Budget hängt nur von bereits geladenen Daten ab — läuft mit in der Welle.
-  const [punkte, budget, { data: players }, { data: pointRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
+  const [punkte, budget, { data: players }, { data: pointRows }, { data: statRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
     await Promise.all([
       punkteAbfrage,
       getTransferBudget(supabase, squad.id, angezeigt, settings),
@@ -203,6 +203,7 @@ export default async function TeamPage({
         .order("position")
         .order("price", { ascending: false }),
       supabase.from("fantasy_points").select("player_id, points"),
+      supabase.from("player_stats").select("player_id, goals, assists"),
       supabase
         .from("squad_players")
         .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
@@ -219,6 +220,14 @@ export default async function TeamPage({
   const totalPointsByPlayer = new Map<number, number>();
   for (const row of pointRows ?? []) {
     totalPointsByPlayer.set(row.player_id, (totalPointsByPlayer.get(row.player_id) ?? 0) + row.points);
+  }
+
+  // Saisonsummen für die Sortierung im Spielermarkt.
+  const toreByPlayer = new Map<number, number>();
+  const assistsByPlayer = new Map<number, number>();
+  for (const row of statRows ?? []) {
+    toreByPlayer.set(row.player_id, (toreByPlayer.get(row.player_id) ?? 0) + (row.goals ?? 0));
+    assistsByPlayer.set(row.player_id, (assistsByPlayer.get(row.player_id) ?? 0) + (row.assists ?? 0));
   }
 
   // Gegner des kommenden Spieltags pro Verein — (H)eim oder (A)uswärts.
@@ -253,6 +262,8 @@ export default async function TeamPage({
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",
       points: totalPointsByPlayer.get(p.id) ?? 0,
+      goals: toreByPlayer.get(p.id) ?? 0,
+      assists: assistsByPlayer.get(p.id) ?? 0,
       nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
     };
   });

@@ -34,6 +34,8 @@ export interface PlayerOption {
   price: number;
   club: string;
   points: number;
+  goals: number;
+  assists: number;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
 }
@@ -224,7 +226,7 @@ export default function TeamBuilder({
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
-  const [sortiere, setSortiere] = useState<"points" | "price">("points");
+  const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists">("points");
   const marketRef = useRef<HTMLElement | null>(null);
 
   // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
@@ -483,9 +485,7 @@ export default function TeamBuilder({
         (filterClub === "ALL" || p.club === filterClub) &&
         (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
     )
-    .sort((a, b) =>
-      sortiere === "points" ? b.points - a.points || b.price - a.price : b.price - a.price || b.points - a.points
-    );
+    .sort((a, b) => (b[sortiere] - a[sortiere]) || b.points - a.points || b.price - a.price);
 
   // Erst nach dem Mounten berechnet: `Date.now()` im Render würde beim
   // Hydrieren vom Server-Wert abweichen können (React-Hydration-Mismatch).
@@ -875,14 +875,17 @@ export default function TeamBuilder({
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={() => setSortiere((s) => (s === "points" ? "price" : "points"))}
-                title={t.toggleSort}
-                className="pressable-subtle whitespace-nowrap rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm font-semibold text-brand-deep hover:border-brand-magenta"
+              <select
+                value={sortiere}
+                onChange={(e) => setSortiere(e.target.value as typeof sortiere)}
+                aria-label={t.toggleSort}
+                className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base font-semibold text-brand-deep outline-none focus:border-brand-magenta sm:text-sm"
               >
-                {sortiere === "points" ? t.sortPoints : t.sortPrice}
-              </button>
+                <option value="points">{t.sortPoints}</option>
+                <option value="price">{t.sortPrice}</option>
+                <option value="goals">{t.sortGoals}</option>
+                <option value="assists">{t.sortAssists}</option>
+              </select>
             </div>
           </div>
           <div className="max-h-[34rem] overflow-y-auto">
@@ -902,6 +905,8 @@ export default function TeamBuilder({
                     <span className="block truncate font-semibold text-brand-deep">{p.name}</span>
                     <span className="block truncate text-xs text-brand-deep/50">
                       {p.club} · {p.position}
+                      {p.goals > 0 && ` · ⚽ ${p.goals}`}
+                      {p.assists > 0 && ` · 🅰 ${p.assists}`}
                       {p.nextOpponent && (
                         <span className="text-brand-deep/40"> · {p.nextOpponent}</span>
                       )}

@@ -12,13 +12,15 @@ export interface StatsRow {
   club: string;
   totalPoints: number;
   latestPoints: number | null;
+  goals: number;
+  assists: number;
   /** Schnitt der API-Bewertung; null, wenn nie bewertet. */
   rating: number | null;
 }
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating";
+type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists";
 
 export default function StatsTable({
   rows,
@@ -124,6 +126,8 @@ export default function StatsTable({
             <option value="latestPoints">{t.sortLatest}</option>
             <option value="price">{t.sortPrice}</option>
             <option value="rating">{t.sortRating}</option>
+            <option value="goals">{t.sortGoals}</option>
+            <option value="assists">{t.sortAssists}</option>
             <option value="name">{t.sortName}</option>
           </select>
         </div>
@@ -155,6 +159,16 @@ export default function StatsTable({
               <th className="hidden px-3 py-2 text-right sm:table-cell">
                 <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title={t.ratingTitle}>
                   {t.rating}{sortIndicator("rating")}
+                </button>
+              </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("goals")} className="uppercase">
+                  {t.goals}{sortIndicator("goals")}
+                </button>
+              </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("assists")} className="uppercase">
+                  {t.assists}{sortIndicator("assists")}
                 </button>
               </th>
               {latestGameweekNumber !== null && (
@@ -196,6 +210,8 @@ export default function StatsTable({
                       <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
                         {r.rating !== null && ` · ★ ${r.rating.toFixed(1)}`}
+                        {r.goals > 0 && ` · ⚽ ${r.goals}`}
+                        {r.assists > 0 && ` · 🅰 ${r.assists}`}
                       </span>
                     </span>
                   </span>
@@ -207,6 +223,12 @@ export default function StatsTable({
                 </td>
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
                   {r.rating === null ? "—" : r.rating.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.goals}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.assists}
                 </td>
                 {latestGameweekNumber !== null && (
                   <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
@@ -222,7 +244,7 @@ export default function StatsTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 8 : 7} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 10 : 9} className="px-3 py-8 text-center text-brand-deep/50">
                   {t.noneFound}
                 </td>
               </tr>
