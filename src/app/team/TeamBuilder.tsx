@@ -68,6 +68,8 @@ type BuilderDict = ReturnType<typeof getDictionary>["builder"];
 function PlayerCard({
   player,
   pick,
+  selected = false,
+  onSelect,
   onCaptain,
   onVice,
   onToggleStarting,
@@ -76,6 +78,10 @@ function PlayerCard({
 }: {
   player: PlayerOption;
   pick: SquadPick;
+  /** Karte ist angetippt — zeigt die C/V-Auswahl über dem Spieler. */
+  selected?: boolean;
+  /** Antippen der Karte; nur für Startelf-Spieler gesetzt. */
+  onSelect?: () => void;
   onCaptain: () => void;
   onVice: () => void;
   onToggleStarting: () => void;
@@ -93,7 +99,40 @@ function PlayerCard({
           {pick.isCaptain ? "C" : "V"}
         </span>
       )}
-      <div className="flex w-full flex-col items-center transition-transform duration-150 group-hover:scale-105">
+      {/* C/V-Auswahl: erscheint über dem angetippten Startelf-Spieler. */}
+      {selected && (
+        <div className="pop-in absolute -top-9 z-20 flex gap-1.5 rounded-lg bg-black/80 p-1 shadow-lg sm:-top-10">
+          <button
+            type="button"
+            onClick={onCaptain}
+            title={t.captainTitle}
+            aria-label={t.makeCaptain(player.name)}
+            className={`pressable h-7 w-7 rounded-md text-xs font-bold leading-none ${
+              pick.isCaptain ? "bg-black text-brand-accent ring-1 ring-brand-accent" : "bg-white text-brand-deep"
+            }`}
+          >
+            C
+          </button>
+          <button
+            type="button"
+            onClick={onVice}
+            title={t.viceTitle}
+            aria-label={t.makeVice(player.name)}
+            className={`pressable h-7 w-7 rounded-md text-xs font-bold leading-none ${
+              pick.isViceCaptain ? "bg-brand-deep text-brand-accent ring-1 ring-brand-accent" : "bg-white text-brand-deep"
+            }`}
+          >
+            V
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={onSelect}
+        disabled={!onSelect}
+        aria-label={onSelect ? t.pickCv(player.name) : undefined}
+        className="flex w-full cursor-pointer flex-col items-center transition-transform duration-150 group-hover:scale-105 disabled:cursor-default"
+      >
         <Jersey club={player.club} fluid />
         <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
           <span className="block truncate">{player.name}</span>
@@ -103,38 +142,12 @@ function PlayerCard({
         <div className="w-full truncate rounded-b bg-brand-deep px-1 py-0.5 text-center text-[9px] font-medium leading-4 text-white/90 sm:px-1.5 sm:text-xs">
           {player.nextOpponent ?? "—"}
         </div>
-      </div>
+      </button>
       {/* Auf dem Handy als dunkle Pille gruppiert: In der Fünferkette liegen
           die Nachbar-Trios sonst so dicht, dass sie zu einem durchgehenden
           Band verschmelzen und die Zuordnung zum Spieler verloren geht.
           Ab sm reicht der Abstand, dort bleibt alles wie gehabt. */}
       <div className="mt-1 flex gap-0.5 rounded-lg bg-black/25 p-0.5 sm:mt-2 sm:gap-1.5 sm:rounded-none sm:bg-transparent sm:p-0">
-        <button
-          type="button"
-          onClick={onCaptain}
-          title={t.captainTitle}
-          aria-label={t.makeCaptain(player.name)}
-          className={`pressable h-5 w-5 rounded text-[9px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:rounded-md sm:text-xs ${
-            pick.isCaptain
-              ? "bg-black text-brand-accent"
-              : "bg-white text-brand-deep hover:bg-black hover:text-brand-accent"
-          }`}
-        >
-          C
-        </button>
-        <button
-          type="button"
-          onClick={onVice}
-          title={t.viceTitle}
-          aria-label={t.makeVice(player.name)}
-          className={`pressable h-5 w-5 rounded text-[9px] font-bold leading-none shadow-sm sm:h-7 sm:w-7 sm:rounded-md sm:text-xs ${
-            pick.isViceCaptain
-              ? "bg-brand-deep text-brand-accent"
-              : "bg-white text-brand-deep hover:bg-brand-deep hover:text-brand-accent"
-          }`}
-        >
-          V
-        </button>
         <button
           type="button"
           onClick={onToggleStarting}
@@ -222,6 +235,8 @@ export default function TeamBuilder({
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  // Angetippter Startelf-Spieler, über dem die C/V-Auswahl schwebt.
+  const [cvAuswahl, setCvAuswahl] = useState<number | null>(null);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -630,10 +645,12 @@ export default function TeamBuilder({
                         t={t}
                         player={player}
                         pick={pick}
-                        onCaptain={() => setCaptain(pick.playerId)}
-                      onVice={() => setVice(pick.playerId)}
-                        onToggleStarting={() => toggleStarting(pick.playerId)}
-                        onRemove={() => removePlayer(pick.playerId)}
+                        selected={cvAuswahl === pick.playerId}
+                        onSelect={() => setCvAuswahl((id) => (id === pick.playerId ? null : pick.playerId))}
+                        onCaptain={() => { setCaptain(pick.playerId); setCvAuswahl(null); }}
+                        onVice={() => { setVice(pick.playerId); setCvAuswahl(null); }}
+                        onToggleStarting={() => { toggleStarting(pick.playerId); setCvAuswahl(null); }}
+                        onRemove={() => { removePlayer(pick.playerId); setCvAuswahl(null); }}
                       />
                     );
                   })}
