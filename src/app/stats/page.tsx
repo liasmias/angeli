@@ -16,7 +16,7 @@ export default async function StatsPage() {
       .eq("is_active", true),
     supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
-    supabase.from("player_stats").select("player_id, rating, goals, assists"),
+    supabase.from("player_stats").select("player_id, rating, goals, assists, minutes, goals_conceded"),
   ]);
 
   const latestGameweekWithPoints = (gameweeks ?? []).find((gw) =>
@@ -28,9 +28,14 @@ export default async function StatsPage() {
   const ratingSumme = new Map<number, { summe: number; anzahl: number }>();
   const toreSumme = new Map<number, number>();
   const assistsSumme = new Map<number, number>();
+  const zuNullSumme = new Map<number, number>();
   for (const r of ratingRows ?? []) {
     toreSumme.set(r.player_id, (toreSumme.get(r.player_id) ?? 0) + (r.goals ?? 0));
     assistsSumme.set(r.player_id, (assistsSumme.get(r.player_id) ?? 0) + (r.assists ?? 0));
+    // Zu-null wie im Regelwerk: ab 60 Minuten ohne Gegentor.
+    if ((r.minutes ?? 0) >= 60 && (r.goals_conceded ?? 0) === 0) {
+      zuNullSumme.set(r.player_id, (zuNullSumme.get(r.player_id) ?? 0) + 1);
+    }
     if (r.rating === null) continue;
     const e = ratingSumme.get(r.player_id) ?? { summe: 0, anzahl: 0 };
     ratingSumme.set(r.player_id, { summe: e.summe + Number(r.rating), anzahl: e.anzahl + 1 });
@@ -57,6 +62,10 @@ export default async function StatsPage() {
       latestPoints: latestByPlayer.get(p.id) ?? null,
       goals: toreSumme.get(p.id) ?? 0,
       assists: assistsSumme.get(p.id) ?? 0,
+      // Nur für Torhüter und Verteidiger — bei anderen Positionen zählt
+      // die Wertung nicht, die Spalte zeigt dort einen Strich.
+      cleanSheets:
+        p.position === "GK" || p.position === "DEF" ? (zuNullSumme.get(p.id) ?? 0) : null,
       rating: (() => {
         const e = ratingSumme.get(p.id);
         return e ? e.summe / e.anzahl : null;

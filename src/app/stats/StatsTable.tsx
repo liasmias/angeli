@@ -14,13 +14,15 @@ export interface StatsRow {
   latestPoints: number | null;
   goals: number;
   assists: number;
+  /** Zu-null-Spiele; null bei MID/FWD (Wertung gilt dort nicht). */
+  cleanSheets: number | null;
   /** Schnitt der API-Bewertung; null, wenn nie bewertet. */
   rating: number | null;
 }
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists";
+type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists" | "cleanSheets";
 
 export default function StatsTable({
   rows,
@@ -128,6 +130,7 @@ export default function StatsTable({
             <option value="rating">{t.sortRating}</option>
             <option value="goals">{t.sortGoals}</option>
             <option value="assists">{t.sortAssists}</option>
+            <option value="cleanSheets">{t.sortCleanSheets}</option>
             <option value="name">{t.sortName}</option>
           </select>
         </div>
@@ -171,6 +174,11 @@ export default function StatsTable({
                   {t.assists}{sortIndicator("assists")}
                 </button>
               </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("cleanSheets")} className="uppercase">
+                  {t.cleanSheets}{sortIndicator("cleanSheets")}
+                </button>
+              </th>
               {latestGameweekNumber !== null && (
                 <th className="px-2 py-2 text-right sm:px-3">
                   <button
@@ -212,6 +220,7 @@ export default function StatsTable({
                         {r.rating !== null && ` · ★ ${r.rating.toFixed(1)}`}
                         {r.goals > 0 && ` · ⚽ ${r.goals}`}
                         {r.assists > 0 && ` · 🅰 ${r.assists}`}
+                        {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
                       </span>
                     </span>
                   </span>
@@ -230,6 +239,9 @@ export default function StatsTable({
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
                   {r.assists}
                 </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.cleanSheets ?? "—"}
+                </td>
                 {latestGameweekNumber !== null && (
                   <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
                     {r.latestPoints ?? "—"}
@@ -244,7 +256,7 @@ export default function StatsTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 10 : 9} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 11 : 10} className="px-3 py-8 text-center text-brand-deep/50">
                   {t.noneFound}
                 </td>
               </tr>
