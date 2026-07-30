@@ -198,7 +198,7 @@ function Karte({
     >
       {(p.isCaptain || p.isViceCaptain) && (
         <span
-          className={`absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
             p.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
           }`}
         >
@@ -207,7 +207,7 @@ function Karte({
       )}
       {marke && (
         <span
-          className={`absolute -left-1 top-0 z-10 rounded px-1 py-0.5 text-[8px] font-bold uppercase leading-none ring-1 ring-white/40 sm:text-[9px] ${
+          className={`absolute left-0.5 top-0 z-10 rounded px-1 py-0.5 text-[8px] font-bold uppercase leading-none ring-1 ring-white/40 sm:text-[9px] ${
             p.isStarting ? "bg-emerald-500 text-white" : "bg-brand-danger text-white"
           }`}
         >

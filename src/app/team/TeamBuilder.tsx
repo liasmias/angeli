@@ -84,7 +84,7 @@ function PlayerCard({
     <div className="pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
-          className={`pop-in absolute -right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`pop-in absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
             pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
           }`}
         >
@@ -487,10 +487,17 @@ export default function TeamBuilder({
       sortiere === "points" ? b.points - a.points || b.price - a.price : b.price - a.price || b.points - a.points
     );
 
-  const deadlineDate = deadline ? new Date(deadline) : null;
-  const hoursLeft = deadlineDate
-    ? Math.max(0, Math.round((deadlineDate.getTime() - Date.now()) / 3_600_000))
-    : null;
+  // Erst nach dem Mounten berechnet: `Date.now()` im Render würde beim
+  // Hydrieren vom Server-Wert abweichen können (React-Hydration-Mismatch).
+  const [hoursLeft, setHoursLeft] = useState<number | null>(null);
+  useEffect(() => {
+    if (!deadline) return;
+    const rechne = () =>
+      setHoursLeft(Math.max(0, Math.round((new Date(deadline).getTime() - Date.now()) / 3_600_000)));
+    rechne();
+    const id = setInterval(rechne, 60_000);
+    return () => clearInterval(id);
+  }, [deadline]);
   const countdown =
     hoursLeft === null
       ? null
@@ -850,15 +857,16 @@ export default function TeamBuilder({
             <div className="flex gap-2">
               <input
                 type="search"
+            style={{ WebkitAppearance: "none" }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t.search}
-                className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-sm outline-none focus:border-brand-magenta"
+                className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
               />
               <select
                 value={filterClub}
                 onChange={(e) => setFilterClub(e.target.value)}
-                className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta"
+                className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
               >
                 <option value="ALL">{t.club}</option>
                 {clubs.map((c) => (

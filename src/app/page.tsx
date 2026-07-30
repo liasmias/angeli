@@ -80,7 +80,9 @@ export default async function Home() {
               alt=""
               width={56}
               height={56}
-              loading="lazy"
+              // Nicht lazy: Safari lädt Bilder nicht nach, die nur per
+              // CSS-Transform in den Viewport wandern — Lücken im Band.
+              loading="eager"
               draggable={false}
               className="select-none"
             />

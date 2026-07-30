@@ -89,15 +89,16 @@ export default function StatsTable({
         <div className="flex flex-1 gap-2">
           <input
             type="search"
+            style={{ WebkitAppearance: "none" }}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.search}
-            className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-sm outline-none focus:border-brand-magenta"
+            className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
           />
           <select
             value={filterClub}
             onChange={(e) => setFilterClub(e.target.value)}
-            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta"
+            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
           >
             <option value="ALL">{t.club}</option>
             {clubs.map((c) => (
@@ -116,7 +117,7 @@ export default function StatsTable({
               setSortKey(key);
               setSortDesc(key !== "name");
             }}
-            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-sm outline-none focus:border-brand-magenta sm:hidden"
+            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm sm:hidden"
             aria-label={t.sortBy}
           >
             <option value="totalPoints">{t.sortPoints}</option>

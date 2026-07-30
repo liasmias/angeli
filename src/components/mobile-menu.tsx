@@ -40,10 +40,21 @@ export default function MobileMenu({
   useEffect(() => setOffen(false), [pfad]);
 
   // Hintergrund nicht mitscrollen lassen, solange das Menü offen ist.
+  // `overflow: hidden` allein reicht auf iOS Safari nicht (Scroll-Chaining
+  // aufs Wurzelelement) — der Body wird stattdessen fixiert und die
+  // Scroll-Position beim Schliessen wiederhergestellt.
   useEffect(() => {
-    document.body.style.overflow = offen ? "hidden" : "";
+    if (!offen) return;
+    const scrollY = window.scrollY;
+    const { position, top, width } = document.body.style;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.position = position;
+      document.body.style.top = top;
+      document.body.style.width = width;
+      window.scrollTo(0, scrollY);
     };
   }, [offen]);
 
@@ -87,9 +98,9 @@ export default function MobileMenu({
             aria-hidden
             tabIndex={-1}
             onClick={() => setOffen(false)}
-            className="absolute inset-x-0 top-full z-40 h-screen cursor-default bg-black/40"
+            className="absolute inset-x-0 top-full z-40 h-dvh cursor-default bg-black/40"
           />
-          <div className="absolute inset-x-0 top-full z-50 max-h-[80vh] overflow-y-auto border-t border-white/15 bg-brand-deep px-4 py-3 shadow-xl">
+          <div className="absolute inset-x-0 top-full z-50 max-h-[80dvh] overflow-y-auto border-t border-white/15 bg-brand-deep px-4 py-3 shadow-xl">
             <ul className="flex flex-col">
               {links.map((l) => (
                 <li key={l.href}>

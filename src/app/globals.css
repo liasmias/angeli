@@ -119,8 +119,12 @@ h2 {
 .pressable {
   transition: transform 0.13s ease, box-shadow 0.13s ease;
 }
-.pressable:hover {
-  transform: scale(1.045);
+/* Nur auf Geräten mit echtem Hover — iOS Safari lässt :hover nach dem
+   Antippen kleben, der Button bliebe dauerhaft vergrössert. */
+@media (hover: hover) {
+  .pressable:hover {
+    transform: scale(1.045);
+  }
 }
 .pressable:active {
   transform: scale(0.93);
