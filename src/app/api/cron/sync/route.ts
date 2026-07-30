@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import { computeAutoSubs } from "@/lib/auto-subs";
+import { PREIS_ANSTIEG, PREIS_RATING_SCHWELLE } from "@/lib/pricing";
 import type { Position } from "@/lib/database.types";
 
 // Status-Codes von API-Football.
@@ -296,6 +297,51 @@ export async function GET(request: Request) {
     }
   }
 
+  // Preisanstieg: Rating >= Schwelle an diesem UND dem vorherigen Spieltag
+  // → +0.3 Mio. Läuft erst nach Rundenende, damit das Rating final ist.
+  // price_changes hält je Spieler und Runde höchstens einen Eintrag — der
+  // Schritt ist dadurch beliebig wiederholbar, ohne doppelt zu erhöhen.
+  let priceRises = 0;
+  if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
+    const vorherigeRunde = (alleGws ?? []).find((g) => g.number === gameweek.number - 1);
+    if (vorherigeRunde) {
+      const [{ data: aktuelleTop }, { data: vorherigeTop }] = await Promise.all([
+        supabase
+          .from("player_stats")
+          .select("player_id")
+          .eq("gameweek_id", gameweek.id)
+          .gte("rating", PREIS_RATING_SCHWELLE),
+        supabase
+          .from("player_stats")
+          .select("player_id")
+          .eq("gameweek_id", vorherigeRunde.id)
+          .gte("rating", PREIS_RATING_SCHWELLE),
+      ]);
+      const vorherigeIds = new Set((vorherigeTop ?? []).map((r) => r.player_id));
+      for (const r of aktuelleTop ?? []) {
+        if (!vorherigeIds.has(r.player_id)) continue;
+        // Insert schlägt fehl, wenn für diese Runde schon erhöht wurde
+        // (unique) oder die Migration noch fehlt — beides: überspringen.
+        const { error: insertError } = await supabase
+          .from("price_changes")
+          .insert({ player_id: r.player_id, gameweek_id: gameweek.id, delta: PREIS_ANSTIEG });
+        if (insertError) continue;
+        const { data: spieler } = await supabase
+          .from("players")
+          .select("price")
+          .eq("id", r.player_id)
+          .single();
+        if (spieler) {
+          await supabase
+            .from("players")
+            .update({ price: Math.round((Number(spieler.price) + PREIS_ANSTIEG) * 10) / 10 })
+            .eq("id", r.player_id);
+          priceRises++;
+        }
+      }
+    }
+  }
+
   // Deadlines pflegen: immer 1 Stunde vor dem ersten Anpfiff der Runde.
   // Für die nächste offene Runde kommen die Anspielzeiten frisch von der API —
   // Spielverschiebungen korrigieren die Deadline damit von selbst. Spätere
@@ -377,6 +423,7 @@ export async function GET(request: Request) {
     playersRecomputed: touchedPlayerIds.size,
     autoSubs,
     captainSwaps,
+    priceRises,
     deadlinesAdjusted,
   });
 }

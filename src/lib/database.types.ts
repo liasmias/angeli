@@ -209,6 +209,14 @@ type PointAdjustmentsRow = {
   created_at: string;
 };
 
+type PriceChangesRow = {
+  id: number;
+  player_id: number;
+  gameweek_id: number;
+  delta: number;
+  created_at: string;
+};
+
 type StandingsRow = {
   user_id: string;
   username: string;
@@ -371,6 +379,15 @@ export interface Database {
           activated_at?: string;
         };
         Update: Partial<ChipUsagesRow>;
+        Relationships: [];
+      };
+      price_changes: {
+        Row: PriceChangesRow;
+        Insert: Omit<PriceChangesRow, "id" | "created_at"> & {
+          id?: number;
+          created_at?: string;
+        };
+        Update: Partial<PriceChangesRow>;
         Relationships: [];
       };
     };

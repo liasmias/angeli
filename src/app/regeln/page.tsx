@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
+import { PREIS_ANSTIEG, PREIS_RATING_SCHWELLE } from "@/lib/pricing";
 import { getLang } from "@/lib/lang";
 
 export const metadata = {
@@ -121,6 +122,12 @@ export default async function RegelnPage() {
               {MIN_STARTERS.DEF} defenders, at least {MIN_STARTERS.MID} midfielders and at least{" "}
               {MIN_STARTERS.FWD} forward. Upper limits: at most {MAX_STARTERS.DEF} defenders,{" "}
               {MAX_STARTERS.MID} midfielders and {MAX_STARTERS.FWD} forwards.
+            </p>
+            <p className="rounded-lg bg-brand-deep/5 p-3">
+              <b>Automatic price rise:</b> if a player reaches a rating of at least{" "}
+              <b>{PREIS_RATING_SCHWELLE}</b> in two consecutive gameweeks, his price goes up
+              by <b>{PREIS_ANSTIEG}m</b>. Your existing team keeps its full value — even above
+              the base budget.
             </p>
           </Abschnitt>
 
@@ -304,6 +311,13 @@ export default async function RegelnPage() {
             mindestens {MIN_STARTERS.FWD} Stürmer. Nach oben gilt: höchstens{" "}
             {MAX_STARTERS.DEF} {POSITION_LABEL.DEF}, {MAX_STARTERS.MID} {POSITION_LABEL.MID} und{" "}
             {MAX_STARTERS.FWD} {POSITION_LABEL.FWD}.
+          </p>
+          <p className="rounded-lg bg-brand-deep/5 p-3">
+            <b>Automatische Preiserhöhung:</b> Erreicht ein Spieler an zwei
+            aufeinanderfolgenden Spieltagen ein Rating von mindestens{" "}
+            <b>{PREIS_RATING_SCHWELLE}</b>, steigt sein Preis um{" "}
+            <b>{PREIS_ANSTIEG} Mio.</b> Dein bereits gekauftes Team behält dabei
+            seinen vollen Wert — auch über dem Basis-Budget.
           </p>
         </Abschnitt>
 
