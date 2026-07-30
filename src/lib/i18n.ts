@@ -42,6 +42,9 @@ const de = {
     startModalText:
       "Du kannst auch nach dem Saisonstart jederzeit mitmachen — deine erste Runde ist immer transferfrei, du baust dein Team also ohne Strafpunkte auf. Steigst du zwischen Runde 3 und 5 ein, wird dir zusätzlich der Durchschnitt der Punkte aller bereits Spielenden gutgeschrieben. Du startest damit nicht bei null, sondern aus der Mitte der Rangliste. Melde dich dafür nach der Registrierung kurz beim Admin — er trägt die Gutschrift ein.",
     startModalClose: "Alles klar!",
+    installTitle: "Als App aufs Handy",
+    installIos: "iPhone: In Safari auf Teilen tippen, dann «Zum Home-Bildschirm».",
+    installAndroid: "Android: In Chrome aufs Menü (⋮) tippen, dann «Zum Startbildschirm hinzufügen».",
     cards: [
       {
         title: "100 Mio. Budget für 15 Spieler",
@@ -294,6 +297,9 @@ const en: typeof de = {
     startModalText:
       "You can join any time after the season has started — your first round is always transfer-free, so you build your team without penalty points. If you join between rounds 3 and 5, you are additionally credited the average points of everyone already playing. That means you start from the middle of the leaderboard, not from zero. Just message the admin after signing up — they enter the credit.",
     startModalClose: "Got it!",
+    installTitle: "Get it as an app",
+    installIos: "iPhone: in Safari tap Share, then “Add to Home Screen”.",
+    installAndroid: "Android: in Chrome tap the menu (⋮), then “Add to Home screen”.",
     cards: [
       {
         title: "100m budget for 15 players",

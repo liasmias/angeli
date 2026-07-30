@@ -90,6 +90,18 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Nur mobil sichtbar — auf dem Desktop gibt es nichts zu installieren. */}
+      <section className="border-b border-brand-deep/10 bg-white px-6 py-3 sm:hidden">
+        <p className="text-center text-xs font-bold uppercase tracking-wide text-brand-deep/60">
+          {t.installTitle}
+        </p>
+        <p className="mt-1 text-center text-xs leading-relaxed text-brand-deep/70">
+          {t.installIos}
+          <br />
+          {t.installAndroid}
+        </p>
+      </section>
+
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-16 sm:grid-cols-3">
         {t.cards.map((f) => (
           <div
