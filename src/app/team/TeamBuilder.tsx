@@ -97,6 +97,7 @@ function PlayerCard({
 }) {
   return (
     <div
+      id={`spieler-karte-${player.id}`}
       className={`pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center transition-opacity duration-150 ${
         dimmed ? "opacity-35" : ""
       }`}
@@ -218,6 +219,8 @@ export default function TeamBuilder({
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
+  // Zuletzt entfernte Spieler — Grundlage für "Rückgängig" im Transfer-Modus.
+  const [entfernt, setEntfernt] = useState<SquadPick[]>([]);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -440,7 +443,56 @@ export default function TeamBuilder({
   }
 
   function removePlayer(playerId: number) {
-    setSquad((prev) => prev.filter((s) => s.playerId !== playerId));
+    setSquad((prev) => {
+      const pick = prev.find((s) => s.playerId === playerId);
+      if (pick) setEntfernt((st) => [...st, pick]);
+      return prev.filter((s) => s.playerId !== playerId);
+    });
+  }
+
+  /** Macht den letzten "Transfer out" rückgängig — mit denselben Prüfungen
+   *  wie beim normalen Hinzufügen (Kader-, Positions- und Club-Limit). */
+  function transferRueckgaengig() {
+    const letzter = entfernt[entfernt.length - 1];
+    if (!letzter) return;
+    const player = playersById.get(letzter.playerId);
+    if (!player) return;
+    if (squad.some((s) => s.playerId === letzter.playerId)) {
+      setEntfernt((st) => st.slice(0, -1));
+      return;
+    }
+    if (squad.length >= settings.squadSize) {
+      setToast({ kind: "error", text: t.errSquadFull(settings.squadSize) });
+      return;
+    }
+    if (countByPosition[player.position] >= slotsByPosition[player.position]) {
+      setToast({ kind: "error", text: t.errPosFull(t.positions[player.position]) });
+      return;
+    }
+    const gleicherClub = squad.filter(
+      (s) => playersById.get(s.playerId)?.club === player.club
+    ).length;
+    if (gleicherClub >= MAX_PER_CLUB) {
+      setToast({ kind: "error", text: t.errClubFull(MAX_PER_CLUB, player.club) });
+      return;
+    }
+    // Startelf-Platz nur, wenn die Formation es noch hergibt; Rollen (C/V)
+    // nur zurück, wenn sie inzwischen nicht neu vergeben wurden.
+    const darfStarten =
+      letzter.isStarting && canStart(starterCounts(), player.position, settings.startingSize).ok;
+    const captainFrei = !squad.some((s) => s.isCaptain);
+    const vizeFrei = !squad.some((s) => s.isViceCaptain);
+    setSquad((prev) => [
+      ...prev,
+      {
+        ...letzter,
+        isStarting: darfStarten,
+        isCaptain: letzter.isCaptain && captainFrei && darfStarten,
+        isViceCaptain: letzter.isViceCaptain && vizeFrei && darfStarten,
+      },
+    ]);
+    setEntfernt((st) => st.slice(0, -1));
+    setToast({ kind: "success", text: t.undoDone(player.name) });
   }
 
   /**
@@ -603,6 +655,21 @@ export default function TeamBuilder({
         const player = playersById.get(sheetSpieler);
         if (!pick || !player) return null;
         const zu = () => setSheetSpieler(null);
+        // Desktop: Popover an der Karte ausrichten (fixed, damit die
+        // clip-path-Kanten von Spielfeld und Bank nichts abschneiden).
+        // Mobil bleibt es das Bottom Sheet.
+        let popoverStyle: React.CSSProperties | undefined;
+        if (typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches) {
+          const anker = document.getElementById(`spieler-karte-${sheetSpieler}`);
+          if (anker) {
+            const r = anker.getBoundingClientRect();
+            const links = Math.min(Math.max(r.left + r.width / 2, 150), window.innerWidth - 150);
+            popoverStyle =
+              r.top > 300
+                ? { left: links, bottom: window.innerHeight - r.top + 8, transform: "translateX(-50%)" }
+                : { left: links, top: r.bottom + 8, transform: "translateX(-50%)" };
+          }
+        }
         return (
           <>
             <button
@@ -611,7 +678,14 @@ export default function TeamBuilder({
               onClick={zu}
               className="fixed inset-0 z-40 cursor-default bg-black/40"
             />
-            <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:bottom-6 sm:rounded-2xl">
+            <div
+              style={popoverStyle}
+              className={
+                popoverStyle
+                  ? "fixed z-50 w-64 rounded-2xl bg-white p-4 shadow-2xl"
+                  : "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl"
+              }
+            >
               <div className="mb-3 flex items-center gap-3">
                 <Jersey club={player.club} size={40} />
                 <div className="min-w-0">
@@ -679,6 +753,15 @@ export default function TeamBuilder({
       {transferModus && tauschAus === null && (
         <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
           <span className="truncate">{t.transferHint}</span>
+          {entfernt.length > 0 && (
+            <button
+              type="button"
+              onClick={transferRueckgaengig}
+              className="pressable shrink-0 rounded-full bg-white/15 px-3 py-1 font-bold"
+            >
+              {t.undo}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setTransferModus(false)}
