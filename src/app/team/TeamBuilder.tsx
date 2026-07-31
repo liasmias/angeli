@@ -888,7 +888,17 @@ export default function TeamBuilder({
           <div className="relative z-10 flex flex-col gap-7">
             {POSITIONS.map((pos) => {
               const row = starters(pos);
-              const missing = slotsByPosition[pos] - countByPosition[pos];
+              // Geisterkarten (Transfer-Modus) belegen ihren Platz sichtbar —
+              // fuer sie braucht es keinen "+"-Platzhalter mehr.
+              const geister = transferModus
+                ? entfernt.filter(
+                    (e) =>
+                      e.isStarting &&
+                      playersById.get(e.playerId)?.position === pos &&
+                      !squad.some((s) => s.playerId === e.playerId)
+                  )
+                : [];
+              const missing = slotsByPosition[pos] - countByPosition[pos] - geister.length;
               return (
                 // Nie umbrechen: pro Position genau eine Linie, egal ob drei
                 // oder fünf Spieler. Die Karten teilen sich die Breite.
@@ -914,15 +924,7 @@ export default function TeamBuilder({
                       />
                     );
                   })}
-                  {transferModus &&
-                    entfernt
-                      .filter(
-                        (e) =>
-                          e.isStarting &&
-                          playersById.get(e.playerId)?.position === pos &&
-                          !squad.some((s) => s.playerId === e.playerId)
-                      )
-                      .map((e) => {
+                  {geister.map((e) => {
                         const player = playersById.get(e.playerId);
                         if (!player) return null;
                         return (
