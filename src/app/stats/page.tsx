@@ -14,7 +14,7 @@ export default async function StatsPage() {
       .from("players")
       .select("id, first_name, last_name, position, price, clubs(name, short_name)")
       .eq("is_active", true),
-    supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
+    supabase.from("fantasy_points").select("player_id, gameweek_id, points, breakdown"),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
     supabase.from("player_stats").select("player_id, rating, goals, assists, minutes, goals_conceded"),
   ]);
@@ -43,8 +43,11 @@ export default async function StatsPage() {
 
   const totalsByPlayer = new Map<number, number>();
   const latestByPlayer = new Map<number, number>();
+  const bonusByPlayer = new Map<number, number>();
   for (const p of points ?? []) {
     totalsByPlayer.set(p.player_id, (totalsByPlayer.get(p.player_id) ?? 0) + p.points);
+    const b = Number((p.breakdown as Record<string, number> | null)?.bonus ?? 0);
+    if (b) bonusByPlayer.set(p.player_id, (bonusByPlayer.get(p.player_id) ?? 0) + b);
     if (latestGameweekWithPoints && p.gameweek_id === latestGameweekWithPoints.id) {
       latestByPlayer.set(p.player_id, p.points);
     }
@@ -62,6 +65,7 @@ export default async function StatsPage() {
       latestPoints: latestByPlayer.get(p.id) ?? null,
       goals: toreSumme.get(p.id) ?? 0,
       assists: assistsSumme.get(p.id) ?? 0,
+      bonus: bonusByPlayer.get(p.id) ?? 0,
       // Nur für Torhüter und Verteidiger — bei anderen Positionen zählt
       // die Wertung nicht, die Spalte zeigt dort einen Strich.
       cleanSheets:

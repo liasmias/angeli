@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
 import { PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
+import { BONUS_AB_SPIELTAG } from "@/lib/bonus";
 import { getLang } from "@/lib/lang";
 
 export const metadata = {
@@ -155,6 +156,12 @@ export default async function RegelnPage() {
               Your <b>captain</b> scores double — including negatives. If they do not play at
               all, your <b>vice-captain</b> takes the armband. Bench players do not count, unless
               you play the Bench Boost.
+            </p>
+            <p className="rounded-lg bg-brand-deep/5 p-3">
+              <b>Bonus points (from gameweek {BONUS_AB_SPIELTAG}):</b> after each match the three
+              best-rated players receive <b>3, 2 and 1</b> extra points (based on the player
+              rating). Ties share the rank — two joint firsts both get 3, the next gets 1.
+              Bonus appears once the match has finished.
             </p>
           </Abschnitt>
 

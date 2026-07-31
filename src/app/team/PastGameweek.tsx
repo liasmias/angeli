@@ -30,6 +30,7 @@ type TeamDict = ReturnType<typeof getDictionary>["team"];
 const KATEGORIEN = [
   "minutes", "goals", "assists", "clean_sheet", "goals_conceded", "saves",
   "penalties_saved", "penalties_conceded", "yellow_cards", "red_cards", "own_goals",
+  "bonus",
 ] as const;
 
 function Popup({
@@ -50,7 +51,7 @@ function Popup({
     ? KATEGORIEN.map((k) => {
         const punkte = d.breakdown[k] ?? 0;
         const menge =
-          k === "clean_sheet"
+          k === "clean_sheet" || k === "bonus"
             ? punkte > 0 ? 1 : 0
             : (d.stats[k as keyof typeof d.stats] as number) ?? 0;
         return { k, menge, punkte };

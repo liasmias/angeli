@@ -14,6 +14,8 @@ export interface StatsRow {
   latestPoints: number | null;
   goals: number;
   assists: number;
+  /** Summe der Bonuspunkte (Top 3 je Partie) über die Saison. */
+  bonus: number;
   /** Zu-null-Spiele; null bei MID/FWD (Wertung gilt dort nicht). */
   cleanSheets: number | null;
   /** Schnitt der API-Bewertung; null, wenn nie bewertet. */
@@ -22,7 +24,7 @@ export interface StatsRow {
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists" | "cleanSheets";
+type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists" | "cleanSheets" | "bonus";
 
 export default function StatsTable({
   rows,
@@ -131,6 +133,7 @@ export default function StatsTable({
             <option value="goals">{t.sortGoals}</option>
             <option value="assists">{t.sortAssists}</option>
             <option value="cleanSheets">{t.sortCleanSheets}</option>
+            <option value="bonus">{t.sortBonus}</option>
             <option value="name">{t.sortName}</option>
           </select>
         </div>
@@ -179,6 +182,11 @@ export default function StatsTable({
                   {t.cleanSheets}{sortIndicator("cleanSheets")}
                 </button>
               </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("bonus")} className="uppercase">
+                  {t.bonus}{sortIndicator("bonus")}
+                </button>
+              </th>
               {latestGameweekNumber !== null && (
                 <th className="px-2 py-2 text-right sm:px-3">
                   <button
@@ -221,6 +229,7 @@ export default function StatsTable({
                         {r.goals > 0 && ` · ⚽ ${r.goals}`}
                         {r.assists > 0 && ` · 🅰 ${r.assists}`}
                         {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
+                        {r.bonus > 0 && ` · ⭐ ${r.bonus}`}
                       </span>
                     </span>
                   </span>
@@ -242,6 +251,9 @@ export default function StatsTable({
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
                   {r.cleanSheets ?? "—"}
                 </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.bonus}
+                </td>
                 {latestGameweekNumber !== null && (
                   <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
                     {r.latestPoints ?? "—"}
@@ -256,7 +268,7 @@ export default function StatsTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 11 : 10} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 12 : 11} className="px-3 py-8 text-center text-brand-deep/50">
                   {t.noneFound}
                 </td>
               </tr>
