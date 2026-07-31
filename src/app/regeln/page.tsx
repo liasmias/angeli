@@ -260,9 +260,18 @@ export default async function RegelnPage() {
               Tap your name in the top right. There you can change both and delete your account
               if needed.
             </Frage>
+            <Frage frage="How do bonus points work?">
+              After each match Angeli looks at the ratings of everyone who played: the top-rated
+              player gets <b>+3</b>, the second <b>+2</b>, the third <b>+1</b> — on top of the
+              normal points, doubled for your captain like everything else. Ties share the rank:
+              two joint firsts both get +3 and the next-best is third (+1). Example from
+              gameweek 1, YB 4:2 Sion: Essende (rating 8.9) +3, Sanches (7.9) +2, Fernandes
+              (7.6) +1. Bonus appears once the match has finished, starting from gameweek 2.
+            </Frage>
             <Frage frage="What does the rating in the statistics mean?">
-              A performance rating from the data provider (roughly 6.0 to 10.0). It is purely a
-              guide for picking players and does <b>not</b> count towards your fantasy points.
+              A performance rating from the data provider (roughly 6.0 to 10.0). It decides the
+              <b> bonus points</b> (top 3 of each match) and the automatic <b>price changes</b> —
+              it does not feed into the normal event points (goals, assists, cards …).
             </Frage>
           </Abschnitt>
 
@@ -451,10 +460,20 @@ export default async function RegelnPage() {
             Oben rechts auf deinen Namen tippen. Dort kannst du beides ändern und dein Konto bei
             Bedarf auch löschen.
           </Frage>
+          <Frage frage="Wie funktionieren die Bonuspunkte?">
+            Nach jeder Partie schaut Angeli auf die Ratings aller Eingesetzten: Der Bestbewertete
+            erhält <b>+3</b>, der Zweite <b>+2</b>, der Dritte <b>+1</b> — zusätzlich zu den
+            normalen Punkten, und beim Captain verdoppelt wie alles andere. Bei Gleichstand
+            teilen sich Spieler den Rang: Stehen zwei gemeinsam zuoberst, bekommen beide +3,
+            und der Nächstbeste ist Dritter (+1). Beispiel Spieltag 1, YB 4:2 Sion: Essende
+            (Rating 8.9) +3, Sanches (7.9) +2, Fernandes (7.6) +1. Der Bonus erscheint erst
+            nach Abpfiff der Partie und gilt ab Spieltag 2.
+          </Frage>
           <Frage frage="Was bedeutet das Rating in den Statistiken?">
-            Eine Bewertung der Datenquelle zur Leistung im Spiel (etwa 6.0 bis 10.0). Sie ist
-            reine Orientierungshilfe bei der Spielerauswahl und fliesst <b>nicht</b> in deine
-            Fantasy-Punkte ein.
+            Eine Bewertung der Datenquelle zur Leistung im Spiel (etwa 6.0 bis 10.0). Sie
+            entscheidet über die <b>Bonuspunkte</b> (Top 3 jeder Partie) und die automatischen
+            <b> Preisanpassungen</b> — in die normalen Ereignispunkte (Tore, Assists, Karten …)
+            fliesst sie nicht ein.
           </Frage>
         </Abschnitt>
 
