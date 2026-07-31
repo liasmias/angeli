@@ -5,6 +5,7 @@ import Jersey from "@/components/jersey";
 import type { Position } from "@/lib/database.types";
 import {
   MAX_PER_CLUB,
+  MAX_STARTERS,
   MIN_STARTERS,
   canStart,
   emptyCounts,
@@ -65,31 +66,35 @@ const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
 type BuilderDict = ReturnType<typeof getDictionary>["builder"];
 
+/**
+ * Spielerkarte nach dem FPL-Muster: Die Karte selbst ist die einzige
+ * Interaktion — ein Tipp öffnet das Aktionsmenü (bzw. führt im Tauschmodus
+ * den Tausch aus). Es gibt keine Knöpfe unter der Karte mehr.
+ */
 function PlayerCard({
   player,
   pick,
-  selected = false,
-  onSelect,
-  onCaptain,
-  onVice,
-  onToggleStarting,
-  onRemove,
+  onTap,
+  dimmed = false,
+  highlight = false,
   t,
 }: {
   player: PlayerOption;
   pick: SquadPick;
-  /** Karte ist angetippt — zeigt die C/V-Auswahl über dem Spieler. */
-  selected?: boolean;
-  /** Antippen der Karte; nur für Startelf-Spieler gesetzt. */
-  onSelect?: () => void;
-  onCaptain: () => void;
-  onVice: () => void;
-  onToggleStarting: () => void;
-  onRemove: () => void;
+  /** Tipp auf die Karte; im Tauschmodus nur für gültige Ziele gesetzt. */
+  onTap?: () => void;
+  /** Tauschmodus: kein gültiger Tauschpartner — ausgegraut, nicht tippbar. */
+  dimmed?: boolean;
+  /** Tauschmodus: dieser Spieler ist die Quelle des Tauschs. */
+  highlight?: boolean;
   t: BuilderDict;
 }) {
   return (
-    <div className="pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
+    <div
+      className={`pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center transition-opacity duration-150 ${
+        dimmed ? "opacity-35" : ""
+      }`}
+    >
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
           className={`pop-in absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
@@ -99,39 +104,14 @@ function PlayerCard({
           {pick.isCaptain ? "C" : "V"}
         </span>
       )}
-      {/* C/V-Auswahl: erscheint über dem angetippten Startelf-Spieler. */}
-      {selected && (
-        <div className="pop-in absolute -top-9 z-20 flex gap-1.5 rounded-lg bg-black/80 p-1 shadow-lg sm:-top-10">
-          <button
-            type="button"
-            onClick={onCaptain}
-            title={t.captainTitle}
-            aria-label={t.makeCaptain(player.name)}
-            className={`pressable h-7 w-7 rounded-md text-xs font-bold leading-none ${
-              pick.isCaptain ? "bg-black text-brand-accent ring-1 ring-brand-accent" : "bg-white text-brand-deep"
-            }`}
-          >
-            C
-          </button>
-          <button
-            type="button"
-            onClick={onVice}
-            title={t.viceTitle}
-            aria-label={t.makeVice(player.name)}
-            className={`pressable h-7 w-7 rounded-md text-xs font-bold leading-none ${
-              pick.isViceCaptain ? "bg-brand-deep text-brand-accent ring-1 ring-brand-accent" : "bg-white text-brand-deep"
-            }`}
-          >
-            V
-          </button>
-        </div>
-      )}
       <button
         type="button"
-        onClick={onSelect}
-        disabled={!onSelect}
-        aria-label={onSelect ? t.pickCv(player.name) : undefined}
-        className="flex w-full cursor-pointer flex-col items-center transition-transform duration-150 group-hover:scale-105 disabled:cursor-default"
+        onClick={onTap}
+        disabled={!onTap}
+        aria-label={t.playerActions(player.name)}
+        className={`flex w-full cursor-pointer flex-col items-center rounded-lg transition-transform duration-150 group-hover:scale-105 disabled:cursor-default ${
+          highlight ? "ring-2 ring-brand-accent" : ""
+        }`}
       >
         <Jersey club={player.club} fluid />
         <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
@@ -143,30 +123,6 @@ function PlayerCard({
           {player.nextOpponent ?? "—"}
         </div>
       </button>
-      {/* Auf dem Handy als dunkle Pille gruppiert: In der Fünferkette liegen
-          die Nachbar-Trios sonst so dicht, dass sie zu einem durchgehenden
-          Band verschmelzen und die Zuordnung zum Spieler verloren geht.
-          Ab sm reicht der Abstand, dort bleibt alles wie gehabt. */}
-      <div className="mt-1 flex gap-0.5 rounded-lg bg-black/25 p-0.5 sm:mt-2 sm:gap-1.5 sm:rounded-none sm:bg-transparent sm:p-0">
-        <button
-          type="button"
-          onClick={onToggleStarting}
-          title={pick.isStarting ? t.benchTitle : t.startTitle}
-          aria-label={pick.isStarting ? t.toBench(player.name) : t.toStarters(player.name)}
-          className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-deep shadow-sm hover:bg-brand-lime sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
-        >
-          {pick.isStarting ? "↓" : "↑"}
-        </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          title={t.removeTitle}
-          aria-label={t.remove(player.name)}
-          className="pressable h-5 w-5 rounded bg-white text-[9px] font-bold leading-none text-brand-danger shadow-sm hover:bg-brand-danger hover:text-white sm:h-7 sm:w-7 sm:rounded-md sm:text-xs"
-        >
-          ✕
-        </button>
-      </div>
     </div>
   );
 }
@@ -235,8 +191,10 @@ export default function TeamBuilder({
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ kind: "error" | "success"; text: string } | null>(null);
-  // Angetippter Startelf-Spieler, über dem die C/V-Auswahl schwebt.
-  const [cvAuswahl, setCvAuswahl] = useState<number | null>(null);
+  // FPL-Muster: Tipp auf eine Karte öffnet das Aktionsmenü; "Auswechseln"
+  // startet den Tauschmodus, in dem nur gültige Partner tippbar bleiben.
+  const [sheetSpieler, setSheetSpieler] = useState<number | null>(null);
+  const [tauschAus, setTauschAus] = useState<number | null>(null);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -462,6 +420,86 @@ export default function TeamBuilder({
     setSquad((prev) => prev.filter((s) => s.playerId !== playerId));
   }
 
+  /**
+   * Bleibt die Formation gültig, wenn Startelf-Spieler `raus` durch
+   * Bankspieler `rein` ersetzt wird? Grundlage für das Ausgrauen im
+   * Tauschmodus — ungültige Ziele lassen sich gar nicht erst antippen.
+   */
+  function tauschGueltig(rausId: number, reinId: number): boolean {
+    const rausPos = playersById.get(rausId)?.position;
+    const reinPos = playersById.get(reinId)?.position;
+    if (!rausPos || !reinPos) return false;
+    const counts = { ...starterCounts() };
+    counts[rausPos]--;
+    counts[reinPos]++;
+    return POSITIONS.every((p) => counts[p] >= MIN_STARTERS[p] && counts[p] <= MAX_STARTERS[p]);
+  }
+
+  /** Führt den Tausch Startelf ↔ Bank aus; Binde wandert mit dem Platz. */
+  function tauschen(startelfId: number, bankId: number) {
+    setSquad((prev) => {
+      const raus = prev.find((s) => s.playerId === startelfId);
+      const rein = prev.find((s) => s.playerId === bankId);
+      if (!raus || !rein) return prev;
+      // Captain/Vize bleiben in der Startelf: Die Rolle geht auf den
+      // Hereinkommenden über — sonst wäre der Kader nicht speicherbar.
+      if (raus.isCaptain || raus.isViceCaptain) {
+        const player = playersById.get(bankId);
+        setToast({
+          kind: "success",
+          text: raus.isCaptain ? t.captainMoved(player?.name ?? "?") : t.viceMoved(player?.name ?? "?"),
+        });
+      }
+      return prev.map((s) => {
+        if (s.playerId === startelfId) {
+          return { ...s, isStarting: false, isCaptain: false, isViceCaptain: false };
+        }
+        if (s.playerId === bankId) {
+          return {
+            ...s,
+            isStarting: true,
+            isCaptain: raus.isCaptain,
+            isViceCaptain: raus.isViceCaptain,
+          };
+        }
+        return s;
+      });
+    });
+    setTauschAus(null);
+  }
+
+  /** Tipp auf eine Karte: im Tauschmodus tauschen, sonst Menü öffnen. */
+  function karteAngetippt(playerId: number) {
+    if (tauschAus === null) {
+      setSheetSpieler(playerId);
+      return;
+    }
+    if (playerId === tauschAus) {
+      setTauschAus(null); // Quelle nochmal angetippt → abbrechen
+      return;
+    }
+    const quelle = squad.find((s) => s.playerId === tauschAus);
+    const ziel = squad.find((s) => s.playerId === playerId);
+    if (!quelle || !ziel || quelle.isStarting === ziel.isStarting) return;
+    const [startelfId, bankId] = quelle.isStarting
+      ? [quelle.playerId, ziel.playerId]
+      : [ziel.playerId, quelle.playerId];
+    if (!tauschGueltig(startelfId, bankId)) return;
+    tauschen(startelfId, bankId);
+  }
+
+  /** Ist `playerId` im Tauschmodus ein gültiges Ziel? */
+  function istTauschZiel(playerId: number): boolean {
+    if (tauschAus === null) return false;
+    const quelle = squad.find((s) => s.playerId === tauschAus);
+    const ziel = squad.find((s) => s.playerId === playerId);
+    if (!quelle || !ziel || quelle.isStarting === ziel.isStarting) return false;
+    const [startelfId, bankId] = quelle.isStarting
+      ? [quelle.playerId, ziel.playerId]
+      : [ziel.playerId, quelle.playerId];
+    return tauschGueltig(startelfId, bankId);
+  }
+
   function handleSave() {
     // Vorprüfung im Client, damit der Fehler sofort kommt — der Server
     // validiert dieselben Regeln nochmals verbindlich.
@@ -534,6 +572,100 @@ export default function TeamBuilder({
         >
           {toast.text}
         </p>
+      )}
+
+      {/* Aktionsmenü (Bottom Sheet) — öffnet sich beim Tipp auf eine Karte. */}
+      {sheetSpieler !== null && (() => {
+        const pick = squad.find((s) => s.playerId === sheetSpieler);
+        const player = playersById.get(sheetSpieler);
+        if (!pick || !player) return null;
+        const zu = () => setSheetSpieler(null);
+        return (
+          <>
+            <button
+              type="button"
+              aria-label={t.sheetClose}
+              onClick={zu}
+              className="fixed inset-0 z-40 cursor-default bg-black/40"
+            />
+            <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:bottom-6 sm:rounded-2xl">
+              <div className="mb-3 flex items-center gap-3">
+                <Jersey club={player.club} size={40} />
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-brand-deep">{player.name}</p>
+                  <p className="text-xs text-brand-deep/60">
+                    {player.club} · {t.positions[player.position]} · {player.price.toFixed(1)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {pick.isStarting ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={pick.isCaptain}
+                      onClick={() => { setCaptain(pick.playerId); zu(); }}
+                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
+                    >
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs font-bold text-brand-accent">C</span>
+                      {t.captainTitle}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pick.isViceCaptain}
+                      onClick={() => { setVice(pick.playerId); zu(); }}
+                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
+                    >
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-deep text-xs font-bold text-brand-accent">V</span>
+                      {t.viceTitle}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setTauschAus(pick.playerId); zu(); }}
+                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
+                    >
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-lime text-xs font-bold text-brand-deep">⇄</span>
+                      {t.swapOut}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setTauschAus(pick.playerId); zu(); }}
+                    className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-lime text-xs font-bold text-brand-deep">⇄</span>
+                    {t.swapIn}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { removePlayer(pick.playerId); zu(); }}
+                  className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-danger/10 px-4 py-3 text-left text-sm font-semibold text-brand-danger"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-danger text-xs font-bold text-white">✕</span>
+                  {t.removeTitle}
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* Tauschmodus-Hinweis mit Abbrechen — schwebt unten, bis getauscht wird. */}
+      {tauschAus !== null && (
+        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
+          <span className="truncate">
+            {t.swapHint(playersById.get(tauschAus)?.name ?? "?")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setTauschAus(null)}
+            className="pressable shrink-0 rounded-full bg-white/15 px-3 py-1 font-bold"
+          >
+            {t.swapCancel}
+          </button>
+        </div>
       )}
 
       {/* ===== Spielfeld ===== */}
@@ -645,12 +777,13 @@ export default function TeamBuilder({
                         t={t}
                         player={player}
                         pick={pick}
-                        selected={cvAuswahl === pick.playerId}
-                        onSelect={() => setCvAuswahl((id) => (id === pick.playerId ? null : pick.playerId))}
-                        onCaptain={() => { setCaptain(pick.playerId); setCvAuswahl(null); }}
-                        onVice={() => { setVice(pick.playerId); setCvAuswahl(null); }}
-                        onToggleStarting={() => { toggleStarting(pick.playerId); setCvAuswahl(null); }}
-                        onRemove={() => { removePlayer(pick.playerId); setCvAuswahl(null); }}
+                        highlight={tauschAus === pick.playerId}
+                        dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                        onTap={
+                          tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
+                            ? () => karteAngetippt(pick.playerId)
+                            : undefined
+                        }
                       />
                     );
                   })}
@@ -695,10 +828,13 @@ export default function TeamBuilder({
                       t={t}
                       player={player}
                       pick={pick}
-                      onCaptain={() => setCaptain(pick.playerId)}
-                      onVice={() => setVice(pick.playerId)}
-                      onToggleStarting={() => toggleStarting(pick.playerId)}
-                      onRemove={() => removePlayer(pick.playerId)}
+                      highlight={tauschAus === pick.playerId}
+                      dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                      onTap={
+                        tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
+                          ? () => karteAngetippt(pick.playerId)
+                          : undefined
+                      }
                     />
                   </div>
                 );
@@ -718,10 +854,13 @@ export default function TeamBuilder({
                       t={t}
                       player={player}
                       pick={pick}
-                      onCaptain={() => setCaptain(pick.playerId)}
-                      onVice={() => setVice(pick.playerId)}
-                      onToggleStarting={() => toggleStarting(pick.playerId)}
-                      onRemove={() => removePlayer(pick.playerId)}
+                      highlight={tauschAus === pick.playerId}
+                      dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                      onTap={
+                        tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
+                          ? () => karteAngetippt(pick.playerId)
+                          : undefined
+                      }
                     />
                     <div className="flex gap-1">
                       <button
