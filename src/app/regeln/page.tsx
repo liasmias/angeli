@@ -364,6 +364,12 @@ export default async function RegelnPage() {
             zum Einsatz, übernimmt dein <b>Vize-Captain</b> die Binde. Bankspieler zählen nicht,
             ausser du setzt den Bench Boost ein.
           </p>
+          <p className="rounded-lg bg-brand-deep/5 p-3">
+            <b>Bonuspunkte (ab Spieltag {BONUS_AB_SPIELTAG}):</b> Nach jeder Partie erhalten die
+            drei am besten bewerteten Spieler <b>3, 2 und 1</b> Zusatzpunkte (Basis ist das
+            Spieler-Rating). Bei Gleichstand teilen sich Spieler den Rang — zwei geteilte Erste
+            bekommen beide 3, der Nächste 1. Der Bonus erscheint, sobald die Partie beendet ist.
+          </p>
         </Abschnitt>
 
         <Abschnitt titel="Automatische Einwechslung">
