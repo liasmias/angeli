@@ -77,6 +77,8 @@ function PlayerCard({
   onTap,
   dimmed = false,
   highlight = false,
+  showPrice = false,
+  onQuickRemove,
   t,
 }: {
   player: PlayerOption;
@@ -87,6 +89,10 @@ function PlayerCard({
   dimmed?: boolean;
   /** Tauschmodus: dieser Spieler ist die Quelle des Tauschs. */
   highlight?: boolean;
+  /** Transfer-Modus: Preis statt Gegner in der unteren Zeile. */
+  showPrice?: boolean;
+  /** Transfer-Modus: kleines ✕ oben rechts entfernt den Spieler direkt. */
+  onQuickRemove?: () => void;
   t: BuilderDict;
 }) {
   return (
@@ -97,12 +103,23 @@ function PlayerCard({
     >
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
-          className={`pop-in absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
-            pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
-          }`}
+          className={`pop-in absolute top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+            onQuickRemove ? "left-0.5" : "right-0.5"
+          } ${pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"}`}
         >
           {pick.isCaptain ? "C" : "V"}
         </span>
+      )}
+      {onQuickRemove && (
+        <button
+          type="button"
+          onClick={onQuickRemove}
+          title={t.remove(player.name)}
+          aria-label={t.remove(player.name)}
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-[10px] font-bold leading-none text-white ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs"
+        >
+          ✕
+        </button>
       )}
       <button
         type="button"
@@ -117,10 +134,14 @@ function PlayerCard({
         <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
           <span className="block truncate">{player.name}</span>
         </div>
-        {/* Statt des eigenen Vereins der nächste Gegner — das ist die
-            Information, die bei der Aufstellung zählt. */}
-        <div className="w-full truncate rounded-b bg-brand-deep px-1 py-0.5 text-center text-[9px] font-medium leading-4 text-white/90 sm:px-1.5 sm:text-xs">
-          {player.nextOpponent ?? "—"}
+        {/* Normal der nächste Gegner — im Transfer-Modus der Preis, denn
+            dann ist das die Information, die zählt. */}
+        <div
+          className={`w-full truncate rounded-b px-1 py-0.5 text-center text-[9px] font-medium leading-4 sm:px-1.5 sm:text-xs ${
+            showPrice ? "bg-brand-accent font-bold text-brand-deep" : "bg-brand-deep text-white/90"
+          }`}
+        >
+          {showPrice ? player.price.toFixed(1) : (player.nextOpponent ?? "—")}
         </div>
       </button>
     </div>
@@ -195,6 +216,8 @@ export default function TeamBuilder({
   // startet den Tauschmodus, in dem nur gültige Partner tippbar bleiben.
   const [sheetSpieler, setSheetSpieler] = useState<number | null>(null);
   const [tauschAus, setTauschAus] = useState<number | null>(null);
+  // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
+  const [transferModus, setTransferModus] = useState(false);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -640,17 +663,31 @@ export default function TeamBuilder({
                 )}
                 <button
                   type="button"
-                  onClick={() => { removePlayer(pick.playerId); zu(); }}
+                  onClick={() => { removePlayer(pick.playerId); setTransferModus(true); zu(); }}
                   className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-danger/10 px-4 py-3 text-left text-sm font-semibold text-brand-danger"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-danger text-xs font-bold text-white">✕</span>
-                  {t.removeTitle}
+                  {t.transferOut}
                 </button>
               </div>
             </div>
           </>
         );
       })()}
+
+      {/* Transfer-Modus-Hinweis mit Fertig-Knopf. */}
+      {transferModus && tauschAus === null && (
+        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
+          <span className="truncate">{t.transferHint}</span>
+          <button
+            type="button"
+            onClick={() => setTransferModus(false)}
+            className="pressable shrink-0 rounded-full bg-brand-accent px-3 py-1 font-bold text-brand-deep"
+          >
+            {t.transferDone}
+          </button>
+        </div>
+      )}
 
       {/* Tauschmodus-Hinweis mit Abbrechen — schwebt unten, bis getauscht wird. */}
       {tauschAus !== null && (
@@ -779,6 +816,8 @@ export default function TeamBuilder({
                         pick={pick}
                         highlight={tauschAus === pick.playerId}
                         dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                        showPrice={transferModus}
+                        onQuickRemove={transferModus ? () => removePlayer(pick.playerId) : undefined}
                         onTap={
                           tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
                             ? () => karteAngetippt(pick.playerId)
@@ -830,6 +869,8 @@ export default function TeamBuilder({
                       pick={pick}
                       highlight={tauschAus === pick.playerId}
                       dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                      showPrice={transferModus}
+                      onQuickRemove={transferModus ? () => removePlayer(pick.playerId) : undefined}
                       onTap={
                         tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
                           ? () => karteAngetippt(pick.playerId)
@@ -856,6 +897,8 @@ export default function TeamBuilder({
                       pick={pick}
                       highlight={tauschAus === pick.playerId}
                       dimmed={tauschAus !== null && tauschAus !== pick.playerId && !istTauschZiel(pick.playerId)}
+                      showPrice={transferModus}
+                      onQuickRemove={transferModus ? () => removePlayer(pick.playerId) : undefined}
                       onTap={
                         tauschAus === null || tauschAus === pick.playerId || istTauschZiel(pick.playerId)
                           ? () => karteAngetippt(pick.playerId)
