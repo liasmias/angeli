@@ -79,6 +79,7 @@ function PlayerCard({
   highlight = false,
   showPrice = false,
   onQuickRemove,
+  onUndo,
   t,
 }: {
   player: PlayerOption;
@@ -93,6 +94,8 @@ function PlayerCard({
   showPrice?: boolean;
   /** Transfer-Modus: kleines ✕ oben rechts entfernt den Spieler direkt. */
   onQuickRemove?: () => void;
+  /** Geisterkarte eines Entfernten: ↩ oben rechts holt ihn zurück. */
+  onUndo?: () => void;
   t: BuilderDict;
 }) {
   return (
@@ -120,6 +123,17 @@ function PlayerCard({
           className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-[10px] font-bold leading-none text-white ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs"
         >
           ✕
+        </button>
+      )}
+      {onUndo && (
+        <button
+          type="button"
+          onClick={onUndo}
+          title={t.undoTitle(player.name)}
+          aria-label={t.undoTitle(player.name)}
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-[10px] font-bold leading-none text-brand-deep ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs"
+        >
+          ↩
         </button>
       )}
       <button
@@ -450,15 +464,15 @@ export default function TeamBuilder({
     });
   }
 
-  /** Macht den letzten "Transfer out" rückgängig — mit denselben Prüfungen
+  /** Macht einen "Transfer out" rückgängig — mit denselben Prüfungen
    *  wie beim normalen Hinzufügen (Kader-, Positions- und Club-Limit). */
-  function transferRueckgaengig() {
-    const letzter = entfernt[entfernt.length - 1];
+  function transferRueckgaengig(playerId: number) {
+    const letzter = entfernt.find((s) => s.playerId === playerId);
     if (!letzter) return;
     const player = playersById.get(letzter.playerId);
     if (!player) return;
     if (squad.some((s) => s.playerId === letzter.playerId)) {
-      setEntfernt((st) => st.slice(0, -1));
+      setEntfernt((st) => st.filter((s) => s.playerId !== playerId));
       return;
     }
     if (squad.length >= settings.squadSize) {
@@ -491,7 +505,7 @@ export default function TeamBuilder({
         isViceCaptain: letzter.isViceCaptain && vizeFrei && darfStarten,
       },
     ]);
-    setEntfernt((st) => st.slice(0, -1));
+    setEntfernt((st) => st.filter((s) => s.playerId !== playerId));
     setToast({ kind: "success", text: t.undoDone(player.name) });
   }
 
@@ -753,15 +767,6 @@ export default function TeamBuilder({
       {transferModus && tauschAus === null && (
         <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
           <span className="truncate">{t.transferHint}</span>
-          {entfernt.length > 0 && (
-            <button
-              type="button"
-              onClick={transferRueckgaengig}
-              className="pressable shrink-0 rounded-full bg-white/15 px-3 py-1 font-bold"
-            >
-              {t.undo}
-            </button>
-          )}
           <button
             type="button"
             onClick={() => setTransferModus(false)}
@@ -909,6 +914,29 @@ export default function TeamBuilder({
                       />
                     );
                   })}
+                  {transferModus &&
+                    entfernt
+                      .filter(
+                        (e) =>
+                          e.isStarting &&
+                          playersById.get(e.playerId)?.position === pos &&
+                          !squad.some((s) => s.playerId === e.playerId)
+                      )
+                      .map((e) => {
+                        const player = playersById.get(e.playerId);
+                        if (!player) return null;
+                        return (
+                          <PlayerCard
+                            key={`ghost-${e.playerId}`}
+                            t={t}
+                            player={player}
+                            pick={{ ...e, isCaptain: false, isViceCaptain: false }}
+                            dimmed
+                            showPrice
+                            onUndo={() => transferRueckgaengig(e.playerId)}
+                          />
+                        );
+                      })}
                   {missing > 0 && (
                     <EmptySlot
                       t={t}
@@ -1013,6 +1041,28 @@ export default function TeamBuilder({
                   </div>
                 );
               })}
+              {transferModus &&
+                entfernt
+                  .filter((e) => !e.isStarting && !squad.some((s) => s.playerId === e.playerId))
+                  .map((e) => {
+                    const player = playersById.get(e.playerId);
+                    if (!player) return null;
+                    return (
+                      <div key={`ghost-${e.playerId}`} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+                          —
+                        </span>
+                        <PlayerCard
+                          t={t}
+                          player={player}
+                          pick={{ ...e, isCaptain: false, isViceCaptain: false }}
+                          dimmed
+                          showPrice
+                          onUndo={() => transferRueckgaengig(e.playerId)}
+                        />
+                      </div>
+                    );
+                  })}
             </div>
           )}
         </div>
