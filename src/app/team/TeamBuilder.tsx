@@ -101,7 +101,7 @@ function PlayerCard({
   return (
     <div
       id={`spieler-karte-${player.id}`}
-      className={`pop-in group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center transition-opacity duration-150 ${
+      className={`${onUndo ? "" : "pop-in "}group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center transition-opacity duration-150 ${
         dimmed ? "opacity-35" : ""
       }`}
     >
@@ -233,8 +233,10 @@ export default function TeamBuilder({
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
-  // Zuletzt entfernte Spieler — Grundlage für "Rückgängig" im Transfer-Modus.
-  const [entfernt, setEntfernt] = useState<SquadPick[]>([]);
+  // Zuletzt entfernte Spieler samt Originalposition im Kader-Array —
+  // Grundlage für "Rückgängig" und dafür, dass die Geisterkarte an
+  // ihrem Platz stehen bleibt statt ans Reihenende zu springen.
+  const [entfernt, setEntfernt] = useState<{ pick: SquadPick; idx: number }[]>([]);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -458,8 +460,8 @@ export default function TeamBuilder({
 
   function removePlayer(playerId: number) {
     setSquad((prev) => {
-      const pick = prev.find((s) => s.playerId === playerId);
-      if (pick) setEntfernt((st) => [...st, pick]);
+      const idx = prev.findIndex((s) => s.playerId === playerId);
+      if (idx >= 0) setEntfernt((st) => [...st, { pick: prev[idx], idx }]);
       return prev.filter((s) => s.playerId !== playerId);
     });
   }
@@ -467,12 +469,13 @@ export default function TeamBuilder({
   /** Macht einen "Transfer out" rückgängig — mit denselben Prüfungen
    *  wie beim normalen Hinzufügen (Kader-, Positions- und Club-Limit). */
   function transferRueckgaengig(playerId: number) {
-    const letzter = entfernt.find((s) => s.playerId === playerId);
-    if (!letzter) return;
+    const eintrag = entfernt.find((e) => e.pick.playerId === playerId);
+    if (!eintrag) return;
+    const letzter = eintrag.pick;
     const player = playersById.get(letzter.playerId);
     if (!player) return;
     if (squad.some((s) => s.playerId === letzter.playerId)) {
-      setEntfernt((st) => st.filter((s) => s.playerId !== playerId));
+      setEntfernt((st) => st.filter((e) => e.pick.playerId !== playerId));
       return;
     }
     if (squad.length >= settings.squadSize) {
@@ -496,16 +499,17 @@ export default function TeamBuilder({
       letzter.isStarting && canStart(starterCounts(), player.position, settings.startingSize).ok;
     const captainFrei = !squad.some((s) => s.isCaptain);
     const vizeFrei = !squad.some((s) => s.isViceCaptain);
-    setSquad((prev) => [
-      ...prev,
-      {
+    setSquad((prev) => {
+      const neu = [...prev];
+      neu.splice(Math.min(eintrag.idx, neu.length), 0, {
         ...letzter,
         isStarting: darfStarten,
         isCaptain: letzter.isCaptain && captainFrei && darfStarten,
         isViceCaptain: letzter.isViceCaptain && vizeFrei && darfStarten,
-      },
-    ]);
-    setEntfernt((st) => st.filter((s) => s.playerId !== playerId));
+      });
+      return neu;
+    });
+    setEntfernt((st) => st.filter((e) => e.pick.playerId !== playerId));
     setToast({ kind: "success", text: t.undoDone(player.name) });
   }
 
@@ -889,23 +893,45 @@ export default function TeamBuilder({
             {POSITIONS.map((pos) => {
               const row = starters(pos);
               // Geisterkarten (Transfer-Modus) belegen ihren Platz sichtbar —
-              // fuer sie braucht es keinen "+"-Platzhalter mehr.
+              // fuer sie braucht es keinen "+"-Platzhalter mehr. Nach dem
+              // Original-Index einsortiert, damit nichts in der Reihe springt.
               const geister = transferModus
                 ? entfernt.filter(
                     (e) =>
-                      e.isStarting &&
-                      playersById.get(e.playerId)?.position === pos &&
-                      !squad.some((s) => s.playerId === e.playerId)
+                      e.pick.isStarting &&
+                      playersById.get(e.pick.playerId)?.position === pos &&
+                      !squad.some((s) => s.playerId === e.pick.playerId)
                   )
                 : [];
+              const eintraege = [
+                ...row.map((pick) => ({
+                  pick,
+                  geist: false,
+                  idx: squad.findIndex((s) => s.playerId === pick.playerId),
+                })),
+                ...geister.map((e) => ({ pick: e.pick, geist: true, idx: e.idx })),
+              ].sort((a, b) => a.idx - b.idx);
               const missing = slotsByPosition[pos] - countByPosition[pos] - geister.length;
               return (
                 // Nie umbrechen: pro Position genau eine Linie, egal ob drei
                 // oder fünf Spieler. Die Karten teilen sich die Breite.
                 <div key={pos} className="flex items-start justify-center gap-1.5 sm:gap-5">
-                  {row.map((pick) => {
+                  {eintraege.map(({ pick, geist }) => {
                     const player = playersById.get(pick.playerId);
                     if (!player) return null;
+                    if (geist) {
+                      return (
+                        <PlayerCard
+                          key={pick.playerId}
+                          t={t}
+                          player={player}
+                          pick={{ ...pick, isCaptain: false, isViceCaptain: false }}
+                          dimmed
+                          showPrice
+                          onUndo={() => transferRueckgaengig(pick.playerId)}
+                        />
+                      );
+                    }
                     return (
                       <PlayerCard
                         key={pick.playerId}
@@ -924,21 +950,6 @@ export default function TeamBuilder({
                       />
                     );
                   })}
-                  {geister.map((e) => {
-                        const player = playersById.get(e.playerId);
-                        if (!player) return null;
-                        return (
-                          <PlayerCard
-                            key={`ghost-${e.playerId}`}
-                            t={t}
-                            player={player}
-                            pick={{ ...e, isCaptain: false, isViceCaptain: false }}
-                            dimmed
-                            showPrice
-                            onUndo={() => transferRueckgaengig(e.playerId)}
-                          />
-                        );
-                      })}
                   {missing > 0 && (
                     <EmptySlot
                       t={t}
@@ -1045,8 +1056,8 @@ export default function TeamBuilder({
               })}
               {transferModus &&
                 entfernt
-                  .filter((e) => !e.isStarting && !squad.some((s) => s.playerId === e.playerId))
-                  .map((e) => {
+                  .filter((e) => !e.pick.isStarting && !squad.some((s) => s.playerId === e.pick.playerId))
+                  .map(({ pick: e }) => {
                     const player = playersById.get(e.playerId);
                     if (!player) return null;
                     return (
