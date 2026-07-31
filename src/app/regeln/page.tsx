@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
-import { PREIS_ANSTIEG, PREIS_RATING_SCHWELLE } from "@/lib/pricing";
+import { PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
 import { getLang } from "@/lib/lang";
 
 export const metadata = {
@@ -124,10 +124,11 @@ export default async function RegelnPage() {
               {MAX_STARTERS.MID} midfielders and {MAX_STARTERS.FWD} forwards.
             </p>
             <p className="rounded-lg bg-brand-deep/5 p-3">
-              <b>Automatic price rise:</b> if a player reaches a rating of at least{" "}
+              <b>Automatic price changes:</b> if a player reaches a rating of at least{" "}
               <b>{PREIS_RATING_SCHWELLE}</b> in two consecutive gameweeks, his price goes up
-              by <b>{PREIS_ANSTIEG}m</b>. Your existing team keeps its full value — even above
-              the base budget.
+              by <b>{PREIS_ANSTIEG}m</b>. If he stays below <b>{PREIS_SENKUNG_SCHWELLE}</b>{" "}
+              twice in a row, it drops by <b>{PREIS_SENKUNG}m</b> (never below {PREIS_MINIMUM}).
+              Your existing team keeps its full value — even above the base budget.
             </p>
           </Abschnitt>
 
@@ -313,10 +314,12 @@ export default async function RegelnPage() {
             {MAX_STARTERS.FWD} {POSITION_LABEL.FWD}.
           </p>
           <p className="rounded-lg bg-brand-deep/5 p-3">
-            <b>Automatische Preiserhöhung:</b> Erreicht ein Spieler an zwei
+            <b>Automatische Preisanpassung:</b> Erreicht ein Spieler an zwei
             aufeinanderfolgenden Spieltagen ein Rating von mindestens{" "}
             <b>{PREIS_RATING_SCHWELLE}</b>, steigt sein Preis um{" "}
-            <b>{PREIS_ANSTIEG} Mio.</b> Dein bereits gekauftes Team behält dabei
+            <b>{PREIS_ANSTIEG} Mio.</b> Bleibt er zweimal in Folge unter{" "}
+            <b>{PREIS_SENKUNG_SCHWELLE}</b>, sinkt er um <b>{PREIS_SENKUNG} Mio.</b>{" "}
+            (nie unter {PREIS_MINIMUM}). Dein bereits gekauftes Team behält dabei
             seinen vollen Wert — auch über dem Basis-Budget.
           </p>
         </Abschnitt>

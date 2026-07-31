@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import { computeAutoSubs } from "@/lib/auto-subs";
-import { PREIS_ANSTIEG, PREIS_RATING_SCHWELLE } from "@/lib/pricing";
+import { PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
 import type { Position } from "@/lib/database.types";
 
 // Status-Codes von API-Football.
@@ -305,39 +305,62 @@ export async function GET(request: Request) {
   if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
     const vorherigeRunde = (alleGws ?? []).find((g) => g.number === gameweek.number - 1);
     if (vorherigeRunde) {
-      const [{ data: aktuelleTop }, { data: vorherigeTop }] = await Promise.all([
-        supabase
-          .from("player_stats")
-          .select("player_id")
-          .eq("gameweek_id", gameweek.id)
-          .gte("rating", PREIS_RATING_SCHWELLE),
-        supabase
-          .from("player_stats")
-          .select("player_id")
-          .eq("gameweek_id", vorherigeRunde.id)
-          .gte("rating", PREIS_RATING_SCHWELLE),
-      ]);
-      const vorherigeIds = new Set((vorherigeTop ?? []).map((r) => r.player_id));
+      const [{ data: aktuelleTop }, { data: vorherigeTop }, { data: aktuelleTief }, { data: vorherigeTief }] =
+        await Promise.all([
+          supabase
+            .from("player_stats")
+            .select("player_id")
+            .eq("gameweek_id", gameweek.id)
+            .gte("rating", PREIS_RATING_SCHWELLE),
+          supabase
+            .from("player_stats")
+            .select("player_id")
+            .eq("gameweek_id", vorherigeRunde.id)
+            .gte("rating", PREIS_RATING_SCHWELLE),
+          // Schwach nur, wer gespielt UND ein Rating unter der Schwelle hat —
+          // wer gar nicht zum Einsatz kam (rating NULL), fällt nicht darunter.
+          supabase
+            .from("player_stats")
+            .select("player_id")
+            .eq("gameweek_id", gameweek.id)
+            .lt("rating", PREIS_SENKUNG_SCHWELLE),
+          supabase
+            .from("player_stats")
+            .select("player_id")
+            .eq("gameweek_id", vorherigeRunde.id)
+            .lt("rating", PREIS_SENKUNG_SCHWELLE),
+        ]);
+
+      // Je Spieler und Runde genau eine Preisbewegung; das Vorzeichen von
+      // delta unterscheidet Anstieg und Senkung.
+      const bewegungen: { playerId: number; delta: number }[] = [];
+      const topVorher = new Set((vorherigeTop ?? []).map((r) => r.player_id));
       for (const r of aktuelleTop ?? []) {
-        if (!vorherigeIds.has(r.player_id)) continue;
-        // Insert schlägt fehl, wenn für diese Runde schon erhöht wurde
-        // (unique) oder die Migration noch fehlt — beides: überspringen.
-        const { error: insertError } = await supabase
-          .from("price_changes")
-          .insert({ player_id: r.player_id, gameweek_id: gameweek.id, delta: PREIS_ANSTIEG });
-        if (insertError) continue;
+        if (topVorher.has(r.player_id)) bewegungen.push({ playerId: r.player_id, delta: PREIS_ANSTIEG });
+      }
+      const tiefVorher = new Set((vorherigeTief ?? []).map((r) => r.player_id));
+      for (const r of aktuelleTief ?? []) {
+        if (tiefVorher.has(r.player_id)) bewegungen.push({ playerId: r.player_id, delta: -PREIS_SENKUNG });
+      }
+
+      for (const b of bewegungen) {
         const { data: spieler } = await supabase
           .from("players")
           .select("price")
-          .eq("id", r.player_id)
+          .eq("id", b.playerId)
           .single();
-        if (spieler) {
-          await supabase
-            .from("players")
-            .update({ price: Math.round((Number(spieler.price) + PREIS_ANSTIEG) * 10) / 10 })
-            .eq("id", r.player_id);
-          priceRises++;
-        }
+        if (!spieler) continue;
+        const alt = Number(spieler.price);
+        const neu = Math.max(PREIS_MINIMUM, Math.round((alt + b.delta) * 10) / 10);
+        if (neu === alt) continue; // schon am Minimum — keine Bewegung buchen
+        // Insert schlägt fehl, wenn für diese Runde schon gebucht wurde
+        // (unique) oder die Migration noch fehlt — beides: überspringen.
+        const { error: insertError } = await supabase
+          .from("price_changes")
+          .insert({ player_id: b.playerId, gameweek_id: gameweek.id, delta: neu - alt });
+        if (insertError) continue;
+        await supabase.from("players").update({ price: neu }).eq("id", b.playerId);
+        priceRises++;
       }
     }
   }
