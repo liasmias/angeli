@@ -2,13 +2,20 @@ import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
+import { loadPlayerDetails, type PlayerDetail } from "@/lib/player-detail";
+import type { PastPlayer } from "@/app/team/PastGameweek";
+import type { Position } from "@/lib/database.types";
+import BestPlayerChips from "./BestPlayerChips";
 
 const FINISHED = new Set(["FT", "AET", "PEN"]);
 // Dieselben Live-Status wie im Sync — Zwischenstände laufender Partien.
 const LIVE = new Set(["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"]);
 
 interface BestPlayer {
+  playerId: number;
   name: string;
+  club: string;
+  position: Position;
   points: number;
   goals: number;
   assists: number;
@@ -16,7 +23,8 @@ interface BestPlayer {
 
 export default async function FixturesPage() {
   const supabase = await createClient();
-  const t = getDictionary(await getLang()).fixtures;
+  const lang = await getLang();
+  const t = getDictionary(lang).fixtures;
 
   const [{ data: gameweeks }, { data: fixtures }, { data: stats }, { data: points }, { data: players }] =
     await Promise.all([
@@ -27,19 +35,30 @@ export default async function FixturesPage() {
         .order("kickoff"),
       supabase.from("player_stats").select("player_id, fixture_id, gameweek_id, goals, assists"),
       supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
-      supabase.from("players").select("id, first_name, last_name"),
+      supabase.from("players").select("id, first_name, last_name, position, clubs(short_name)"),
     ]);
 
-  const nameById = new Map(
-    (players ?? []).map((p) => [p.id, shortenPlayerName(p.first_name, p.last_name)])
+  const spielerById = new Map(
+    (players ?? []).map((p) => {
+      const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
+      return [p.id, {
+        name: shortenPlayerName(p.first_name, p.last_name),
+        club: club?.short_name ?? "—",
+        position: p.position,
+      }];
+    })
   );
   const pointsByPlayerGw = new Map((points ?? []).map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
 
   const bestByFixture = new Map<number, BestPlayer[]>();
   for (const s of stats ?? []) {
     if (s.fixture_id === null) continue;
+    const info = spielerById.get(s.player_id);
     const entry: BestPlayer = {
-      name: nameById.get(s.player_id) ?? "?",
+      playerId: s.player_id,
+      name: info?.name ?? "?",
+      club: info?.club ?? "—",
+      position: info?.position ?? "MID",
       points: pointsByPlayerGw.get(`${s.player_id}:${s.gameweek_id}`) ?? 0,
       goals: s.goals,
       assists: s.assists,
@@ -47,6 +66,23 @@ export default async function FixturesPage() {
     const list = bestByFixture.get(s.fixture_id) ?? [];
     list.push(entry);
     bestByFixture.set(s.fixture_id, list);
+  }
+
+  // Popup-Details fuer die "Beste Spieler"-Chips: je Spieltag die
+  // Top-Spieler aller Partien einsammeln und in einem Rutsch laden.
+  const gwIdByFixture = new Map((fixtures ?? []).map((f) => [f.id, f.gameweek_id]));
+  const chipIdsByGw = new Map<number, Set<number>>();
+  for (const [fixtureId, liste] of bestByFixture) {
+    const gwId = gwIdByFixture.get(fixtureId);
+    if (gwId === undefined || gwId === null) continue;
+    const top = [...liste].filter((b) => b.points > 0).sort((a, b) => b.points - a.points).slice(0, 6);
+    const menge = chipIdsByGw.get(gwId) ?? new Set<number>();
+    for (const b of top) menge.add(b.playerId);
+    chipIdsByGw.set(gwId, menge);
+  }
+  const detailsByGw = new Map<number, Record<number, PlayerDetail>>();
+  for (const [gwId, ids] of chipIdsByGw) {
+    detailsByGw.set(gwId, await loadPlayerDetails(supabase, gwId, [...ids]));
   }
 
   const now = Date.now();
@@ -148,16 +184,23 @@ export default async function FixturesPage() {
                           <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-deep/50">
                             {t.bestPlayers}
                           </div>
-                          <div className="mb-3 flex flex-wrap gap-1.5">
-                            {best.map((b) => (
-                              <span
-                                key={b.name}
-                                className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 text-xs font-bold text-brand-deep"
-                              >
-                                {b.name} ({b.points})
-                              </span>
-                            ))}
-                          </div>
+                          <BestPlayerChips
+                            lang={lang}
+                            gameweekNumber={gw.number}
+                            players={best.map((b): PastPlayer => ({
+                              playerId: b.playerId,
+                              name: b.name,
+                              club: b.club,
+                              position: b.position,
+                              isStarting: true,
+                              isCaptain: false,
+                              isViceCaptain: false,
+                              pointsEarned: b.points,
+                              benchOrder: 0,
+                              autoSubbed: false,
+                              detail: detailsByGw.get(gw.id)?.[b.playerId],
+                            }))}
+                          />
                           {scorers.length > 0 && (
                             <p className="text-xs text-brand-deep/70">
                               <span className="font-bold">{t.goal}</span>{" "}

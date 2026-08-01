@@ -33,7 +33,8 @@ const KATEGORIEN = [
   "bonus",
 ] as const;
 
-function Popup({
+/** Punkte-Popup — auch vom Spielplan wiederverwendet (beste Spieler). */
+export function Popup({
   p, gameweekNumber, lang, onClose,
 }: {
   p: PastPlayer;
