@@ -1,4 +1,4 @@
--- Sync alle 15 Minuten direkt aus Supabase heraus anstossen.
+-- Sync alle 5 Minuten direkt aus Supabase heraus anstossen.
 --
 -- Hintergrund: Vercel führt Cron-Jobs im Hobby-Tarif nur einmal täglich aus
 -- (und dann zu beliebiger Minute innerhalb der Stunde). Für Live-Punkte
@@ -18,7 +18,7 @@ where exists (select 1 from cron.job where jobname = 'angeli-sync');
 
 select cron.schedule(
   'angeli-sync',
-  '*/15 * * * *',
+  '*/5 * * * *',
   $$
   select net.http_get(
     url := '<APP_URL>/api/cron/sync',
