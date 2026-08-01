@@ -99,15 +99,15 @@ export default async function FixturesPage() {
                         <span className="relative">
                           <span
                             className={`rounded-lg px-3 py-1 font-bold tabular-nums ${
-                              live ? "bg-brand-danger text-white" : "bg-brand-deep text-brand-accent"
+                              live ? "bg-brand-magenta text-white" : "bg-brand-deep text-brand-accent"
                             }`}
                           >
                             {f.home_goals ?? 0}:{f.away_goals ?? 0}
                           </span>
                           {live && (
                             <span className="absolute -right-1.5 -top-1.5 flex h-3 w-3" aria-label="live">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-danger opacity-60" />
-                              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-danger ring-2 ring-white" />
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-magenta opacity-60" />
+                              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-magenta ring-2 ring-white" />
                             </span>
                           )}
                         </span>
