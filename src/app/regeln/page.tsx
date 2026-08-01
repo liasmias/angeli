@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
-import { PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
+import { PREIS_AB_SPIELTAG, PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
 import { BONUS_AB_SPIELTAG } from "@/lib/bonus";
 import { getLang } from "@/lib/lang";
 
@@ -129,7 +129,9 @@ export default async function RegelnPage() {
               <b>{PREIS_RATING_SCHWELLE}</b> in two consecutive gameweeks, his price goes up
               by <b>{PREIS_ANSTIEG}m</b>. If he stays below <b>{PREIS_SENKUNG_SCHWELLE}</b>{" "}
               twice in a row, it drops by <b>{PREIS_SENKUNG}m</b> (never below {PREIS_MINIMUM}).
-              Your existing team keeps its full value — even above the base budget.
+              Counting starts at gameweek {PREIS_AB_SPIELTAG}, so the first change happens after
+              gameweek {PREIS_AB_SPIELTAG + 1}. Your existing team keeps its full value — even
+              above the base budget.
             </p>
           </Abschnitt>
 
@@ -335,8 +337,9 @@ export default async function RegelnPage() {
             <b>{PREIS_RATING_SCHWELLE}</b>, steigt sein Preis um{" "}
             <b>{PREIS_ANSTIEG} Mio.</b> Bleibt er zweimal in Folge unter{" "}
             <b>{PREIS_SENKUNG_SCHWELLE}</b>, sinkt er um <b>{PREIS_SENKUNG} Mio.</b>{" "}
-            (nie unter {PREIS_MINIMUM}). Dein bereits gekauftes Team behält dabei
-            seinen vollen Wert — auch über dem Basis-Budget.
+            (nie unter {PREIS_MINIMUM}). Gezählt wird ab Spieltag {PREIS_AB_SPIELTAG} —
+            die erste Anpassung kommt also nach Spieltag {PREIS_AB_SPIELTAG + 1}. Dein bereits
+            gekauftes Team behält dabei seinen vollen Wert — auch über dem Basis-Budget.
           </p>
         </Abschnitt>
 

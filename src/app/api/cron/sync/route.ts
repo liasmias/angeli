@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import { computeAutoSubs } from "@/lib/auto-subs";
-import { PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
+import { PREIS_AB_SPIELTAG, PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
 import type { Position } from "@/lib/database.types";
 
 // Status-Codes von API-Football.
@@ -304,7 +304,10 @@ export async function GET(request: Request) {
   let priceRises = 0;
   if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
     const vorherigeRunde = (alleGws ?? []).find((g) => g.number === gameweek.number - 1);
-    if (vorherigeRunde) {
+    // Spieltag 1 zaehlt nicht in Bewertungspaare (PREIS_AB_SPIELTAG):
+    // er lag vor dem Beitritt der Mitglieder und steckt schon in den
+    // Startpreisen. Erstes Paar ist damit 2+3.
+    if (vorherigeRunde && vorherigeRunde.number >= PREIS_AB_SPIELTAG) {
       const [{ data: aktuelleTop }, { data: vorherigeTop }, { data: aktuelleTief }, { data: vorherigeTief }] =
         await Promise.all([
           supabase
