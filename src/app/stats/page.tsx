@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
 import StatsTable, { type StatsRow } from "./StatsTable";
 import { getLang } from "@/lib/lang";
+import { getOwnershipPercent } from "@/lib/ownership";
 import { getDictionary } from "@/lib/i18n";
 
 export default async function StatsPage() {
@@ -9,7 +10,7 @@ export default async function StatsPage() {
   const lang = await getLang();
   const t = getDictionary(lang).stats;
 
-  const [{ data: players }, { data: points }, { data: gameweeks }, { data: ratingRows }] = await Promise.all([
+  const [{ data: players }, { data: points }, { data: gameweeks }, { data: ratingRows }, ownership] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, position, price, clubs(name, short_name)")
@@ -17,6 +18,7 @@ export default async function StatsPage() {
     supabase.from("fantasy_points").select("player_id, gameweek_id, points, breakdown"),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
     supabase.from("player_stats").select("player_id, rating, goals, assists, minutes, goals_conceded"),
+    getOwnershipPercent(),
   ]);
 
   const latestGameweekWithPoints = (gameweeks ?? []).find((gw) =>
@@ -66,6 +68,7 @@ export default async function StatsPage() {
       goals: toreSumme.get(p.id) ?? 0,
       assists: assistsSumme.get(p.id) ?? 0,
       bonus: bonusByPlayer.get(p.id) ?? 0,
+      owned: ownership.get(p.id) ?? 0,
       // Nur für Torhüter und Verteidiger — bei anderen Positionen zählt
       // die Wertung nicht, die Spalte zeigt dort einen Strich.
       cleanSheets:

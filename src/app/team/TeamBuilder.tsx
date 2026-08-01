@@ -37,6 +37,8 @@ export interface PlayerOption {
   points: number;
   goals: number;
   assists: number;
+  /** In wie viel Prozent der gespeicherten Teams der Spieler steckt. */
+  owned: number;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
 }
@@ -241,7 +243,7 @@ export default function TeamBuilder({
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
-  const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists">("points");
+  const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "owned">("points");
   const marketRef = useRef<HTMLElement | null>(null);
 
   // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
@@ -1230,6 +1232,7 @@ export default function TeamBuilder({
                 <option value="price">{t.sortPrice}</option>
                 <option value="goals">{t.sortGoals}</option>
                 <option value="assists">{t.sortAssists}</option>
+                <option value="owned">{t.sortOwned}</option>
               </select>
             </div>
           </div>
@@ -1252,6 +1255,7 @@ export default function TeamBuilder({
                       {p.club} · {p.position}
                       {p.goals > 0 && ` · ⚽ ${p.goals}`}
                       {p.assists > 0 && ` · 🅰 ${p.assists}`}
+                      {p.owned > 0 && ` · 👥 ${p.owned}%`}
                       {p.nextOpponent && (
                         <span className="text-brand-deep/40"> · {p.nextOpponent}</span>
                       )}

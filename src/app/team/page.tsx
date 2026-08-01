@@ -8,6 +8,7 @@ import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 import { loadPlayerDetails } from "@/lib/player-detail";
+import { getOwnershipPercent } from "@/lib/ownership";
 
 export default async function TeamPage({
   searchParams,
@@ -192,10 +193,11 @@ export default async function TeamPage({
 
   // ---------- Offener Spieltag: bearbeiten ----------
   // Budget hängt nur von bereits geladenen Daten ab — läuft mit in der Welle.
-  const [punkte, budget, { data: players }, { data: pointRows }, { data: statRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
+  const [punkte, budget, ownership, { data: players }, { data: pointRows }, { data: statRows }, { data: squadPlayers }, { data: chipRows }, { data: gwFixtures }] =
     await Promise.all([
       punkteAbfrage,
       getTransferBudget(supabase, squad.id, angezeigt, settings),
+      getOwnershipPercent(),
       supabase
         .from("players")
         .select("id, first_name, last_name, position, price, is_active, club_id, clubs(name, short_name)")
@@ -264,6 +266,7 @@ export default async function TeamPage({
       points: totalPointsByPlayer.get(p.id) ?? 0,
       goals: toreByPlayer.get(p.id) ?? 0,
       assists: assistsByPlayer.get(p.id) ?? 0,
+      owned: ownership.get(p.id) ?? 0,
       nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
     };
   });
