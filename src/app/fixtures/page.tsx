@@ -4,6 +4,8 @@ import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 
 const FINISHED = new Set(["FT", "AET", "PEN"]);
+// Dieselben Live-Status wie im Sync — Zwischenstände laufender Partien.
+const LIVE = new Set(["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"]);
 
 interface BestPlayer {
   name: string;
@@ -80,6 +82,7 @@ export default async function FixturesPage() {
                   const home = Array.isArray(f.home) ? f.home[0] : f.home;
                   const away = Array.isArray(f.away) ? f.away[0] : f.away;
                   const finished = FINISHED.has(f.status);
+                  const live = LIVE.has(f.status);
                   const best = (bestByFixture.get(f.id) ?? [])
                     .filter((b) => b.points > 0)
                     .sort((a, b) => b.points - a.points)
@@ -92,9 +95,21 @@ export default async function FixturesPage() {
                       <span className="flex-1 text-right font-semibold text-brand-deep">
                         {home?.name ?? "?"}
                       </span>
-                      {finished ? (
-                        <span className="rounded-lg bg-brand-deep px-3 py-1 font-bold tabular-nums text-brand-accent">
-                          {f.home_goals}:{f.away_goals}
+                      {finished || live ? (
+                        <span className="relative">
+                          <span
+                            className={`rounded-lg px-3 py-1 font-bold tabular-nums ${
+                              live ? "bg-brand-danger text-white" : "bg-brand-deep text-brand-accent"
+                            }`}
+                          >
+                            {f.home_goals ?? 0}:{f.away_goals ?? 0}
+                          </span>
+                          {live && (
+                            <span className="absolute -right-1.5 -top-1.5 flex h-3 w-3" aria-label="live">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-danger opacity-60" />
+                              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-danger ring-2 ring-white" />
+                            </span>
+                          )}
                         </span>
                       ) : (
                         <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold tabular-nums text-brand-deep/60">
@@ -116,7 +131,7 @@ export default async function FixturesPage() {
                     </div>
                   );
 
-                  if (!finished || best.length === 0) {
+                  if ((!finished && !live) || best.length === 0) {
                     return <li key={f.id}>{matchRow}</li>;
                   }
 
