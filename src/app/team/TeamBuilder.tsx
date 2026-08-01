@@ -654,7 +654,7 @@ export default function TeamBuilder({
         : t.inHours(hoursLeft);
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    <div className="flex flex-col gap-6 lg:flex-row lg:justify-center">
       {/* Toast */}
       {toast && (
         <p
@@ -800,7 +800,9 @@ export default function TeamBuilder({
       )}
 
       {/* ===== Spielfeld ===== */}
-      <section className="min-w-0 flex-1">
+      {/* Auf breiten Bildschirmen gedeckelt — sonst wachsen Spielfeld und
+          Bank ins Riesige und wirken neben dem fixen Markt unzentriert. */}
+      <section className="min-w-0 flex-1 lg:max-w-[44rem]">
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
