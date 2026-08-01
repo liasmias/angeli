@@ -239,7 +239,7 @@ export default async function RegelnPage() {
               else is ahead. Just message the admin, who enters the credit.
             </Frage>
             <Frage frage="When are points updated?">
-              Automatically every 15 minutes, including during live matches. Interim scores can
+              Automatically every 5 minutes, including during live matches. Interim scores can
               still change — numbers are final only after the final whistle.
             </Frage>
             <Frage frage="Can I see other people's teams?">
@@ -446,7 +446,7 @@ export default async function RegelnPage() {
             beim Admin, er trägt die Gutschrift ein.
           </Frage>
           <Frage frage="Wann werden die Punkte aktualisiert?">
-            Automatisch alle 15 Minuten, auch während laufender Spiele. Zwischenstände können
+            Automatisch alle 5 Minuten, auch während laufender Spiele. Zwischenstände können
             sich deshalb noch ändern — endgültig sind die Zahlen erst nach Abpfiff.
           </Frage>
           <Frage frage="Kann ich die Teams der anderen sehen?">
