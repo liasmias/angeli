@@ -233,7 +233,7 @@ export default function StatsTable({
                       {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
                       <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
-                        {r.rating !== null && ` · ★ ${r.rating.toFixed(1)}`}
+                        {r.rating !== null && ` · Ø★ ${r.rating.toFixed(1)}`}
                         {r.goals > 0 && ` · ⚽ ${r.goals}`}
                         {r.assists > 0 && ` · 🅰 ${r.assists}`}
                         {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
