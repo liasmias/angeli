@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
-import type { Position } from "@/lib/database.types";
+import type { PlayerFlag, Position } from "@/lib/database.types";
 import {
   MAX_PER_CLUB,
   MAX_STARTERS,
@@ -41,6 +41,9 @@ export interface PlayerOption {
   owned: number;
   /** Zu-null-Spiele; null bei MID/FWD (Wertung gilt dort nicht). */
   cleanSheets: number | null;
+  /** Verfügbarkeit: gelb = fraglich, rot = fällt aus. */
+  flag: PlayerFlag | null;
+  flagNote: string | null;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
 }
@@ -112,10 +115,22 @@ function PlayerCard({
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
           className={`pop-in absolute top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
-            onQuickRemove ? "left-0.5" : "right-0.5"
+            onQuickRemove || player.flag ? "left-0.5" : "right-0.5"
           } ${pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"}`}
         >
           {pick.isCaptain ? "C" : "V"}
+        </span>
+      )}
+      {/* Verfügbarkeits-Markierung — gelb: fraglich, rot: fällt aus. */}
+      {player.flag && !onQuickRemove && !onUndo && (
+        <span
+          title={player.flagNote ?? undefined}
+          aria-label={`${player.name}: ${player.flagNote ?? (player.flag === "red" ? t.flagRed : t.flagYellow)}`}
+          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold leading-none ring-2 ring-white sm:h-6 sm:w-6 ${
+            player.flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
+          }`}
+        >
+          !
         </span>
       )}
       {onQuickRemove && (
@@ -1265,7 +1280,17 @@ export default function TeamBuilder({
                 >
                   <Jersey club={p.club} size={28} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-brand-deep">{p.name}</span>
+                    <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
+                      {p.flag && (
+                        <span
+                          title={p.flagNote ?? undefined}
+                          className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+                            p.flag === "red" ? "bg-brand-danger" : "bg-amber-400"
+                          }`}
+                        />
+                      )}
+                      <span className="truncate">{p.name}</span>
+                    </span>
                     <span className="block truncate text-xs text-brand-deep/50">
                       {p.club} · {p.position}
                       {p.owned > 0 && ` · 👥 ${p.owned}%`}

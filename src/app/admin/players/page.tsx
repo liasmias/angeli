@@ -8,7 +8,7 @@ export default async function AdminPlayersPage() {
   const [{ data: players }, { data: clubs }] = await Promise.all([
     supabase
       .from("players")
-      .select("id, first_name, last_name, position, price, is_active, club_id, clubs(name, short_name)")
+      .select("id, first_name, last_name, position, price, is_active, flag, flag_note, club_id, clubs(name, short_name)")
       .order("last_name"),
     supabase.from("clubs").select("id, name").order("name"),
   ]);
@@ -25,6 +25,8 @@ export default async function AdminPlayersPage() {
       club: club?.short_name ?? club?.name ?? "—",
       clubId: p.club_id,
       isActive: p.is_active,
+      flag: p.flag,
+      flagNote: p.flag_note,
     };
   });
 

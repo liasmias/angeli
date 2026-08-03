@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin-guard";
-import type { Position } from "@/lib/database.types";
+import type { PlayerFlag, Position } from "@/lib/database.types";
 
 const VALID_POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
@@ -22,6 +22,10 @@ export async function updatePlayer(formData: FormData) {
   const isActive = formData.get("isActive") === "on";
   const lastName = String(formData.get("lastName") ?? "").trim();
   const firstName = String(formData.get("firstName") ?? "").trim() || null;
+  // Verfügbarkeit: leer = spielbereit, sonst gelb (fraglich) oder rot (fällt aus).
+  const roh = String(formData.get("flag") ?? "");
+  const flag: PlayerFlag | null = roh === "yellow" || roh === "red" ? roh : null;
+  const flagNote = String(formData.get("flagNote") ?? "").trim() || null;
 
   if (!Number.isFinite(playerId) || !Number.isFinite(price) || price < 0) return;
   if (!Number.isFinite(clubId) || !lastName) return;
@@ -34,6 +38,8 @@ export async function updatePlayer(formData: FormData) {
       is_active: isActive,
       first_name: firstName,
       last_name: lastName,
+      flag,
+      flag_note: flag ? flagNote : null,
     })
     .eq("id", playerId);
   revalidatePath("/admin/players");
@@ -63,6 +69,9 @@ export async function createPlayer(formData: FormData) {
     price,
     api_football_player_id: apiIdRaw ? Number(apiIdRaw) : null,
     is_active: true,
+    // Neue Spieler gelten als spielbereit; markiert wird später bei Bedarf.
+    flag: null,
+    flag_note: null,
   });
   revalidatePath("/admin/players");
   revalidatePath("/team");

@@ -2,6 +2,8 @@
 // If the schema drifts, regenerate with:
 //   npx supabase gen types typescript --project-id <ref> > src/lib/database.types.ts
 
+export type PlayerFlag = "yellow" | "red";
+
 export type Position = "GK" | "DEF" | "MID" | "FWD";
 export type ProfileRole = "user" | "admin";
 
@@ -68,6 +70,9 @@ type PlayersRow = {
   price: number;
   api_football_player_id: number | null;
   is_active: boolean;
+  /** Verfügbarkeit: null | "yellow" (fraglich) | "red" (fällt aus). */
+  flag: PlayerFlag | null;
+  flag_note: string | null;
 };
 
 type GameweeksRow = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Position } from "@/lib/database.types";
+import type { PlayerFlag, Position } from "@/lib/database.types";
 import { updatePlayer } from "./actions";
 
 export interface AdminPlayerRow {
@@ -15,6 +15,8 @@ export interface AdminPlayerRow {
   club: string;
   clubId: number | null;
   isActive: boolean;
+  flag: PlayerFlag | null;
+  flagNote: string | null;
 }
 
 export interface ClubOption {
@@ -105,6 +107,7 @@ export default function PlayerAdminTable({
               <th className="px-2 py-2 sm:px-3">Club</th>
               <th className="hidden px-3 py-2 sm:table-cell">Pos.</th>
               <th className="px-3 py-2">Preis</th>
+              <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Aktiv</th>
               <th className="px-3 py-2"></th>
             </tr>
@@ -145,6 +148,28 @@ export default function PlayerAdminTable({
                   </select>
                 </td>
                 <td className="hidden px-3 py-1.5 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="px-2 py-1.5 sm:px-3">
+                  <span className="flex items-center gap-1.5">
+                    <select
+                      form={`player-${r.id}`}
+                      name="flag"
+                      defaultValue={r.flag ?? ""}
+                      title="Verfügbarkeit"
+                      className="rounded border border-brand-deep/15 px-1.5 py-1 text-xs outline-none focus:border-brand-magenta"
+                    >
+                      <option value="">— fit</option>
+                      <option value="yellow">🟡 fraglich</option>
+                      <option value="red">🔴 fällt aus</option>
+                    </select>
+                    <input
+                      form={`player-${r.id}`}
+                      name="flagNote"
+                      defaultValue={r.flagNote ?? ""}
+                      placeholder="Grund"
+                      className="w-24 rounded border border-brand-deep/15 px-2 py-1 text-xs outline-none focus:border-brand-magenta"
+                    />
+                  </span>
+                </td>
                 <td className="px-2 py-1.5 sm:px-3">
                   <input
                     form={`player-${r.id}`}
