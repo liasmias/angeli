@@ -39,6 +39,8 @@ export interface PlayerOption {
   assists: number;
   /** In wie viel Prozent der gespeicherten Teams der Spieler steckt. */
   owned: number;
+  /** Zu-null-Spiele; null bei MID/FWD (Wertung gilt dort nicht). */
+  cleanSheets: number | null;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
 }
@@ -243,8 +245,13 @@ export default function TeamBuilder({
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
-  const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "owned">("points");
+  const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "cleanSheets" | "owned">("points");
   const marketRef = useRef<HTMLElement | null>(null);
+  // Was die Statistik-Spalte im Markt zeigt: die gewaehlte Sortierung —
+  // ausser bei Preis (eigene Spalte) und Aufgestellt % (bleibt in der
+  // Unterzeile), dort Punkte als Standard.
+  const marktSpalte: "points" | "goals" | "assists" | "cleanSheets" =
+    sortiere === "price" || sortiere === "owned" ? "points" : sortiere;
 
   // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
   // auf einen leeren Slot würde sonst sichtbar nichts bewirken. Im breiten
@@ -633,7 +640,12 @@ export default function TeamBuilder({
         (filterClub === "ALL" || p.club === filterClub) &&
         (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
     )
-    .sort((a, b) => (b[sortiere] - a[sortiere]) || b.points - a.points || b.price - a.price);
+    .sort(
+      (a, b) =>
+        ((b[sortiere] ?? -1) as number) - ((a[sortiere] ?? -1) as number) ||
+        b.points - a.points ||
+        b.price - a.price
+    );
 
   // Erst nach dem Mounten berechnet: `Date.now()` im Render würde beim
   // Hydrieren vom Server-Wert abweichen können (React-Hydration-Mismatch).
@@ -1234,6 +1246,7 @@ export default function TeamBuilder({
                 <option value="price">{t.sortPrice}</option>
                 <option value="goals">{t.sortGoals}</option>
                 <option value="assists">{t.sortAssists}</option>
+                <option value="cleanSheets">{t.sortCleanSheets}</option>
                 <option value="owned">{t.sortOwned}</option>
               </select>
             </div>
@@ -1255,19 +1268,20 @@ export default function TeamBuilder({
                     <span className="block truncate font-semibold text-brand-deep">{p.name}</span>
                     <span className="block truncate text-xs text-brand-deep/50">
                       {p.club} · {p.position}
-                      {p.goals > 0 && ` · ⚽ ${p.goals}`}
-                      {p.assists > 0 && ` · 🅰 ${p.assists}`}
                       {p.owned > 0 && ` · 👥 ${p.owned}%`}
                       {p.nextOpponent && (
                         <span className="text-brand-deep/40"> · {p.nextOpponent}</span>
                       )}
                     </span>
                   </span>
-                  <span className="w-10 text-right">
+                  {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
+                  <span className="w-11 text-right">
                     <span className="block text-[10px] font-semibold uppercase text-brand-deep/40">
-                      {t.pts}
+                      {t.statShort[marktSpalte]}
                     </span>
-                    <span className="block font-bold tabular-nums text-brand-deep">{p.points}</span>
+                    <span className="block font-bold tabular-nums text-brand-deep">
+                      {marktSpalte === "cleanSheets" ? (p.cleanSheets ?? "—") : p[marktSpalte]}
+                    </span>
                   </span>
                   <span className="w-9 text-right font-bold tabular-nums text-brand-deep">
                     {p.price.toFixed(1)}

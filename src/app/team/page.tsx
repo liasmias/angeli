@@ -205,7 +205,7 @@ export default async function TeamPage({
         .order("position")
         .order("price", { ascending: false }),
       supabase.from("fantasy_points").select("player_id, points"),
-      supabase.from("player_stats").select("player_id, goals, assists"),
+      supabase.from("player_stats").select("player_id, goals, assists, minutes, goals_conceded"),
       supabase
         .from("squad_players")
         .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
@@ -227,9 +227,14 @@ export default async function TeamPage({
   // Saisonsummen für die Sortierung im Spielermarkt.
   const toreByPlayer = new Map<number, number>();
   const assistsByPlayer = new Map<number, number>();
+  const zuNullByPlayer = new Map<number, number>();
   for (const row of statRows ?? []) {
     toreByPlayer.set(row.player_id, (toreByPlayer.get(row.player_id) ?? 0) + (row.goals ?? 0));
     assistsByPlayer.set(row.player_id, (assistsByPlayer.get(row.player_id) ?? 0) + (row.assists ?? 0));
+    // Zu-null wie im Regelwerk: ab 60 Minuten ohne Gegentor.
+    if ((row.minutes ?? 0) >= 60 && (row.goals_conceded ?? 0) === 0) {
+      zuNullByPlayer.set(row.player_id, (zuNullByPlayer.get(row.player_id) ?? 0) + 1);
+    }
   }
 
   // Gegner des kommenden Spieltags pro Verein — (H)eim oder (A)uswärts.
@@ -267,6 +272,8 @@ export default async function TeamPage({
       goals: toreByPlayer.get(p.id) ?? 0,
       assists: assistsByPlayer.get(p.id) ?? 0,
       owned: ownership.get(p.id) ?? 0,
+      cleanSheets:
+        p.position === "GK" || p.position === "DEF" ? (zuNullByPlayer.get(p.id) ?? 0) : null,
       nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
     };
   });
