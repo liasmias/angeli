@@ -31,7 +31,11 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient();
 
-  const { data: settings } = await supabase.from("league_settings").select("season").eq("id", 1).single();
+  const { data: settings } = await supabase
+    .from("league_settings")
+    .select("season, last_sync_at")
+    .eq("id", 1)
+    .single();
   if (!settings) {
     return NextResponse.json({ error: "league_settings nicht konfiguriert." }, { status: 500 });
   }
@@ -61,6 +65,58 @@ export async function GET(request: Request) {
 
   if (!gameweek) {
     return NextResponse.json({ message: "Kein gesperrter Spieltag zum Synchronisieren." });
+  }
+
+  // ---------------------------------------------------------------------
+  // Leerlauf-Bremse
+  //
+  // Der Cron tickt alle 5 Minuten, gespielt wird aber nur an rund zwei
+  // Tagen pro Woche. Ohne diese Prüfung würde jeder Tick den zuletzt
+  // gesperrten Spieltag komplett durcharbeiten — auch tagelang nach dem
+  // Schlusspfiff. Das kostet Rechenzeit bei Vercel und Kontingent bei
+  // API-Football, ohne je ein anderes Ergebnis zu liefern.
+  //
+  // Voll gerechnet wird nur, wenn es etwas zu holen gibt:
+  //   * eine Partie läuft, steht kurz bevor oder endete gerade
+  //   * der Spieltag wurde in diesem Lauf frisch gesperrt (Schnappschüsse!)
+  //   * der Spielplan fehlt noch komplett
+  //   * der letzte volle Lauf ist zu lange her (Spielplan-Auffrischung)
+  // Sonst steigen wir hier aus — ein paar Datenbank-Abfragen statt eines
+  // vollen Durchlaufs.
+  const VORLAUF_MS = 15 * 60 * 1000; // vor dem Anpfiff schon mitlaufen
+  const NACHLAUF_MS = 3.5 * 60 * 60 * 1000; // Spiel + Nachspielzeit + Bonus
+  const NACHZUEGLER_MS = 8 * 60 * 60 * 1000; // Schlussstand fehlt noch
+  const AUFFRISCHUNG_MS = 6 * 60 * 60 * 1000; // Spielplan-Kontrolle
+
+  const { data: bekannteFixtures } = await supabase
+    .from("fixtures")
+    .select("kickoff, status")
+    .eq("gameweek_id", gameweek.id);
+
+  const jetzt = Date.now();
+  const partieAktiv = (bekannteFixtures ?? []).some((f) => {
+    // Ohne Anstosszeit lieber rechnen als etwas verpassen.
+    if (!f.kickoff) return true;
+    const anpfiff = new Date(f.kickoff).getTime();
+    if (anpfiff > jetzt) return anpfiff - jetzt <= VORLAUF_MS;
+    const seitAnpfiff = jetzt - anpfiff;
+    if (seitAnpfiff <= NACHLAUF_MS) return true;
+    // Längst angepfiffen, aber noch kein Schlussstand — Daten nachziehen.
+    // Zeitlich begrenzt, sonst hielte eine abgesagte Partie den Sync ewig wach.
+    return seitAnpfiff <= NACHZUEGLER_MS && !FINISHED_STATUSES.has(f.status ?? "");
+  });
+
+  const letzterSync = settings.last_sync_at ? new Date(settings.last_sync_at).getTime() : 0;
+  const planFaellig = jetzt - letzterSync >= AUFFRISCHUNG_MS;
+  const spielplanFehlt = (bekannteFixtures ?? []).length === 0;
+  const geradeGesperrt = (newlyLocked ?? []).length > 0;
+
+  if (!partieAktiv && !planFaellig && !spielplanFehlt && !geradeGesperrt) {
+    return NextResponse.json({
+      gameweek: gameweek.number,
+      skipped: true,
+      message: "Leerlauf — keine Partie aktiv, Spielplan aktuell.",
+    });
   }
 
   // Fehlende Aufstellungs-Schnappschüsse nachziehen: Der Schnappschuss entsteht
