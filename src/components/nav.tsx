@@ -35,6 +35,7 @@ export default async function Nav() {
     { href: "/fixtures", label: t.fixtures },
     { href: "/stats", label: t.stats },
     { href: "/regeln", label: t.rules },
+    { href: "/faq", label: t.faq },
     ...(user
       ? [
           { href: "/team", label: t.myTeam },

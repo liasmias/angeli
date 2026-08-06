@@ -6,7 +6,7 @@ import { BONUS_AB_SPIELTAG } from "@/lib/bonus";
 import { getLang } from "@/lib/lang";
 
 export const metadata = {
-  title: "Regeln & FAQ — Angeli",
+  title: "Regeln — Angeli",
   description:
     "Wie Angeli funktioniert: Punkte, Kader, Transfers und Chips in der Schweizer Liga.",
 };
@@ -87,7 +87,7 @@ export default async function RegelnPage() {
     ];
     return (
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
-        <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Rules & FAQ</h1>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Rules</h1>
         <p className="mb-6 text-sm text-brand-deep/60">
           Everything you need to play — a two-minute read.
         </p>
@@ -226,63 +226,12 @@ export default async function RegelnPage() {
             </ul>
           </Abschnitt>
 
-          <Abschnitt titel="Frequently asked questions">
-            <Frage frage="When do I have to submit my lineup?">
-              Before the deadline of each gameweek — it is shown above your lineup and sits one
-              hour before the round&apos;s first kick-off. After that, your XI is locked.
-            </Frage>
-            <Frage frage="I joined mid-season. Do I still stand a chance?">
-              Yes. Your first round is transfer-free, so you build your team without penalty
-              points.
-              <br />
-              <br />
-              If you join <b>within the first 5 rounds</b>, you are additionally credited the{" "}
-              <b>average points scored so far</b> — you do not start from zero while everyone
-              else is ahead. Just message the admin, who enters the credit.
-            </Frage>
-            <Frage frage="When are points updated?">
-              Automatically every 5 minutes, including during live matches. Interim scores can
-              still change — numbers are final only after the final whistle.
-            </Frage>
-            <Frage frage="Can I see other people's teams?">
-              Yes, via the leaderboard — but only after each gameweek&apos;s deadline. If live
-              lineups were visible, you could simply copy them.
-            </Frage>
-            <Frage frage="What happens if one of my players doesn't play?">
-              They score 0 points. Unlike some other games, bench players do not step in
-              automatically — plan your starting XI with the schedule in mind.
-            </Frage>
-            <Frage frage="A player's points look wrong. What now?">
-              Report it to the admin. The data comes from an external provider and is rarely,
-              but not never, wrong. Own goals, for instance, are not delivered by the API at
-              all — the admin enters them manually. Corrections apply retroactively to the
-              leaderboard.
-            </Frage>
-            <Frage frage="How do I change my account name or password?">
-              Tap your name in the top right. There you can change both and delete your account
-              if needed.
-            </Frage>
-            <Frage frage="How do bonus points work?">
-              After each match Angeli looks at the ratings of everyone who played: the top-rated
-              player gets <b>+3</b>, the second <b>+2</b>, the third <b>+1</b> — on top of the
-              normal points, doubled for your captain like everything else. Ties share the rank:
-              two joint firsts both get +3 and the next-best is third (+1). Example from
-              gameweek 1, YB 4:2 Sion: Essende (rating 8.9) +3, Sanches (7.9) +2, Fernandes
-              (7.6) +1. Bonus appears once the match has finished, starting from gameweek 2.
-            </Frage>
-            <Frage frage="What does the rating in the statistics mean?">
-              A performance rating from the data provider (roughly 6.0 to 10.0). It decides the
-              <b> bonus points</b> (top 3 of each match) and the automatic <b>price changes</b> —
-              it does not feed into the normal event points (goals, assists, cards …).
-            </Frage>
-          </Abschnitt>
-
           <p className="text-center text-sm text-brand-deep/60">
-            Still unclear? Ask the admin — or head straight to{" "}
-            <Link href="/stats" className="font-semibold text-brand-magenta underline">
-              the statistics
-            </Link>
-            .
+            Questions about a specific situation? The{" "}
+            <Link href="/faq" className="font-semibold text-brand-magenta underline">
+              FAQ
+            </Link>{" "}
+            answers most of them.
           </p>
         </div>
       </main>
@@ -291,7 +240,7 @@ export default async function RegelnPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Regeln & FAQ</h1>
+      <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Regeln</h1>
       <p className="mb-6 text-sm text-brand-deep/60">
         Alles, was du zum Mitspielen wissen musst — in zwei Minuten gelesen.
       </p>
@@ -434,64 +383,12 @@ export default async function RegelnPage() {
           </ul>
         </Abschnitt>
 
-        <Abschnitt titel="Häufige Fragen">
-          <Frage frage="Wann muss ich meine Aufstellung abgeben?">
-            Vor der Deadline des jeweiligen Spieltags — sie steht über deiner Aufstellung und
-            liegt eine Stunde vor dem ersten Anpfiff der Runde. Danach ist deine Elf fix.
-          </Frage>
-          <Frage frage="Ich bin erst mitten in der Saison dazugestossen. Habe ich noch eine Chance?">
-            Ja. Deine erste Runde ist transferfrei, du baust dein Team also ohne Strafpunkte auf.
-            <br />
-            <br />
-            Steigst du <b>innerhalb der ersten 5 Runden</b> ein, erhältst du zusätzlich die bis
-            dahin <b>durchschnittlich erspielten Punkte</b> gutgeschrieben — du startest also
-            nicht bei null, während die anderen schon vorgelegt haben. Melde dich dafür einfach
-            beim Admin, er trägt die Gutschrift ein.
-          </Frage>
-          <Frage frage="Wann werden die Punkte aktualisiert?">
-            Automatisch alle 5 Minuten, auch während laufender Spiele. Zwischenstände können
-            sich deshalb noch ändern — endgültig sind die Zahlen erst nach Abpfiff.
-          </Frage>
-          <Frage frage="Kann ich die Teams der anderen sehen?">
-            Ja, über die Rangliste — aber erst nach der Deadline des jeweiligen Spieltags. Wäre
-            die laufende Aufstellung sichtbar, könnte man einfach abschreiben.
-          </Frage>
-          <Frage frage="Was passiert, wenn ein Spieler nicht spielt?">
-            Er bringt 0 Punkte. Anders als bei manchen anderen Spielen rücken Bankspieler nicht
-            automatisch nach — plane deine Startelf also mit Blick auf die Ansetzungen.
-          </Frage>
-          <Frage frage="Die Punkte eines Spielers stimmen nicht. Was nun?">
-            Melde es dem Admin. Die Daten stammen von einem externen Anbieter und sind selten,
-            aber nicht nie fehlerhaft. Eigentore etwa liefert die Schnittstelle gar nicht — die
-            trägt der Admin von Hand nach. Korrekturen wirken rückwirkend auf die Rangliste.
-          </Frage>
-          <Frage frage="Wie ändere ich meinen Accountnamen oder mein Passwort?">
-            Oben rechts auf deinen Namen tippen. Dort kannst du beides ändern und dein Konto bei
-            Bedarf auch löschen.
-          </Frage>
-          <Frage frage="Wie funktionieren die Bonuspunkte?">
-            Nach jeder Partie schaut Angeli auf die Ratings aller Eingesetzten: Der Bestbewertete
-            erhält <b>+3</b>, der Zweite <b>+2</b>, der Dritte <b>+1</b> — zusätzlich zu den
-            normalen Punkten, und beim Captain verdoppelt wie alles andere. Bei Gleichstand
-            teilen sich Spieler den Rang: Stehen zwei gemeinsam zuoberst, bekommen beide +3,
-            und der Nächstbeste ist Dritter (+1). Beispiel Spieltag 1, YB 4:2 Sion: Essende
-            (Rating 8.9) +3, Sanches (7.9) +2, Fernandes (7.6) +1. Der Bonus erscheint erst
-            nach Abpfiff der Partie und gilt ab Spieltag 2.
-          </Frage>
-          <Frage frage="Was bedeutet das Rating in den Statistiken?">
-            Eine Bewertung der Datenquelle zur Leistung im Spiel (etwa 6.0 bis 10.0). Sie
-            entscheidet über die <b>Bonuspunkte</b> (Top 3 jeder Partie) und die automatischen
-            <b> Preisanpassungen</b> — in die normalen Ereignispunkte (Tore, Assists, Karten …)
-            fliesst sie nicht ein.
-          </Frage>
-        </Abschnitt>
-
         <p className="text-center text-sm text-brand-deep/60">
-          Noch etwas unklar? Frag den Admin — oder schau direkt in{" "}
-          <Link href="/stats" className="font-semibold text-brand-magenta underline">
-            die Statistiken
-          </Link>
-          .
+          Fragen zu einer konkreten Situation? Die{" "}
+          <Link href="/faq" className="font-semibold text-brand-magenta underline">
+            häufigen Fragen
+          </Link>{" "}
+          beantworten die meisten davon.
         </p>
       </div>
     </main>
