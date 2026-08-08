@@ -208,8 +208,13 @@ export default async function TeamPage({
       supabase.from("player_stats").select("player_id, goals, assists, minutes, goals_conceded"),
       supabase
         .from("squad_players")
-        .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price")
-        .eq("squad_id", squad.id),
+        .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price, bench_order")
+        .eq("squad_id", squad.id)
+        // Nach Bankplatz sortieren — der Baukasten leitet die Einwechsel-
+        // Reihenfolge aus der Array-Position ab. Ohne diese Sortierung
+        // liefert Postgres die Zeilen in beliebiger Reihenfolge, und die
+        // gespeicherte Reihenfolge ginge beim nächsten Speichern verloren.
+        .order("bench_order"),
       supabase.from("chip_usages").select("chip, gameweek_id, gameweeks(number)").eq("squad_id", squad.id),
       supabase
         .from("fixtures")
