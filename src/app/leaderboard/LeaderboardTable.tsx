@@ -10,6 +10,32 @@ export interface StandingRow {
   total_points: number;
   /** 1-basiert, aus der Gesamtwertung — bleibt auch in gefilterten Listen stehen. */
   rank: number;
+  /** Plätze gegenüber der Vorrunde: positiv = gutgemacht. null = kein Vergleich. */
+  movement: number | null;
+}
+
+/** Pfeil mit Platzdifferenz — nichts anzeigen, wo es nichts zu vergleichen gibt. */
+function Bewegung({ wert }: { wert: number | null }) {
+  if (wert === null) return <span className="w-9 shrink-0" aria-hidden />;
+  if (wert === 0) {
+    return (
+      <span className="w-9 shrink-0 text-center text-xs font-bold text-brand-deep/25" aria-hidden>
+        –
+      </span>
+    );
+  }
+  const hoch = wert > 0;
+  return (
+    <span
+      className={`w-9 shrink-0 text-center text-xs font-bold tabular-nums ${
+        hoch ? "text-brand-grass" : "text-brand-magenta"
+      }`}
+      title={`${hoch ? "+" : ""}${wert}`}
+    >
+      {hoch ? "▲" : "▼"}
+      {Math.abs(wert)}
+    </span>
+  );
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
@@ -84,6 +110,9 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
               {MEDALS[row.rank - 1] ?? row.rank}
             </span>
             <span className="truncate font-semibold text-brand-deep">{row.username}</span>
+          </span>
+          <span className="ml-auto flex shrink-0 items-center">
+            <Bewegung wert={row.movement} />
           </span>
           <span className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">

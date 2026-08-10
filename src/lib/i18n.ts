@@ -253,6 +253,8 @@ const de = {
     addFavorite: (n: string) => `${n} zu Favoriten hinzufügen`,
     removeFavorite: (n: string) => `${n} aus Favoriten entfernen`,
     noMatch: "Kein Team mit diesem Namen gefunden.",
+    movementHint: (jetzt: number, vorher: number) =>
+      `▲▼ zeigt die Veränderung von Spieltag ${vorher} auf ${jetzt}.`,
     back: "← Zurück zur Rangliste",
     notPublic: (n: string) => `Von ${n} ist noch keine Aufstellung öffentlich — Teams werden erst nach der Deadline des jeweiligen Spieltags sichtbar.`,
   },
@@ -541,6 +543,8 @@ const en: typeof de = {
     addFavorite: (n: string) => `Add ${n} to favourites`,
     removeFavorite: (n: string) => `Remove ${n} from favourites`,
     noMatch: "No team found with that name.",
+    movementHint: (jetzt: number, vorher: number) =>
+      `▲▼ shows the change from gameweek ${vorher} to ${jetzt}.`,
     back: "← Back to leaderboard",
     notPublic: (n: string) => `${n} has no public lineup yet — teams become visible after each gameweek\u2019s deadline.`,
   },
