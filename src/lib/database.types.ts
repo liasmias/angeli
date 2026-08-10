@@ -160,6 +160,8 @@ type SquadsRow = {
   user_id: string;
   free_transfers_remaining: number;
   created_at: string;
+  /** Summe aller beim Verkauf realisierten Kursgewinne und -verluste. */
+  realised_gains: number;
 };
 
 type SquadPlayersRow = {

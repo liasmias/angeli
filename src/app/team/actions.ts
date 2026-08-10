@@ -30,7 +30,7 @@ export async function saveSquad(
 
   const { data: squadRow } = await supabase
     .from("squads")
-    .select("id, free_transfers_remaining")
+    .select("id, free_transfers_remaining, realised_gains")
     .eq("user_id", user.id)
     .single();
   if (!squadRow) return { error: "Kein Kader gefunden." };
@@ -91,28 +91,45 @@ export async function saveSquad(
   }
 
   const priceById = new Map(playerRows.map((p) => [p.id, Number(p.price)]));
+
+  // Tagespreise auch fuer Spieler, die den Kader verlassen — sie bestimmen
+  // den Verkaufserloes und stehen nicht in playerRows.
+  const { data: abgegeben } = await supabase.from("players").select("id, price");
+  const verkaufspreisById = new Map((abgegeben ?? []).map((p) => [p.id, Number(p.price)]));
   const positionById = new Map(playerRows.map((p) => [p.id, p.position]));
 
-  const totalPrice = playerIds.reduce((sum, id) => sum + (priceById.get(id) ?? 0), 0);
-
-  // Persönliche Obergrenze: das Basis-Budget ODER der aktuelle Wert des
-  // bereits gespeicherten Teams — je nachdem, was höher ist. Steigen Preise
-  // gehaltener Spieler, wächst der Spielraum mit; niemand wird durch fremde
-  // Preisänderungen handlungsunfähig. Mehr Wert als vorhanden lässt sich so
-  // trotzdem nicht einkaufen.
+  // --- Budget ---
+  //
+  // Gekauft wird zum Tagespreis, gehalten zum Einkaufspreis, verkauft wieder
+  // zum Tagespreis. Die Differenz beim Verkauf ist ein realisierter Gewinn und
+  // bleibt dem Kader dauerhaft erhalten. Steigt ein gehaltener Spieler, kostet
+  // das kein Budget — der Gewinn steckt so lange im Spieler.
   const budgetCap = Number(settings.budget_cap);
-  const { data: gehaltene } = await supabase
+  const { data: bisher } = await supabase
     .from("squad_players")
-    .select("players(price)")
+    .select("player_id, purchase_price")
     .eq("squad_id", squadRow.id);
-  const bisherigerWert = (gehaltene ?? []).reduce((sum, r) => {
-    const p = Array.isArray(r.players) ? r.players[0] : r.players;
-    return sum + Number(p?.price ?? 0);
-  }, 0);
-  const effektiveGrenze = Math.max(budgetCap, bisherigerWert);
-  if (totalPrice > effektiveGrenze + 1e-9) {
+  const einkaufBisher = new Map((bisher ?? []).map((r) => [r.player_id, Number(r.purchase_price)]));
+
+  // Einkaufspreis je Spieler: gehaltene behalten ihren, neue kommen zum Tagespreis.
+  const einkaufNeu = new Map<number, number>();
+  for (const id of playerIds) {
+    einkaufNeu.set(id, einkaufBisher.get(id) ?? priceById.get(id) ?? 0);
+  }
+  const totalPrice = playerIds.reduce((sum, id) => sum + (einkaufNeu.get(id) ?? 0), 0);
+
+  // Beim Verkauf realisierter Gewinn: Tagespreis minus Einkaufspreis.
+  const behalten = new Set(playerIds);
+  let realisiert = 0;
+  for (const [id, einkauf] of einkaufBisher) {
+    if (behalten.has(id)) continue;
+    realisiert += (verkaufspreisById.get(id) ?? einkauf) - einkauf;
+  }
+  const kapital = budgetCap + Number(squadRow.realised_gains ?? 0) + realisiert;
+
+  if (totalPrice > kapital + 1e-9) {
     return {
-      error: `Budget überschritten (${totalPrice.toFixed(1)} / ${effektiveGrenze.toFixed(1)}).`,
+      error: `Budget überschritten (${totalPrice.toFixed(1)} / ${kapital.toFixed(1)}).`,
     };
   }
 
@@ -187,11 +204,18 @@ export async function saveSquad(
     is_starting: s.isStarting,
     is_captain: s.isCaptain,
     is_vice_captain: s.isViceCaptain,
-    purchase_price: priceById.get(s.playerId) ?? 0,
+    purchase_price: einkaufNeu.get(s.playerId) ?? 0,
     bench_order: benchOrderById.get(s.playerId) ?? 0,
   }));
   const { error: insertError } = await supabase.from("squad_players").insert(squadPlayerRows);
   if (insertError) return { error: "Speichern fehlgeschlagen: " + insertError.message };
+
+  if (Math.abs(realisiert) > 1e-9) {
+    await supabase
+      .from("squads")
+      .update({ realised_gains: Number(squadRow.realised_gains ?? 0) + realisiert })
+      .eq("id", squadRow.id);
+  }
 
   if (!isFirstSquad && transfersNow > 0) {
     const transferRows = Array.from({ length: transfersNow }).map((_, i) => ({

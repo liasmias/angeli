@@ -32,7 +32,7 @@ export default async function TeamPage({
   const [{ data: settings }, { data: squad }, { data: profile }, { data: allGameweeks }, rangInfo] =
     await Promise.all([
       supabase.from("league_settings").select("*").eq("id", 1).single(),
-      supabase.from("squads").select("id, free_transfers_remaining").eq("user_id", user.id).single(),
+      supabase.from("squads").select("id, free_transfers_remaining, realised_gains").eq("user_id", user.id).single(),
       supabase.from("profiles").select("username").eq("id", user.id).single(),
       supabase.from("gameweeks").select("id, number, deadline, is_locked").order("number"),
       getRank(supabase, user.id),
@@ -290,6 +290,7 @@ export default async function TeamPage({
     isStarting: sp.is_starting,
     isCaptain: sp.is_captain,
     isViceCaptain: sp.is_vice_captain,
+    purchasePrice: Number(sp.purchase_price),
   }));
 
   return (
@@ -300,6 +301,7 @@ export default async function TeamPage({
         lang={lang}
         players={playerOptions}
         initialSquad={initialSquad}
+        realisedGains={Number(squad.realised_gains ?? 0)}
         settings={{
           budgetCap: Number(settings.budget_cap),
           squadSize: settings.squad_size,

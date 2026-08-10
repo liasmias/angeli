@@ -54,6 +54,8 @@ export interface SquadPick {
   isCaptain: boolean;
   /** Übernimmt die Binde, falls der Captain nicht zum Einsatz kommt. */
   isViceCaptain: boolean;
+  /** Preis beim Kauf; nur für bereits gespeicherte Spieler gesetzt. */
+  purchasePrice?: number;
 }
 
 interface Settings {
@@ -218,6 +220,7 @@ export default function TeamBuilder({
   lang,
   players,
   initialSquad,
+  realisedGains,
   settings,
   gameweekOpen,
   gameweekNumber,
@@ -231,6 +234,8 @@ export default function TeamBuilder({
   lang: Lang;
   players: PlayerOption[];
   initialSquad: SquadPick[];
+  /** Bereits realisierte Kursgewinne dieses Kaders. */
+  realisedGains: number;
   settings: Settings;
   gameweekOpen: boolean;
   gameweekNumber: number | null;
@@ -293,15 +298,21 @@ export default function TeamBuilder({
     FWD: settings.fwdSlots,
   };
 
-  const spent = squad.reduce((sum, s) => sum + (playersById.get(s.playerId)?.price ?? 0), 0);
-  // Persönliche Obergrenze: Basis-Budget oder aktueller Wert des gespeicherten
-  // Teams — Preissteigerungen gehaltener Spieler sprengen die 100 legal.
-  // Spiegelt dieselbe Rechnung wie der Server beim Speichern.
-  const savedValue = initialSquad.reduce(
-    (sum, s) => sum + (playersById.get(s.playerId)?.price ?? 0),
-    0
-  );
-  const effectiveCap = Math.max(settings.budgetCap, savedValue);
+  // Budget — spiegelt exakt die Rechnung des Servers: gehaltene Spieler zaehlen
+  // mit ihrem Einkaufspreis, neu geholte mit dem Tagespreis. Wer verkauft wird,
+  // bringt die Differenz zum Tagespreis als realisierten Gewinn ein.
+  const einkaufBisher = new Map(initialSquad.map((s) => [s.playerId, s.purchasePrice ?? 0]));
+  const spent = squad.reduce((sum, s) => {
+    const gehalten = einkaufBisher.get(s.playerId);
+    return sum + (gehalten ?? playersById.get(s.playerId)?.price ?? 0);
+  }, 0);
+  const imKader = new Set(squad.map((s) => s.playerId));
+  let realisiert = 0;
+  for (const [id, einkauf] of einkaufBisher) {
+    if (imKader.has(id)) continue;
+    realisiert += (playersById.get(id)?.price ?? einkauf) - einkauf;
+  }
+  const effectiveCap = settings.budgetCap + realisedGains + realisiert;
   const budgetLeft = effectiveCap - spent;
   const countByPosition: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   for (const s of squad) {
