@@ -413,6 +413,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      standings_at: {
+        Args: { p_gameweek: number };
+        Returns: Array<{ user_id: string; username: string; total_points: number }>;
+      };
     };
   };
 }

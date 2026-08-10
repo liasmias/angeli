@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTransferBudget } from "@/lib/transfers";
-import { getGameweekPoints, getRank } from "@/lib/gameweek-summary";
+import { getGameweekPoints, getRank, getRankAt } from "@/lib/gameweek-summary";
 import { shortenPlayerName } from "@/lib/player-name";
 import GameweekNav from "./GameweekNav";
 import PastGameweek, { type PastPlayer } from "./PastGameweek";
@@ -111,6 +111,17 @@ export default async function TeamPage({
   // Die Spieltagspunkte laufen in der Abfragewelle des jeweiligen Zweigs mit.
   const punkteAbfrage = getGameweekPoints(supabase, squad.id, angezeigt.id);
 
+  // Rangliste zum ANGEZEIGTEN Spieltag. Beim Zurückblättern zählt der Stand
+  // von damals — sonst stünde der heutige Rang über einer alten Aufstellung.
+  // Für die offene und die laufende Runde ist das ohnehin der aktuelle Stand,
+  // dafür genügt die bereits geladene Rangliste.
+  const zeigtAktuellen =
+    (offenerSpieltag !== null && angezeigt.id === offenerSpieltag.id) ||
+    (laufenderSpieltag !== null && angezeigt.id === laufenderSpieltag.id);
+  const rang = zeigtAktuellen
+    ? rangInfo
+    : await getRankAt(supabase, user.id, angezeigt.number);
+
   const nav = (punkte: number | null) => (
     <GameweekNav
       lang={lang}
@@ -120,9 +131,9 @@ export default async function TeamPage({
       isLive={laufenderSpieltag?.id === angezeigt.id}
       deadline={angezeigt.deadline}
       points={punkte}
-      totalPoints={rangInfo.totalPoints}
-      rank={rangInfo.rank}
-      participants={rangInfo.participants}
+      totalPoints={rang.totalPoints}
+      rank={rang.rank}
+      participants={rang.participants}
       prevGameweek={prevGameweek}
       nextGameweek={nextGameweek}
     />

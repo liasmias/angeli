@@ -81,3 +81,28 @@ export async function getRank(
   const rank = rows.filter((r) => r.total_points > mine.total_points).length + 1;
   return { rank, totalPoints: mine.total_points, participants: rows.length };
 }
+
+/**
+ * Platzierung und Gesamtpunkte zum Stand NACH einem bestimmten Spieltag.
+ *
+ * Die `standings`-View kennt nur den heutigen Stand. Beim Zurückblättern soll
+ * aber die Rangliste erscheinen, die damals galt — sonst steht über einer
+ * Aufstellung von Spieltag 2 der aktuelle Rang.
+ *
+ * Die Aggregation liegt in der Datenbank (`standings_at`, Migration 0020).
+ * Hier zu rechnen hiesse, alle Schnappschüsse aller Kader zu laden — das
+ * überschreitet das Zeilenlimit von PostgREST und liefert stillschweigend
+ * zu kleine Summen.
+ */
+export async function getRankAt(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  gameweekNumber: number
+): Promise<{ rank: number | null; totalPoints: number; participants: number }> {
+  const { data } = await supabase.rpc("standings_at", { p_gameweek: gameweekNumber });
+  const rows = data ?? [];
+  const mine = rows.find((r) => r.user_id === userId);
+  if (!mine) return { rank: null, totalPoints: 0, participants: rows.length };
+  const rank = rows.filter((r) => Number(r.total_points) > Number(mine.total_points)).length + 1;
+  return { rank, totalPoints: Number(mine.total_points), participants: rows.length };
+}
