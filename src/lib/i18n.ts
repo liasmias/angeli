@@ -125,7 +125,7 @@ const de = {
     },
   },
   builder: {
-    blank: "spielfrei",
+    blank: "kein Spiel",
     budget: "Budget",
     of: "von",
     capHint: "Dein Team ist durch Preissteigerungen mehr wert als das Basis-Budget — dieser Wert bleibt dir erhalten.",
@@ -423,7 +423,7 @@ const en: typeof de = {
     },
   },
   builder: {
-    blank: "blank",
+    blank: "no game",
     budget: "Budget",
     of: "of",
     capHint: "Price rises made your team worth more than the base budget — you keep the full value.",
