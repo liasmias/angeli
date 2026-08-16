@@ -50,6 +50,25 @@ export async function getFixturesByRound(
   });
 }
 
+/**
+ * Partien gezielt über ihre IDs.
+ *
+ * Nötig für von Hand terminierte Nachtragsspiele: Sie stehen bei
+ * API-Football weiter in ihrer ursprünglichen Runde, bei uns aber in der
+ * Runde, in der sie tatsächlich gespielt werden. Über die Runde findet der
+ * Sync sie dort nicht mehr.
+ */
+export async function getFixturesByIds(ids: number[]): Promise<ApiFixture[]> {
+  if (ids.length === 0) return [];
+  // Die API nimmt bis zu 20 IDs pro Aufruf, getrennt durch Bindestriche.
+  const paeckchen: number[][] = [];
+  for (let i = 0; i < ids.length; i += 20) paeckchen.push(ids.slice(i, i + 20));
+  const antworten = await Promise.all(
+    paeckchen.map((p) => apiFootballFetch<ApiFixture[]>("/fixtures", { ids: p.join("-") }))
+  );
+  return antworten.flat();
+}
+
 interface ApiPlayerFixtureStats {
   player: { id: number; name: string };
   statistics: Array<{

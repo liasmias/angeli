@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getFixturesByRound, getFixturePlayerStats } from "@/lib/football-api/client";
+import { getFixturesByRound, getFixturesByIds, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import { computeAutoSubs } from "@/lib/auto-subs";
 import { PREIS_AB_SPIELTAG, PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
@@ -187,7 +187,30 @@ export async function GET(request: Request) {
   const { data: players } = await supabase.from("players").select("id, api_football_player_id");
   const playerIdByApiId = new Map((players ?? []).filter((p) => p.api_football_player_id !== null).map((p) => [p.api_football_player_id as number, p.id]));
 
-  const fixtures = await getFixturesByRound(leagueId, settings.season, `Regular Season - ${gameweek.number}`);
+  // Von Hand terminierte Partien: Ihre Runde bei API-Football stimmt nicht
+  // mehr mit unserer überein. Wir schneiden sie aus der Rundenliste heraus und
+  // holen stattdessen die, die bei uns in dieser Runde liegen, über ihre ID.
+  const { data: manuelleRows } = await supabase
+    .from("fixtures")
+    .select("api_football_fixture_id, gameweek_id")
+    .eq("manual_schedule", true);
+  const manuelleRunde = new Map(
+    (manuelleRows ?? [])
+      .filter((m) => m.api_football_fixture_id !== null)
+      .map((m) => [m.api_football_fixture_id as number, m.gameweek_id])
+  );
+
+  const ausRunde = (
+    await getFixturesByRound(leagueId, settings.season, `Regular Season - ${gameweek.number}`)
+  ).filter((f) => {
+    const zugewiesen = manuelleRunde.get(f.fixture.id);
+    // Nicht von Hand terminiert → die API entscheidet.
+    return zugewiesen === undefined || zugewiesen === gameweek.id;
+  });
+  const nachzutragen = [...manuelleRunde]
+    .filter(([id, gwId]) => gwId === gameweek.id && !ausRunde.some((f) => f.fixture.id === id))
+    .map(([id]) => id);
+  const fixtures = [...ausRunde, ...(await getFixturesByIds(nachzutragen))];
 
   const touchedPlayerIds = new Set<number>();
   let fixturesSynced = 0;
@@ -200,19 +223,33 @@ export async function GET(request: Request) {
     const homeClubId = clubIdByApiId.get(fixture.teams.home.id);
     const awayClubId = clubIdByApiId.get(fixture.teams.away.id);
 
-    await supabase.from("fixtures").upsert(
-      {
-        api_football_fixture_id: fixture.fixture.id,
-        gameweek_id: gameweek.id,
-        home_club_id: homeClubId ?? null,
-        away_club_id: awayClubId ?? null,
-        kickoff: fixture.fixture.date,
-        status: fixture.fixture.status.short,
-        home_goals: fixture.goals.home,
-        away_goals: fixture.goals.away,
-      },
-      { onConflict: "api_football_fixture_id" }
-    );
+    // Runde und Anstosszeit bleiben bei von Hand terminierten Partien, wie
+    // sie sind — die API kennt dort nur den überholten Termin.
+    const gemeinsam = {
+      home_club_id: homeClubId ?? null,
+      away_club_id: awayClubId ?? null,
+      status: fixture.fixture.status.short,
+      home_goals: fixture.goals.home,
+      away_goals: fixture.goals.away,
+    };
+    if (manuelleRunde.has(fixture.fixture.id)) {
+      // Der Datensatz existiert zwingend — die Markierung stammt aus ihm.
+      await supabase
+        .from("fixtures")
+        .update(gemeinsam)
+        .eq("api_football_fixture_id", fixture.fixture.id);
+    } else {
+      await supabase.from("fixtures").upsert(
+        {
+          api_football_fixture_id: fixture.fixture.id,
+          gameweek_id: gameweek.id,
+          kickoff: fixture.fixture.date,
+          manual_schedule: false,
+          ...gemeinsam,
+        },
+        { onConflict: "api_football_fixture_id" }
+      );
+    }
     fixturesSynced++;
 
     const status = fixture.fixture.status.short;
@@ -445,6 +482,8 @@ export async function GET(request: Request) {
       `Regular Season - ${naechsteOffene.number}`
     );
     for (const fixture of kommende) {
+      // Von Hand terminierte Partien nicht in ihre alte Runde zurückziehen.
+      if (manuelleRunde.has(fixture.fixture.id)) continue;
       await supabase.from("fixtures").upsert(
         {
           api_football_fixture_id: fixture.fixture.id,
@@ -455,6 +494,7 @@ export async function GET(request: Request) {
           status: fixture.fixture.status.short,
           home_goals: fixture.goals.home,
           away_goals: fixture.goals.away,
+          manual_schedule: false,
         },
         { onConflict: "api_football_fixture_id" }
       );

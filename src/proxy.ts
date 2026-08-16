@@ -33,9 +33,16 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Fällt der Auth-Aufruf aus, läuft der Request weiter statt mit 500 zu
+  // enden. Kein Sicherheitsloch: Jede geschützte Seite prüft die Anmeldung
+  // selbst noch einmal — der Proxy erspart nur den Umweg über die Seite.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    return response;
+  }
 
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));

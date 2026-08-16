@@ -211,7 +211,7 @@ export default async function TeamPage({
       getOwnershipPercent(),
       supabase
         .from("players")
-        .select("id, first_name, last_name, position, price, is_active, flag, flag_note, club_id, clubs(name, short_name)")
+        .select("id, first_name, last_name, position, price, is_active, flag, flag_note, manual_stats, club_id, clubs(name, short_name)")
         .eq("is_active", true)
         .order("position")
         .order("price", { ascending: false }),
@@ -290,6 +290,7 @@ export default async function TeamPage({
       owned: ownership.get(p.id) ?? 0,
       flag: p.flag,
       flagNote: p.flag_note,
+      manualStats: p.manual_stats,
       cleanSheets:
         p.position === "GK" || p.position === "DEF" ? (zuNullByPlayer.get(p.id) ?? 0) : null,
       nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,

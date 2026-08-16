@@ -125,6 +125,7 @@ const de = {
     },
   },
   builder: {
+    blank: "spielfrei",
     budget: "Budget",
     of: "von",
     capHint: "Dein Team ist durch Preissteigerungen mehr wert als das Basis-Budget — dieser Wert bleibt dir erhalten.",
@@ -172,6 +173,10 @@ const de = {
     viceTitle: "Zum Vize-Captain machen",
     flagYellow: "fraglich (verletzt oder gesperrt)",
     flagRed: "fällt aus",
+    manualTitle: "Punkte werden nachgetragen",
+    manualText:
+      "Dieser Spieler fehlt in der Datenquelle. Seine Punkte trägt der Admin nach Abpfiff von Hand nach — sie erscheinen also erst am Ende des Spieltags, nicht live. Aufstellen kannst du ihn ganz normal, alle Regeln gelten unverändert.",
+    manualShort: "Punkte erst nach Spieltagsende",
     playerActions: (n: string) => `Aktionen für ${n}`,
     swapOut: "Auswechseln",
     swapIn: "Einwechseln",
@@ -265,6 +270,8 @@ const de = {
     showBest: "Beste Spieler anzeigen ▾",
     goal: "Tor:",
     goals: "Tore:",
+    postponed: "Verschoben",
+    postponedHint: "Neuer Termin noch offen. Die Partie wird dem Spieltag zugeordnet, an dem sie nachgeholt wird.",
   },
   stats: {
     title: "Statistiken",
@@ -416,6 +423,7 @@ const en: typeof de = {
     },
   },
   builder: {
+    blank: "blank",
     budget: "Budget",
     of: "of",
     capHint: "Price rises made your team worth more than the base budget — you keep the full value.",
@@ -463,6 +471,10 @@ const en: typeof de = {
     viceTitle: "Make vice-captain",
     flagYellow: "doubtful (injured or suspended)",
     flagRed: "unavailable",
+    manualTitle: "Points added manually",
+    manualText:
+      "This player is missing from the data provider. The admin enters his points by hand after the final whistle — they appear at the end of the gameweek, not live. You can pick him as usual; every rule applies unchanged.",
+    manualShort: "Points only after the gameweek ends",
     playerActions: (n: string) => `Actions for ${n}`,
     swapOut: "Substitute",
     swapIn: "Bring on",
@@ -555,6 +567,8 @@ const en: typeof de = {
     showBest: "Show best players ▾",
     goal: "Goal:",
     goals: "Goals:",
+    postponed: "Postponed",
+    postponedHint: "New date to be confirmed. The match will be assigned to the gameweek it is played in.",
   },
   stats: {
     title: "Statistics",

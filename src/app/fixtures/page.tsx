@@ -101,10 +101,39 @@ export default async function FixturesPage() {
     ...gws.slice(0, currentIndex).reverse(),
   ];
 
+  // Verschobene Partien hängen an keiner Runde und fielen sonst ganz aus der
+  // Anzeige — sie stehen deshalb zuoberst in einem eigenen Block ohne Termin.
+  const verschoben = (fixtures ?? []).filter((f) => f.gameweek_id === null);
+
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6">
       <h1 className="mb-6 text-2xl font-bold tracking-tight text-brand-deep">{t.title}</h1>
       <div className="flex flex-col gap-6">
+        {verschoben.length > 0 && (
+          <section className="overflow-hidden chamfer bg-white shadow-sm">
+            <h2 className="bg-brand-deep px-5 py-2.5 text-sm font-bold text-brand-accent">
+              {t.postponed}
+            </h2>
+            <ul className="divide-y divide-brand-deep/5">
+              {verschoben.map((f) => {
+                const home = Array.isArray(f.home) ? f.home[0] : f.home;
+                const away = Array.isArray(f.away) ? f.away[0] : f.away;
+                return (
+                  <li key={f.id} className="flex items-center gap-3 px-5 py-3">
+                    <span className="flex-1 text-right font-semibold text-brand-deep">{home?.name ?? "?"}</span>
+                    <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold text-brand-deep/60">
+                      —
+                    </span>
+                    <span className="flex-1 font-semibold text-brand-deep">{away?.name ?? "?"}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="border-t border-brand-deep/5 px-5 py-3 text-xs text-brand-deep/60">
+              {t.postponedHint}
+            </p>
+          </section>
+        )}
         {ordered.map((gw) => {
           const gwFixtures = (fixtures ?? []).filter((f) => f.gameweek_id === gw.id);
           if (gwFixtures.length === 0) return null;

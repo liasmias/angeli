@@ -73,6 +73,8 @@ type PlayersRow = {
   /** Verfügbarkeit: null | "yellow" (fraglich) | "red" (fällt aus). */
   flag: PlayerFlag | null;
   flag_note: string | null;
+  /** Statistik wird manuell nachgetragen — kein Eintrag bei API-Football. */
+  manual_stats: boolean;
 };
 
 type GameweeksRow = {
@@ -93,6 +95,7 @@ type FixturesRow = {
   status: string;
   home_goals: number | null;
   away_goals: number | null;
+  manual_schedule: boolean;
 };
 
 type ProfilesRow = {

@@ -30,13 +30,24 @@ export default async function RootLayout({
   const t = getDictionary(lang).footer;
 
   // Admin-Ankündigung — ein Banner auf jeder Seite, solange Text gesetzt ist.
-  const supabase = await createClient();
-  const { data: settings } = await supabase
-    .from("league_settings")
-    .select("*")
-    .eq("id", 1)
-    .maybeSingle();
-  const announcement = settings?.announcement ?? null;
+  //
+  // Bewusst abgesichert: Das Layout rendert JEDE Antwort, auch die 404-Seite.
+  // Wirft die Abfrage — bei einer Störung oder Drosselung von Supabase —,
+  // wird aus einem 404 ein 500. Genau das ist am 15.08. passiert, als ein
+  // Scanner in fünf Minuten 187 nicht existierende Pfade abgeklappert hat.
+  // Ohne Banner weiterzurendern ist allemal besser als eine Fehlerseite.
+  let announcement: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: settings } = await supabase
+      .from("league_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    announcement = settings?.announcement ?? null;
+  } catch {
+    announcement = null;
+  }
 
   return (
     <html

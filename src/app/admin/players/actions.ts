@@ -72,6 +72,8 @@ export async function createPlayer(formData: FormData) {
     // Neue Spieler gelten als spielbereit; markiert wird später bei Bedarf.
     flag: null,
     flag_note: null,
+    // Ohne API-ID kann der Sync nichts zuordnen — dann wird von Hand gepflegt.
+    manual_stats: !apiIdRaw,
   });
   revalidatePath("/admin/players");
   revalidatePath("/team");

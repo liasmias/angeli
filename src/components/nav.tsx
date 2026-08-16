@@ -8,22 +8,30 @@ import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 
 export default async function Nav() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   let username: string | null = null;
   let isAdmin = false;
+  let user: { id: string } | null = null;
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username, role")
-      .eq("id", user.id)
-      .single();
-    username = profile?.username ?? null;
-    isAdmin = profile?.role === "admin";
+  // Abgesichert, weil die Navigation in jeder Antwort steckt — auch in der
+  // 404-Seite. Wirft der Auth-Aufruf, etwa weil Supabase gerade drosselt,
+  // würde daraus sonst ein 500. Im Zweifel die abgemeldete Ansicht zeigen:
+  // Die geschützten Seiten prüfen ohnehin selbst nochmals.
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, role")
+        .eq("id", user.id)
+        .single();
+      username = profile?.username ?? null;
+      isAdmin = profile?.role === "admin";
+    }
+  } catch {
+    user = null;
   }
 
   const lang = await getLang();

@@ -44,6 +44,8 @@ export interface PlayerOption {
   /** Verfügbarkeit: gelb = fraglich, rot = fällt aus. */
   flag: PlayerFlag | null;
   flagNote: string | null;
+  /** Statistik wird von Hand nachgetragen — Punkte erscheinen verzögert. */
+  manualStats: boolean;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
 }
@@ -172,12 +174,20 @@ function PlayerCard({
         </div>
         {/* Normal der nächste Gegner — im Transfer-Modus der Preis, denn
             dann ist das die Information, die zählt. */}
+        {/* Ohne Partie am angezeigten Spieltag steht hier kein Gegner. Das
+            war bisher ein Bindestrich und ging auf dem Handy unter — bei
+            verschobenen Runden ist es aber die wichtigste Information vor
+            der Deadline. Darum als Wort und in Magenta. */}
         <div
-          className={`w-full truncate rounded-b px-1 py-0.5 text-center text-[9px] font-medium leading-4 sm:px-1.5 sm:text-xs ${
-            showPrice ? "bg-brand-accent font-bold text-brand-deep" : "bg-brand-deep text-white/90"
+          className={`w-full truncate rounded-b px-1 py-0.5 text-center leading-4 sm:px-1.5 ${
+            showPrice
+              ? "bg-brand-accent text-[9px] font-bold text-brand-deep sm:text-xs"
+              : player.nextOpponent
+                ? "bg-brand-deep text-[9px] font-medium text-white/90 sm:text-xs"
+                : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
           }`}
         >
-          {showPrice ? player.price.toFixed(1) : (player.nextOpponent ?? "—")}
+          {showPrice ? player.price.toFixed(1) : (player.nextOpponent ?? t.blank)}
         </div>
       </button>
     </div>
@@ -753,6 +763,14 @@ export default function TeamBuilder({
                   </p>
                 </div>
               </div>
+              {player.manualStats && (
+                <div className="mb-3 rounded-xl bg-brand-deep/5 p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
+                    <span aria-hidden>ℹ️</span> {t.manualTitle}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-snug text-brand-deep/70">{t.manualText}</p>
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 {pick.isStarting ? (
                   <>
@@ -1299,6 +1317,15 @@ export default function TeamBuilder({
                             p.flag === "red" ? "bg-brand-danger" : "bg-amber-400"
                           }`}
                         />
+                      )}
+                      {p.manualStats && (
+                        <span
+                          title={t.manualShort}
+                          aria-label={t.manualShort}
+                          className="shrink-0 text-[11px] leading-none"
+                        >
+                          ℹ️
+                        </span>
                       )}
                       <span className="truncate">{p.name}</span>
                     </span>
