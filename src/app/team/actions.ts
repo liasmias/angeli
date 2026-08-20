@@ -230,10 +230,14 @@ export async function saveSquad(
   }
 
   // Spiegelt nur noch den abgeleiteten Stand für die Anzeige.
+  // Bei aktiver Wildcard steht das Guthaben still — die Transfers dieser
+  // Runde kosten nichts und dürfen es deshalb nicht aufzehren.
   await supabase
     .from("squads")
     .update({
-      free_transfers_remaining: Math.max(0, freeLeft - (isFirstSquad ? 0 : transfersNow)),
+      free_transfers_remaining: wildcard
+        ? freeLeft
+        : Math.max(0, freeLeft - (isFirstSquad ? 0 : transfersNow)),
     })
     .eq("id", squadRow.id);
 
