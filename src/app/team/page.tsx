@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTransferBudget } from "@/lib/transfers";
+import { alleZeilen } from "@/lib/supabase/paginate";
 import { getGameweekPoints, getRank, getRankAt } from "@/lib/gameweek-summary";
 import { shortenPlayerName } from "@/lib/player-name";
 import GameweekNav from "./GameweekNav";
@@ -215,8 +216,21 @@ export default async function TeamPage({
         .eq("is_active", true)
         .order("position")
         .order("price", { ascending: false }),
-      supabase.from("fantasy_points").select("player_id, points"),
-      supabase.from("player_stats").select("player_id, goals, assists, minutes, goals_conceded"),
+      // Beide Tabellen wachsen ueber das Zeilenlimit von PostgREST hinaus —
+      // deshalb seitenweise, sonst fielen Saisonwerte stumm auf null.
+      alleZeilen<{ player_id: number; points: number }>((von, bis) =>
+        supabase.from("fantasy_points").select("player_id, points").range(von, bis)
+      ).then((data) => ({ data })),
+      alleZeilen<{
+        player_id: number; goals: number | null; assists: number | null;
+        minutes: number | null; goals_conceded: number | null;
+        yellow_cards: number | null; red_cards: number | null;
+      }>((von, bis) =>
+        supabase
+          .from("player_stats")
+          .select("player_id, goals, assists, minutes, goals_conceded, yellow_cards, red_cards")
+          .range(von, bis)
+      ).then((data) => ({ data })),
       supabase
         .from("squad_players")
         .select("player_id, is_starting, is_captain, is_vice_captain, purchase_price, bench_order")
@@ -244,9 +258,20 @@ export default async function TeamPage({
   const toreByPlayer = new Map<number, number>();
   const assistsByPlayer = new Map<number, number>();
   const zuNullByPlayer = new Map<number, number>();
+  const minutenByPlayer = new Map<number, number>();
+  const einsaetzeByPlayer = new Map<number, number>();
+  const gelbByPlayer = new Map<number, number>();
+  const rotByPlayer = new Map<number, number>();
   for (const row of statRows ?? []) {
     toreByPlayer.set(row.player_id, (toreByPlayer.get(row.player_id) ?? 0) + (row.goals ?? 0));
     assistsByPlayer.set(row.player_id, (assistsByPlayer.get(row.player_id) ?? 0) + (row.assists ?? 0));
+    minutenByPlayer.set(row.player_id, (minutenByPlayer.get(row.player_id) ?? 0) + (row.minutes ?? 0));
+    // Einsatz = mindestens eine Minute auf dem Platz.
+    if ((row.minutes ?? 0) > 0) {
+      einsaetzeByPlayer.set(row.player_id, (einsaetzeByPlayer.get(row.player_id) ?? 0) + 1);
+    }
+    gelbByPlayer.set(row.player_id, (gelbByPlayer.get(row.player_id) ?? 0) + (row.yellow_cards ?? 0));
+    rotByPlayer.set(row.player_id, (rotByPlayer.get(row.player_id) ?? 0) + (row.red_cards ?? 0));
     // Zu-null wie im Regelwerk: ab 60 Minuten ohne Gegentor.
     if ((row.minutes ?? 0) >= 60 && (row.goals_conceded ?? 0) === 0) {
       zuNullByPlayer.set(row.player_id, (zuNullByPlayer.get(row.player_id) ?? 0) + 1);
@@ -294,6 +319,10 @@ export default async function TeamPage({
       cleanSheets:
         p.position === "GK" || p.position === "DEF" ? (zuNullByPlayer.get(p.id) ?? 0) : null,
       nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
+      minutes: minutenByPlayer.get(p.id) ?? 0,
+      appearances: einsaetzeByPlayer.get(p.id) ?? 0,
+      yellowCards: gelbByPlayer.get(p.id) ?? 0,
+      redCards: rotByPlayer.get(p.id) ?? 0,
     };
   });
 

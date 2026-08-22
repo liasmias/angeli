@@ -48,6 +48,11 @@ export interface PlayerOption {
   manualStats: boolean;
   /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
   nextOpponent: string | null;
+  /** Saisonwerte fuer die Spielerkarte. */
+  minutes: number;
+  appearances: number;
+  yellowCards: number;
+  redCards: number;
 }
 
 export interface SquadPick {
@@ -91,6 +96,7 @@ function PlayerCard({
   showPrice = false,
   onQuickRemove,
   onUndo,
+  imStapel = false,
   t,
 }: {
   player: PlayerOption;
@@ -107,14 +113,16 @@ function PlayerCard({
   onQuickRemove?: () => void;
   /** Geisterkarte eines Entfernten: ↩ oben rechts holt ihn zurück. */
   onUndo?: () => void;
+  /** Im Tauschstapel gibt der Rahmen die Breite vor, nicht die Karte selbst. */
+  imStapel?: boolean;
   t: BuilderDict;
 }) {
   return (
     <div
       id={`spieler-karte-${player.id}`}
-      className={`${onUndo ? "" : "pop-in "}group relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center transition-opacity duration-150 ${
-        dimmed ? "opacity-35" : ""
-      }`}
+      className={`${onUndo ? "" : "pop-in "}group relative flex min-w-0 flex-col items-center transition-opacity duration-150 ${
+        imStapel ? "w-full" : "max-w-[7.4rem] flex-1"
+      } ${dimmed ? "opacity-35" : ""}`}
     >
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
@@ -194,6 +202,123 @@ function PlayerCard({
   );
 }
 
+/**
+ * Kleine Spielerkarte: Trikot, Herkunft, nächste Partie und die Saisonwerte.
+ *
+ * Steckt sowohl im Aktionsmenü der Aufstellung als auch im Spielermarkt —
+ * dort war bisher nur zu sehen, wonach gerade sortiert wird. Wer Tore gegen
+ * Vorlagen abwägen wollte, musste die Sortierung umstellen und die Zeile
+ * wiederfinden.
+ */
+function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
+  const werte: [string, string][] = [
+    [t.cardPoints, String(player.points)],
+    [t.cardGoals, String(player.goals)],
+    [t.cardAssists, String(player.assists)],
+    ...(player.cleanSheets !== null
+      ? ([[t.cardCleanSheets, String(player.cleanSheets)]] as [string, string][])
+      : []),
+    [t.cardApps, String(player.appearances)],
+    [t.cardMinutes, String(player.minutes)],
+    [t.cardOwned, `${player.owned}%`],
+    [t.cardCards, `${player.yellowCards}\u2009/\u2009${player.redCards}`],
+  ];
+  return (
+    <div>
+      <div className="flex items-center gap-3">
+        <Jersey club={player.club} size={44} />
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 truncate font-bold text-brand-deep">
+            {player.flag && (
+              <span
+                title={player.flagNote ?? undefined}
+                className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+                  player.flag === "red" ? "bg-brand-danger" : "bg-amber-400"
+                }`}
+              />
+            )}
+            <span className="truncate">{player.name}</span>
+          </p>
+          <p className="text-xs text-brand-deep/60">
+            {player.club} · {t.positions[player.position]} · {player.price.toFixed(1)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-brand-deep/5 px-3 py-2">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+          {t.cardNextGame}
+        </span>
+        <span
+          className={`truncate text-xs font-bold ${
+            player.nextOpponent ? "text-brand-deep" : "text-brand-magenta"
+          }`}
+        >
+          {player.nextOpponent ?? t.cardNoGame}
+        </span>
+      </div>
+
+      {player.flagNote && (
+        <p className="mt-2 text-[11px] leading-snug text-brand-deep/60">{player.flagNote}</p>
+      )}
+
+      <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+        {t.cardSeason}
+      </p>
+      <dl className="mt-1.5 grid grid-cols-4 gap-1.5">
+        {werte.map(([label, wert]) => (
+          <div key={label} className="rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center">
+            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/45">
+              {label}
+            </dt>
+            <dd className="text-sm font-bold tabular-nums text-brand-deep">{wert}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/**
+ * Ein Platz, auf dem gerade getauscht wird: der neu geholte Spieler vorne,
+ * der ausgetauschte blass und leicht versetzt dahinter. Beide teilen sich
+ * eine Spalte, damit die Reihe nicht breiter wird — bei fünf Mittelfeld-
+ * karten war das der Grund, warum es unübersichtlich wurde.
+ */
+function TauschStapel({
+  alt,
+  altPick,
+  neu,
+  neuPick,
+  onUndo,
+  onTap,
+  t,
+}: {
+  alt: PlayerOption;
+  altPick: SquadPick;
+  neu: PlayerOption;
+  neuPick: SquadPick;
+  onUndo: () => void;
+  onTap?: () => void;
+  t: BuilderDict;
+}) {
+  return (
+    <div className="relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center">
+      {/* Vorgänger: nur noch Andeutung, nimmt keine Klicks entgegen. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-y-1.5 translate-x-2 opacity-25"
+      >
+        <PlayerCard t={t} player={alt} pick={{ ...altPick, isCaptain: false, isViceCaptain: false }} showPrice imStapel />
+      </div>
+      <PlayerCard t={t} player={neu} pick={neuPick} showPrice imStapel onTap={onTap} onUndo={onUndo} />
+      <span className="pointer-events-none mt-0.5 max-w-full truncate text-[9px] font-semibold text-white/45">
+        ↔ {alt.name}
+      </span>
+    </div>
+  );
+}
+
 function EmptySlot({
   label,
   missing,
@@ -264,6 +389,9 @@ export default function TeamBuilder({
   // FPL-Muster: Tipp auf eine Karte öffnet das Aktionsmenü; "Auswechseln"
   // startet den Tauschmodus, in dem nur gültige Partner tippbar bleiben.
   const [sheetSpieler, setSheetSpieler] = useState<number | null>(null);
+  // Spielerkarte aus dem Markt — dort ist der Spieler noch nicht im Kader,
+  // deshalb ein eigener Zustand statt `sheetSpieler`.
+  const [marktSpieler, setMarktSpieler] = useState<number | null>(null);
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
@@ -271,6 +399,12 @@ export default function TeamBuilder({
   // Grundlage für "Rückgängig" und dafür, dass die Geisterkarte an
   // ihrem Platz stehen bleibt statt ans Reihenende zu springen.
   const [entfernt, setEntfernt] = useState<{ pick: SquadPick; idx: number }[]>([]);
+  // Zuordnung Geisterkarte -> Nachfolger. Ohne sie landete der neu geholte
+  // Spieler am Reihenende neben dem ausgeblassten Vorgaenger; im Mittelfeld
+  // mit fuenf Karten wurde daraus schnell ein Durcheinander. Mit der
+  // Zuordnung teilen sich beide einen Platz: der Neue vorne, der Alte blass
+  // dahinter.
+  const [ersatz, setErsatz] = useState<{ rausId: number; reinId: number }[]>([]);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -369,8 +503,19 @@ export default function TeamBuilder({
   // Bank: Torhüter fix auf Platz 1, danach die Feldspieler in der Reihenfolge,
   // in der sie bei einer automatischen Einwechslung nachrücken.
   const bench = squad.filter((s) => !s.isStarting);
-  const benchGk = bench.filter((s) => playersById.get(s.playerId)?.position === "GK");
-  const benchFeld = bench.filter((s) => playersById.get(s.playerId)?.position !== "GK");
+  // Wer als Nachfolger im Tauschstapel steckt, erscheint dort — nicht
+  // zusaetzlich als eigene Bankkarte.
+  const imStapelAufBank = new Set(
+    ersatz
+      .filter((r) => entfernt.some((e) => e.pick.playerId === r.rausId && !e.pick.isStarting))
+      .map((r) => r.reinId)
+  );
+  const benchGk = bench.filter(
+    (s) => playersById.get(s.playerId)?.position === "GK" && !imStapelAufBank.has(s.playerId)
+  );
+  const benchFeld = bench.filter(
+    (s) => playersById.get(s.playerId)?.position !== "GK" && !imStapelAufBank.has(s.playerId)
+  );
 
   /** Verschiebt einen Feldspieler auf der Bank um eine Position. */
   function moveBench(playerId: number, richtung: -1 | 1) {
@@ -394,6 +539,15 @@ export default function TeamBuilder({
   }
 
   function togglePlayer(player: PlayerOption) {
+    // Freie Geisterkarte derselben Position: Der Neue uebernimmt ihren Platz.
+    const geist = transferModus
+      ? entfernt.find(
+          (e) =>
+            playersById.get(e.pick.playerId)?.position === player.position &&
+            !squad.some((s) => s.playerId === e.pick.playerId) &&
+            !ersatz.some((r) => r.rausId === e.pick.playerId)
+        )
+      : undefined;
     setSquad((prev) => {
       const exists = prev.find((s) => s.playerId === player.id);
       if (exists) return prev.filter((s) => s.playerId !== player.id);
@@ -421,7 +575,18 @@ export default function TeamBuilder({
       // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das
       // hergibt — sonst auf die Bank.
       const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
-      return [...prev, { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false }];
+      const neuerPick = { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false };
+      if (!geist) return [...prev, neuerPick];
+      // An die Stelle des Vorgaengers setzen, damit die Reihenfolge im
+      // Kader-Array und damit die Bankreihenfolge stabil bleibt.
+      setErsatz((st) =>
+        st.some((r) => r.rausId === geist.pick.playerId)
+          ? st
+          : [...st, { rausId: geist.pick.playerId, reinId: player.id }]
+      );
+      const naechste = [...prev];
+      naechste.splice(Math.min(geist.idx, naechste.length), 0, neuerPick);
+      return naechste;
     });
   }
 
@@ -504,11 +669,57 @@ export default function TeamBuilder({
   }
 
   function removePlayer(playerId: number) {
+    // War der Spieler Nachfolger einer Geisterkarte, wird deren Platz wieder
+    // frei — sonst haenge die Zuordnung an einem Spieler, der weg ist.
+    setErsatz((st) => st.filter((r) => r.reinId !== playerId && r.rausId !== playerId));
+    // Bewusst ausserhalb des setSquad-Updaters: React ruft Updater im Strict
+    // Mode zweimal auf. Stand der Eintrag darin, landete jeder entfernte
+    // Spieler doppelt in `entfernt` — und damit zweimal auf dem Spielfeld.
+    const idx = squad.findIndex((s) => s.playerId === playerId);
+    if (idx >= 0) {
+      const pick = squad[idx];
+      setEntfernt((st) =>
+        st.some((e) => e.pick.playerId === playerId) ? st : [...st, { pick, idx }]
+      );
+    }
+    setSquad((prev) => prev.filter((s) => s.playerId !== playerId));
+  }
+
+  /**
+   * Macht einen ganzen Tausch rückgängig: Der Nachfolger fliegt raus, der
+   * Vorgänger kehrt an seinen Platz zurück. Bewusst in einem einzigen
+   * `setSquad`, weil `transferRueckgaengig` sonst gegen den alten Kader
+   * prüfen würde — der Nachfolger stünde dort noch drin und die Positions-
+   * grenze schlüge fehl.
+   */
+  function tauschRueckgaengig(rausId: number) {
+    const paar = ersatz.find((r) => r.rausId === rausId);
+    if (!paar) {
+      transferRueckgaengig(rausId);
+      return;
+    }
+    const eintrag = entfernt.find((e) => e.pick.playerId === rausId);
+    const alt = eintrag?.pick;
+    const player = alt ? playersById.get(alt.playerId) : undefined;
+    if (!eintrag || !alt || !player) return;
+
     setSquad((prev) => {
-      const idx = prev.findIndex((s) => s.playerId === playerId);
-      if (idx >= 0) setEntfernt((st) => [...st, { pick: prev[idx], idx }]);
-      return prev.filter((s) => s.playerId !== playerId);
+      const ohneNeuen = prev.filter((s) => s.playerId !== paar.reinId);
+      const darfStarten =
+        alt.isStarting &&
+        canStart(starterCounts(ohneNeuen), player.position, settings.startingSize).ok;
+      const naechste = [...ohneNeuen];
+      naechste.splice(Math.min(eintrag.idx, naechste.length), 0, {
+        ...alt,
+        isStarting: darfStarten,
+        isCaptain: alt.isCaptain && !ohneNeuen.some((s) => s.isCaptain) && darfStarten,
+        isViceCaptain: alt.isViceCaptain && !ohneNeuen.some((s) => s.isViceCaptain) && darfStarten,
+      });
+      return naechste;
     });
+    setEntfernt((st) => st.filter((e) => e.pick.playerId !== rausId));
+    setErsatz((st) => st.filter((r) => r.rausId !== rausId));
+    setToast({ kind: "success", text: t.undoDone(player.name) });
   }
 
   /** Macht einen "Transfer out" rückgängig — mit denselben Prüfungen
@@ -662,6 +873,12 @@ export default function TeamBuilder({
       if (result?.error) {
         setToast({ kind: "error", text: result.error });
       } else {
+        // Gespeichert heisst: Der Tausch ist vollzogen. Geisterkarten und
+        // ihre Zuordnungen sind damit erledigt, sonst blieben sie als
+        // Stapel stehen, obwohl es nichts mehr rueckgaengig zu machen gibt.
+        setEntfernt([]);
+        setErsatz([]);
+        setTransferModus(false);
         // Spieltag mitnennen: nach einer verstrichenen Deadline gilt die
         // Aufstellung automatisch für den nächsten Spieltag.
         setToast({ kind: "success", text: t.saved(result?.savedForGameweek) });
@@ -731,11 +948,27 @@ export default function TeamBuilder({
           const anker = document.getElementById(`spieler-karte-${sheetSpieler}`);
           if (anker) {
             const r = anker.getBoundingClientRect();
-            const links = Math.min(Math.max(r.left + r.width / 2, 150), window.innerWidth - 150);
+            const links = Math.min(Math.max(r.left + r.width / 2, 160), window.innerWidth - 160);
+            // Seite nach dem tatsaechlich freien Platz waehlen und die Hoehe
+            // darauf begrenzen. Mit der Spielerkarte ist das Menue deutlich
+            // hoeher als frueher — eine feste Schwelle liess es oben aus dem
+            // Bild laufen, und die Werte waren abgeschnitten.
+            const platzOben = r.top - 16;
+            const platzUnten = window.innerHeight - r.bottom - 16;
             popoverStyle =
-              r.top > 300
-                ? { left: links, bottom: window.innerHeight - r.top + 8, transform: "translateX(-50%)" }
-                : { left: links, top: r.bottom + 8, transform: "translateX(-50%)" };
+              platzOben > platzUnten
+                ? {
+                    left: links,
+                    bottom: window.innerHeight - r.top + 8,
+                    transform: "translateX(-50%)",
+                    maxHeight: platzOben,
+                  }
+                : {
+                    left: links,
+                    top: r.bottom + 8,
+                    transform: "translateX(-50%)",
+                    maxHeight: platzUnten,
+                  };
           }
         }
         return (
@@ -750,18 +983,12 @@ export default function TeamBuilder({
               style={popoverStyle}
               className={
                 popoverStyle
-                  ? "fixed z-50 w-64 rounded-2xl bg-white p-4 shadow-2xl"
-                  : "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl"
+                  ? "fixed z-50 w-80 overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
+                  : "fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl"
               }
             >
-              <div className="mb-3 flex items-center gap-3">
-                <Jersey club={player.club} size={40} />
-                <div className="min-w-0">
-                  <p className="truncate font-bold text-brand-deep">{player.name}</p>
-                  <p className="text-xs text-brand-deep/60">
-                    {player.club} · {t.positions[player.position]} · {player.price.toFixed(1)}
-                  </p>
-                </div>
+              <div className="mb-3">
+                <SpielerKarte player={player} t={t} />
               </div>
               {player.manualStats && (
                 <div className="mb-3 rounded-xl bg-brand-deep/5 p-3">
@@ -820,6 +1047,47 @@ export default function TeamBuilder({
                   {t.transferOut}
                 </button>
               </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* Spielerkarte aus dem Markt — mobil als Bottom Sheet, auf dem Desktop
+          mittig, weil die Marktzeile als Anker zu schmal waere. */}
+      {marktSpieler !== null && (() => {
+        const player = playersById.get(marktSpieler);
+        if (!player) return null;
+        const imKader = squad.some((s) => s.playerId === player.id);
+        const zu = () => setMarktSpieler(null);
+        return (
+          <>
+            <button
+              type="button"
+              aria-label={t.sheetClose}
+              onClick={zu}
+              className="fixed inset-0 z-40 cursor-default bg-black/40"
+            />
+            <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl">
+              <SpielerKarte player={player} t={t} />
+              {player.manualStats && (
+                <div className="mt-3 rounded-xl bg-brand-deep/5 p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
+                    <span aria-hidden>&#8505;&#65039;</span> {t.manualTitle}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-snug text-brand-deep/70">{t.manualText}</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => { togglePlayer(player); zu(); }}
+                className={`pressable mt-3 w-full rounded-xl px-4 py-3 text-sm font-bold ${
+                  imKader
+                    ? "bg-brand-danger/10 text-brand-danger"
+                    : "bg-brand-deep text-brand-accent"
+                }`}
+              >
+                {imKader ? t.cardRemove : t.cardAdd}
+              </button>
             </div>
           </>
         );
@@ -963,12 +1231,22 @@ export default function TeamBuilder({
                       !squad.some((s) => s.playerId === e.pick.playerId)
                   )
                 : [];
+              // Ersetzte Spieler erscheinen nicht als eigene Karte, sondern
+              // als Stapel am Platz ihres Vorgaengers.
+              const ersatzVon = new Map(ersatz.map((r) => [r.rausId, r.reinId]));
+              const alsStapel = new Set(
+                geister
+                  .map((e) => ersatzVon.get(e.pick.playerId))
+                  .filter((id): id is number => id !== undefined && row.some((p) => p.playerId === id))
+              );
               const eintraege = [
-                ...row.map((pick) => ({
-                  pick,
-                  geist: false,
-                  idx: squad.findIndex((s) => s.playerId === pick.playerId),
-                })),
+                ...row
+                  .filter((pick) => !alsStapel.has(pick.playerId))
+                  .map((pick) => ({
+                    pick,
+                    geist: false,
+                    idx: squad.findIndex((s) => s.playerId === pick.playerId),
+                  })),
                 ...geister.map((e) => ({ pick: e.pick, geist: true, idx: e.idx })),
               ].sort((a, b) => a.idx - b.idx);
               const missing = slotsByPosition[pos] - countByPosition[pos] - geister.length;
@@ -980,6 +1258,25 @@ export default function TeamBuilder({
                     const player = playersById.get(pick.playerId);
                     if (!player) return null;
                     if (geist) {
+                      const reinId = ersatzVon.get(pick.playerId);
+                      const nachfolger = reinId !== undefined ? playersById.get(reinId) : undefined;
+                      const nachfolgerPick = reinId !== undefined
+                        ? squad.find((s) => s.playerId === reinId)
+                        : undefined;
+                      if (nachfolger && nachfolgerPick) {
+                        return (
+                          <TauschStapel
+                            key={`stapel-${pick.playerId}`}
+                            t={t}
+                            alt={player}
+                            altPick={pick}
+                            neu={nachfolger}
+                            neuPick={nachfolgerPick}
+                            onUndo={() => tauschRueckgaengig(pick.playerId)}
+                            onTap={() => karteAngetippt(nachfolgerPick.playerId)}
+                          />
+                        );
+                      }
                       return (
                         <PlayerCard
                           key={pick.playerId}
@@ -1120,19 +1417,38 @@ export default function TeamBuilder({
                   .map(({ pick: e }) => {
                     const player = playersById.get(e.playerId);
                     if (!player) return null;
+                    // Wie auf dem Spielfeld: Nachfolger vorne, Vorgaenger blass
+                    // dahinter — nur wenn der Neue auch auf der Bank sitzt.
+                    const reinId = ersatz.find((r) => r.rausId === e.playerId)?.reinId;
+                    const nachfolgerPick = reinId !== undefined
+                      ? squad.find((s) => s.playerId === reinId && !s.isStarting)
+                      : undefined;
+                    const nachfolger = nachfolgerPick ? playersById.get(nachfolgerPick.playerId) : undefined;
                     return (
                       <div key={`ghost-${e.playerId}`} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
                         <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
                           —
                         </span>
-                        <PlayerCard
-                          t={t}
-                          player={player}
-                          pick={{ ...e, isCaptain: false, isViceCaptain: false }}
-                          dimmed
-                          showPrice
-                          onUndo={() => transferRueckgaengig(e.playerId)}
-                        />
+                        {nachfolger && nachfolgerPick ? (
+                          <TauschStapel
+                            t={t}
+                            alt={player}
+                            altPick={e}
+                            neu={nachfolger}
+                            neuPick={nachfolgerPick}
+                            onUndo={() => tauschRueckgaengig(e.playerId)}
+                            onTap={() => karteAngetippt(nachfolgerPick.playerId)}
+                          />
+                        ) : (
+                          <PlayerCard
+                            t={t}
+                            player={player}
+                            pick={{ ...e, isCaptain: false, isViceCaptain: false }}
+                            dimmed
+                            showPrice
+                            onUndo={() => transferRueckgaengig(e.playerId)}
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -1299,13 +1615,21 @@ export default function TeamBuilder({
             {filtered.map((p) => {
               const picked = squad.some((s) => s.playerId === p.id);
               return (
-                <button
+                // Zwei Ziele in einer Zeile: die Flaeche oeffnet die
+                // Spielerkarte, das +/- bleibt der schnelle Weg in den Kader.
+                // Ein einziger Knopf wuerde das eine gegen das andere
+                // eintauschen — vor der Deadline braucht es beides.
+                <div
                   key={p.id}
-                  type="button"
-                  onClick={() => togglePlayer(p)}
-                  className={`pressable-subtle flex w-full items-center gap-3 border-b border-brand-deep/5 px-3 py-2 text-left text-sm ${
+                  className={`flex w-full items-center border-b border-brand-deep/5 pr-3 text-sm ${
                     picked ? "bg-brand-accent/15" : "hover:bg-brand-deep/5"
                   }`}
+                >
+                <button
+                  type="button"
+                  onClick={() => setMarktSpieler(p.id)}
+                  aria-label={t.cardOpen(p.name)}
+                  className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-2 text-left"
                 >
                   <Jersey club={p.club} size={28} />
                   <span className="min-w-0 flex-1">
@@ -1349,14 +1673,19 @@ export default function TeamBuilder({
                   <span className="w-9 text-right font-bold tabular-nums text-brand-deep">
                     {p.price.toFixed(1)}
                   </span>
-                  <span
-                    className={`pressable flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${
-                      picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
-                    }`}
-                  >
-                    {picked ? "−" : "+"}
-                  </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => togglePlayer(p)}
+                  title={picked ? t.cardRemove : t.cardAdd}
+                  aria-label={`${picked ? t.cardRemove : t.cardAdd}: ${p.name}`}
+                  className={`pressable ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
+                  }`}
+                >
+                  {picked ? "−" : "+"}
+                </button>
+                </div>
               );
             })}
             {filtered.length === 0 && (
