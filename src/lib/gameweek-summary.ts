@@ -28,7 +28,8 @@ export async function getGameweekPoints(
   squadId: number,
   gameweekId: number
 ): Promise<number | null> {
-  const [{ data: rows }, { data: benchBoost }, { data: transfers }] = await Promise.all([
+  const [{ data: rows }, { data: benchBoost }, { data: wildcard }, { data: transfers }] =
+    await Promise.all([
     supabase
       .from("gameweek_squads")
       .select("is_starting, is_captain, points_earned")
@@ -39,6 +40,13 @@ export async function getGameweekPoints(
       .select("id")
       .eq("squad_id", squadId)
       .eq("chip", "bench_boost")
+      .eq("gameweek_id", gameweekId)
+      .maybeSingle(),
+    supabase
+      .from("chip_usages")
+      .select("id")
+      .eq("squad_id", squadId)
+      .eq("chip", "wildcard")
       .eq("gameweek_id", gameweekId)
       .maybeSingle(),
     supabase
@@ -59,7 +67,12 @@ export async function getGameweekPoints(
     if (r.is_starting || boost) points += p;
     if (r.is_starting && r.is_captain) points += p;
   }
-  points -= (transfers ?? []).reduce((sum, t) => sum + t.points_cost, 0);
+  // Wildcard-Runde: Die Abzuege dieses Spieltags zaehlen nicht — auch die,
+  // die vor dem Aktivieren des Chips gebucht wurden. Dieselbe Regel steckt in
+  // der standings-View und in standings_at.
+  if (!wildcard) {
+    points -= (transfers ?? []).reduce((sum, t) => sum + t.points_cost, 0);
+  }
   return points;
 }
 
