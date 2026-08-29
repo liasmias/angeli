@@ -126,6 +126,11 @@ const de = {
   },
   builder: {
     blank: "kein Spiel",
+    openMarket: "Spieler wählen",
+    closeMarket: "Spielermarkt schliessen",
+    benchHint: "Wie die Bank funktioniert",
+    benchUp: "Nach vorne",
+    benchDown: "Nach hinten",
     budget: "Budget",
     of: "von",
     capHint: "Dein Team ist durch Preissteigerungen mehr wert als das Basis-Budget — dieser Wert bleibt dir erhalten.",
@@ -438,6 +443,11 @@ const en: typeof de = {
   },
   builder: {
     blank: "no game",
+    openMarket: "Pick players",
+    closeMarket: "Close player market",
+    benchHint: "How the bench works",
+    benchUp: "Move up",
+    benchDown: "Move down",
     budget: "Budget",
     of: "of",
     capHint: "Price rises made your team worth more than the base budget — you keep the full value.",

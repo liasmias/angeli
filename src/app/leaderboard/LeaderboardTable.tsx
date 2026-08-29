@@ -114,12 +114,11 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
           <span className="ml-auto flex shrink-0 items-center">
             <Bewegung wert={row.movement} />
           </span>
-          <span className="flex shrink-0 items-center gap-2">
+          {/* Ohne Pfeil: Die ganze Zeile ist bereits ein Link, das Zeichen war
+              nur Dekoration — auf dem Handy brachen dafuer die Namen ab. */}
+          <span className="flex shrink-0 items-center">
             <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
               {row.total_points}
-            </span>
-            <span className="text-brand-deep/30" aria-hidden>
-              ›
             </span>
           </span>
         </Link>

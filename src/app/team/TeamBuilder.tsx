@@ -151,7 +151,7 @@ function PlayerCard({
           onClick={onQuickRemove}
           title={t.remove(player.name)}
           aria-label={t.remove(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-[10px] font-bold leading-none text-white ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-[10px] font-bold leading-none text-white ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ✕
         </button>
@@ -162,7 +162,7 @@ function PlayerCard({
           onClick={onUndo}
           title={t.undoTitle(player.name)}
           aria-label={t.undoTitle(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-[10px] font-bold leading-none text-brand-deep ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-[10px] font-bold leading-none text-brand-deep ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ↩
         </button>
@@ -191,7 +191,7 @@ function PlayerCard({
             showPrice
               ? "bg-brand-accent text-[9px] font-bold text-brand-deep sm:text-xs"
               : player.nextOpponent
-                ? "bg-brand-deep text-[9px] font-medium text-white/90 sm:text-xs"
+                ? "bg-brand-deep text-[10px] font-medium text-white/90 sm:text-xs"
                 : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
           }`}
         >
@@ -392,6 +392,10 @@ export default function TeamBuilder({
   // Spielerkarte aus dem Markt — dort ist der Spieler noch nicht im Kader,
   // deshalb ein eigener Zustand statt `sheetSpieler`.
   const [marktSpieler, setMarktSpieler] = useState<number | null>(null);
+  // Auf dem Handy liegt der Markt als Overlay ueber der Seite statt als
+  // Abschnitt darunter: Er begann erst bei 1138 px, und seine eigene
+  // Scrollflaeche fing den Daumen ab, statt die Seite weiterzuschieben.
+  const [marktOffen, setMarktOffen] = useState(false);
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
@@ -422,7 +426,7 @@ export default function TeamBuilder({
   // Layout (ab lg) steht der Markt daneben, dort wäre der Sprung störend.
   function jumpToMarket() {
     if (window.matchMedia("(min-width: 1024px)").matches) return;
-    marketRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setMarktOffen(true);
   }
 
   // Toast automatisch ausblenden — Fehler bleiben etwas länger lesbar
@@ -919,7 +923,8 @@ export default function TeamBuilder({
         : t.inHours(hoursLeft);
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:justify-center">
+    // pb-28: Platz fuer die feste Aktionsleiste, damit sie nichts verdeckt.
+    <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:justify-center lg:pb-0">
       {/* Toast */}
       {toast && (
         <p
@@ -1038,6 +1043,24 @@ export default function TeamBuilder({
                     {t.swapIn}
                   </button>
                 )}
+                {!pick.isStarting && playersById.get(pick.playerId)?.position !== "GK" && (
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { moveBench(pick.playerId, -1); zu(); }}
+                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
+                    >
+                      ▲ {t.benchUp}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { moveBench(pick.playerId, 1); zu(); }}
+                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
+                    >
+                      ▼ {t.benchDown}
+                    </button>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => { removePlayer(pick.playerId); setTransferModus(true); zu(); }}
@@ -1095,7 +1118,7 @@ export default function TeamBuilder({
 
       {/* Transfer-Modus-Hinweis mit Fertig-Knopf. */}
       {transferModus && tauschAus === null && (
-        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
+        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-4">
           <span className="truncate">{t.transferHint}</span>
           <button
             type="button"
@@ -1109,7 +1132,7 @@ export default function TeamBuilder({
 
       {/* Tauschmodus-Hinweis mit Abbrechen — schwebt unten, bis getauscht wird. */}
       {tauschAus !== null && (
-        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl">
+        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-4">
           <span className="truncate">
             {t.swapHint(playersById.get(tauschAus)?.name ?? "?")}
           </span>
@@ -1331,7 +1354,15 @@ export default function TeamBuilder({
           <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
             {t.bank}
           </div>
-          <p className="mb-4 text-[11px] leading-snug text-white/45">{t.benchOrderHint}</p>
+          {/* Eingeklappt: Der Text stand bei jedem Aufruf ueber der Bank und
+              kostete auf dem Handy drei Zeilen, obwohl man ihn einmal liest. */}
+          <details className="mb-3 group">
+            <summary className="cursor-pointer list-none text-[11px] font-semibold text-white/45 [&::-webkit-details-marker]:hidden">
+              {t.benchHint} <span className="group-open:hidden">▾</span>
+              <span className="hidden group-open:inline">▴</span>
+            </summary>
+            <p className="mt-1.5 text-[11px] leading-snug text-white/45">{t.benchOrderHint}</p>
+          </details>
           {bench.length === 0 ? (
             <p className="text-sm text-white/50">{t.emptyBench}</p>
           ) : (
@@ -1393,7 +1424,7 @@ export default function TeamBuilder({
                         disabled={i === 0}
                         aria-label={t.benchEarlier(player.name)}
                         title={t.benchEarlier(player.name)}
-                        className="pressable h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ‹
                       </button>
@@ -1403,7 +1434,7 @@ export default function TeamBuilder({
                         disabled={i === benchFeld.length - 1}
                         aria-label={t.benchLater(player.name)}
                         title={t.benchLater(player.name)}
-                        className="pressable h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ›
                       </button>
@@ -1522,8 +1553,10 @@ export default function TeamBuilder({
           })}
         </div>
 
-        {/* Speichern */}
-        <div className="sticky bottom-4 z-20 mt-4 flex justify-center">
+        {/* Speichern — ab lg hier, darunter in der festen Leiste am
+            unteren Rand. Vorher klebte dieser Knopf nur innerhalb der
+            linken Spalte und war aus dem Markt heraus nicht erreichbar. */}
+        <div className="sticky bottom-4 z-20 mt-4 hidden justify-center lg:flex">
           <button
             type="button"
             disabled={isPending || !gameweekOpen}
@@ -1536,10 +1569,62 @@ export default function TeamBuilder({
       </section>
 
       {/* ===== Spielermarkt ===== */}
-      <aside ref={marketRef} className="w-full shrink-0 scroll-mt-4 lg:w-[22rem]">
-        <div className="overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4">
-          <div className="brand-gradient px-4 py-3 text-sm font-bold text-white">
+      {/* Feste Aktionsleiste (nur Handy).
+          Der Speichern-Knopf klebte bisher innerhalb der linken Spalte und
+          war aus dem Spielermarkt heraus nicht erreichbar — nach einem
+          Transfer musste man rund 1100 px zurueckscrollen. Hier steht er
+          immer im Daumenbereich, zusammen mit dem Kaderstand und dem
+          Zugang zum Markt. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
+        <div className="mx-auto max-w-md px-3 pb-3">
+          <div className="chamfer bg-brand-deep px-3 py-2.5 shadow-2xl shadow-black/40">
+            <div className="mb-2 flex items-baseline justify-between text-[11px] font-semibold text-white/60">
+              <span>
+                {t.squad} {squad.length}/{settings.squadSize} · {t.starters} {startingCount}/
+                {settings.startingSize}
+              </span>
+              <span className={budgetLeft < -1e-9 ? "text-brand-accent" : ""}>
+                {t.budget} {budgetLeft.toFixed(1)}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMarktOffen(true)}
+                className="pressable flex-1 rounded-full bg-white/10 px-3 py-3 text-sm font-bold text-white"
+              >
+                {t.openMarket}
+              </button>
+              <button
+                type="button"
+                disabled={isPending || !gameweekOpen}
+                onClick={handleSave}
+                className="pressable flex-[1.3] rounded-full bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
+              >
+                {isPending ? t.saving : gameweekOpen ? t.save : t.locked}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside
+        ref={marketRef}
+        className={`${
+          marktOffen ? "fixed inset-0 z-40 flex flex-col bg-brand-deep/60 p-3" : "hidden"
+        } lg:static lg:z-auto lg:block lg:w-[22rem] lg:shrink-0 lg:bg-transparent lg:p-0`}
+      >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4 lg:flex-none">
+          <div className="brand-gradient flex items-center justify-between px-4 py-3 text-sm font-bold text-white">
             {t.pickPlayers}
+            <button
+              type="button"
+              onClick={() => setMarktOffen(false)}
+              aria-label={t.closeMarket}
+              className="pressable relative -m-2 flex h-9 w-9 items-center justify-center rounded-full text-lg leading-none text-white/80 lg:hidden"
+            >
+              ✕
+            </button>
           </div>
           <div className="flex flex-col gap-2 border-b border-brand-deep/10 p-3">
             <div className="flex gap-1">
@@ -1551,7 +1636,7 @@ export default function TeamBuilder({
                     key={pos}
                     type="button"
                     onClick={() => setFilterPos(pos)}
-                    className={`pressable-subtle flex-1 rounded-full px-1 py-1 text-xs font-bold ${
+                    className={`pressable-subtle flex-1 rounded-full px-1 py-3 text-xs font-bold ${
                       filterPos === pos
                         ? "bg-brand-deep text-brand-accent"
                         : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
@@ -1575,15 +1660,17 @@ export default function TeamBuilder({
                 );
               })}
             </div>
+            {/* Suche auf eigener Zeile: geteilt mit den beiden Auswahlfeldern
+                blieben ihr 108 px, der Platzhalter brach zu "Spieler s…" ab. */}
+            <input
+              type="search"
+              style={{ WebkitAppearance: "none" }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t.search}
+              className="w-full rounded-lg border border-brand-deep/15 px-3 py-2 text-base outline-none focus:border-brand-magenta sm:text-sm"
+            />
             <div className="flex gap-2">
-              <input
-                type="search"
-            style={{ WebkitAppearance: "none" }}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t.search}
-                className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
-              />
               <select
                 value={filterClub}
                 onChange={(e) => setFilterClub(e.target.value)}
@@ -1611,7 +1698,7 @@ export default function TeamBuilder({
               </select>
             </div>
           </div>
-          <div className="max-h-[34rem] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto lg:max-h-[34rem] lg:flex-none">
             {filtered.map((p) => {
               const picked = squad.some((s) => s.playerId === p.id);
               return (
@@ -1679,7 +1766,7 @@ export default function TeamBuilder({
                   onClick={() => togglePlayer(p)}
                   title={picked ? t.cardRemove : t.cardAdd}
                   aria-label={`${picked ? t.cardRemove : t.cardAdd}: ${p.name}`}
-                  className={`pressable ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                  className={`pressable relative ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold before:absolute before:-inset-1.5 before:content-[''] ${
                     picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
                   }`}
                 >
