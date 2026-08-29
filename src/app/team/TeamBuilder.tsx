@@ -424,6 +424,19 @@ export default function TeamBuilder({
   // Auf dem Handy liegt der Spielermarkt unterhalb des Spielfelds — ein Tipp
   // auf einen leeren Slot würde sonst sichtbar nichts bewirken. Im breiten
   // Layout (ab lg) steht der Markt daneben, dort wäre der Sprung störend.
+  /**
+   * Ersatz fuer einen herausgenommenen Spieler suchen: Markt auf dessen
+   * Position filtern und oeffnen. Dieselbe Geste wie beim leeren Slot —
+   * die ausgeblasste Karte war bisher nur ueber ihr kleines ↩ ansprechbar,
+   * ein Tipp darauf tat nichts.
+   */
+  function ersatzSuchen(position: Position) {
+    setFilterPos(position);
+    setFilterClub("ALL");
+    setSearch("");
+    jumpToMarket();
+  }
+
   function jumpToMarket() {
     if (window.matchMedia("(min-width: 1024px)").matches) return;
     setMarktOffen(true);
@@ -1308,6 +1321,7 @@ export default function TeamBuilder({
                           pick={{ ...pick, isCaptain: false, isViceCaptain: false }}
                           dimmed
                           showPrice
+                          onTap={() => ersatzSuchen(player.position)}
                           onUndo={() => transferRueckgaengig(pick.playerId)}
                         />
                       );
@@ -1335,12 +1349,7 @@ export default function TeamBuilder({
                       t={t}
                       label={t.positions[pos]}
                       missing={missing}
-                      onClick={() => {
-                        setFilterPos(pos);
-                        setFilterClub("ALL");
-                        setSearch("");
-                        jumpToMarket();
-                      }}
+                      onClick={() => ersatzSuchen(pos)}
                     />
                   )}
                 </div>
@@ -1477,6 +1486,7 @@ export default function TeamBuilder({
                             pick={{ ...e, isCaptain: false, isViceCaptain: false }}
                             dimmed
                             showPrice
+                            onTap={() => ersatzSuchen(player.position)}
                             onUndo={() => transferRueckgaengig(e.playerId)}
                           />
                         )}
