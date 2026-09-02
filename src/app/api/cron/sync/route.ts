@@ -521,6 +521,31 @@ export async function GET(request: Request) {
     }
   }
 
+  // Beendete Partien, für die der Datenlieferant keine Spielerstatistik
+  // hergibt. Das kommt vor: Bei Zürich–YB am 01.09. fehlte die Aufstellung,
+  // und ohne sie baut API-Football keine Spielerwerte — die Partie stand
+  // stundenlang auf null, ohne dass es jemandem aufgefallen wäre. Der Sync
+  // holt die Daten zwar von selbst nach, sobald sie erscheinen; sichtbar war
+  // die Lücke bis jetzt aber nur, wenn man von Hand nachsah.
+  const ohneDaten: string[] = [];
+  {
+    const { data: beendete } = await supabase
+      .from("fixtures")
+      .select("id, home:clubs!fixtures_home_club_id_fkey(short_name), away:clubs!fixtures_away_club_id_fkey(short_name)")
+      .eq("gameweek_id", gameweek.id)
+      .in("status", [...FINISHED_STATUSES]);
+    for (const f of beendete ?? []) {
+      const { count } = await supabase
+        .from("player_stats")
+        .select("*", { count: "exact", head: true })
+        .eq("fixture_id", f.id);
+      if (count) continue;
+      const heim = Array.isArray(f.home) ? f.home[0] : f.home;
+      const aus = Array.isArray(f.away) ? f.away[0] : f.away;
+      ohneDaten.push(`${heim?.short_name ?? "?"}–${aus?.short_name ?? "?"}`);
+    }
+  }
+
   // Heartbeat für die Admin-Statusanzeige — nur nach einem vollständigen
   // Lauf, damit ein stehengebliebener Zeitstempel echte Ausfälle verrät.
   // Tolerant gegenüber fehlender Spalte (Migration 0011 noch nicht gelaufen).
@@ -528,7 +553,9 @@ export async function GET(request: Request) {
     .from("league_settings")
     .update({
       last_sync_at: new Date().toISOString(),
-      last_sync_note: `GW ${gameweek.number}: ${statsSynced} Statistiken, ${liveSpiele} live, ${beendeteSpiele} beendet`,
+      last_sync_note:
+        `GW ${gameweek.number}: ${statsSynced} Statistiken, ${liveSpiele} live, ${beendeteSpiele} beendet` +
+        (ohneDaten.length ? ` — ohne Spielerdaten: ${ohneDaten.join(", ")}` : ""),
     })
     .eq("id", 1)
     .then(({ error }) => {
@@ -544,6 +571,7 @@ export async function GET(request: Request) {
     statsSynced,
     playersRecomputed: touchedPlayerIds.size,
     autoSubs,
+    ohneSpielerdaten: ohneDaten,
     captainSwaps,
     priceRises,
     deadlinesAdjusted,
