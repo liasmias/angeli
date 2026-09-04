@@ -52,6 +52,8 @@ type ReportsRow = {
   message: string;
   created_at: string;
   resolved_at: string | null;
+  reply: string | null;
+  replied_at: string | null;
 };
 
 type ClubsRow = {
@@ -244,9 +246,11 @@ export interface Database {
       };
       reports: {
         Row: ReportsRow;
-        Insert: Omit<ReportsRow, "id" | "created_at" | "resolved_at"> & {
+        Insert: Omit<ReportsRow, "id" | "created_at" | "resolved_at" | "reply" | "replied_at"> & {
           created_at?: string;
           resolved_at?: string | null;
+          reply?: string | null;
+          replied_at?: string | null;
         };
         Update: Partial<ReportsRow>;
         Relationships: [

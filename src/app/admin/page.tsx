@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { resolveReport, saveAnnouncement, toggleGameweekLock } from "./actions";
+import { replyToReport, resolveReport, saveAnnouncement, toggleGameweekLock } from "./actions";
 import SyncStatus from "./SyncStatus";
 
 export default async function AdminPage() {
@@ -17,7 +17,7 @@ export default async function AdminPage() {
     supabase.from("league_settings").select("*").eq("id", 1).maybeSingle(),
     admin
       .from("reports")
-      .select("id, message, created_at, resolved_at, profiles(username)")
+      .select("id, message, created_at, resolved_at, reply, replied_at, profiles(username)")
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
@@ -53,7 +53,8 @@ export default async function AdminPage() {
             {offeneMeldungen.map((r) => {
               const profil = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
               return (
-                <li key={r.id} className="flex items-start justify-between gap-3 py-2.5">
+                <li key={r.id} className="py-2.5">
+                  <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-brand-deep">
                       {profil?.username ?? "?"}
@@ -79,6 +80,37 @@ export default async function AdminPage() {
                       Erledigt ✓
                     </button>
                   </form>
+                  </div>
+                  {/* Antwort: erscheint beim Mitglied im Profil. Der Haken
+                      schliesst den Vorgang gleich mit — ohne ihn bleibt die
+                      Meldung offen, etwa bei einer Rueckfrage. */}
+                  {r.reply && (
+                    <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                      <span className="font-bold">Bereits geantwortet:</span> {r.reply}
+                    </p>
+                  )}
+                  <form action={replyToReport.bind(null, r.id)} className="mt-2 flex flex-col gap-1.5">
+                    <textarea
+                      name="reply"
+                      rows={2}
+                      required
+                      maxLength={2000}
+                      placeholder={r.reply ? "Antwort überschreiben…" : "Antwort an das Mitglied…"}
+                      className="w-full rounded-lg border border-brand-deep/15 px-2.5 py-1.5 text-sm outline-none focus:border-brand-magenta"
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-1.5 text-xs text-brand-deep/60">
+                        <input type="checkbox" name="resolve" defaultChecked className="accent-emerald-600" />
+                        gleich als erledigt markieren
+                      </label>
+                      <button
+                        type="submit"
+                        className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
+                      >
+                        Antworten
+                      </button>
+                    </div>
+                  </form>
                 </li>
               );
             })}
@@ -99,6 +131,11 @@ export default async function AdminPage() {
                       <p className="mt-0.5 whitespace-pre-wrap text-sm text-brand-deep/70">
                         {r.message}
                       </p>
+                      {r.reply && (
+                        <p className="mt-1 whitespace-pre-wrap text-xs text-emerald-800">
+                          ↳ {r.reply}
+                        </p>
+                      )}
                     </div>
                     <form action={resolveReport.bind(null, r.id, false)}>
                       <button

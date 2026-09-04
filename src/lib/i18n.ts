@@ -240,6 +240,11 @@ const de = {
       gw ? `Team für Spieltag ${gw} gespeichert. Viel Glück! 🍀` : "Team gespeichert. 🍀",
   },
   profil: {
+    myReports: "Deine Meldungen",
+    reportOpen: "offen",
+    reportDone: "erledigt",
+    reportNoReply: "Noch keine Antwort.",
+    reportAnswer: "Antwort",
     title: "Mein Konto",
     memberSince: (d: string) => ` · dabei seit ${d}`,
     usernameTitle: "Accountname",
@@ -557,6 +562,11 @@ const en: typeof de = {
       gw ? `Team saved for gameweek ${gw}. Good luck! 🍀` : "Team saved. 🍀",
   },
   profil: {
+    myReports: "Your messages",
+    reportOpen: "open",
+    reportDone: "resolved",
+    reportNoReply: "No reply yet.",
+    reportAnswer: "Reply",
     title: "My account",
     memberSince: (d: string) => ` · member since ${d}`,
     usernameTitle: "Account name",

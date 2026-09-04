@@ -100,6 +100,30 @@ export async function recomputeGameweek(gameweekId: number, _formData: FormData)
   revalidatePath(`/admin/gameweeks/${gameweekId}`);
 }
 
+/**
+ * Meldung beantworten.
+ *
+ * Die Antwort erscheint beim Mitglied im Profil, dort wo es die Meldung
+ * abgeschickt hat. Bewusst getrennt vom Erledigt-Haken: Eine Rueckfrage
+ * laesst sich beantworten, ohne den Vorgang zu schliessen.
+ */
+export async function replyToReport(reportId: number, formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const text = String(formData.get("reply") ?? "").trim();
+  const schliessen = formData.get("resolve") === "on";
+  if (!text) return;
+  await supabase
+    .from("reports")
+    .update({
+      reply: text.slice(0, 2000),
+      replied_at: new Date().toISOString(),
+      ...(schliessen ? { resolved_at: new Date().toISOString() } : {}),
+    })
+    .eq("id", reportId);
+  revalidatePath("/admin");
+  revalidatePath("/profil");
+}
+
 /** Meldung als erledigt markieren (bzw. wieder öffnen). */
 export async function resolveReport(reportId: number, resolved: boolean, _formData: FormData) {
   const { supabase } = await requireAdmin();
@@ -108,4 +132,5 @@ export async function resolveReport(reportId: number, resolved: boolean, _formDa
     .update({ resolved_at: resolved ? new Date().toISOString() : null })
     .eq("id", reportId);
   revalidatePath("/admin");
+  revalidatePath("/profil");
 }
