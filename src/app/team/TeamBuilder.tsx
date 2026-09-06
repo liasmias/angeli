@@ -15,6 +15,7 @@ import {
 import { saveSquad } from "./actions";
 import { getDictionary, type Lang } from "@/lib/i18n";
 import { activateChip, deactivateChip } from "./chip-actions";
+import { useSheet } from "@/lib/use-sheet";
 import type { ChipName } from "@/lib/database.types";
 
 export interface ChipState {
@@ -402,6 +403,9 @@ export default function TeamBuilder({
   const t = getDictionary(lang).builder;
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
+  // Kurzer Haken nach dem Speichern — sonst ist die einzige Rueckmeldung
+  // der Toast, und der ist schon wieder weg, wenn man hinschaut.
+  const [gespeichert, setGespeichert] = useState(false);
   const [toast, setToast] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   // FPL-Muster: Tipp auf eine Karte öffnet das Aktionsmenü; "Auswechseln"
   // startet den Tauschmodus, in dem nur gültige Partner tippbar bleiben.
@@ -413,6 +417,12 @@ export default function TeamBuilder({
   // Abschnitt darunter: Er begann erst bei 1138 px, und seine eigene
   // Scrollflaeche fing den Daumen ab, statt die Seite weiterzuschieben.
   const [marktOffen, setMarktOffen] = useState(false);
+
+  // Scroll-Sperre, Escape, Zurueck-Knopf und Fokus fuer die drei Overlays.
+  // Die Referenzen landen am jeweiligen Sheet-Inhalt.
+  const aktionsSheet = useSheet(sheetSpieler !== null, () => setSheetSpieler(null));
+  const marktKarteSheet = useSheet(marktSpieler !== null, () => setMarktSpieler(null));
+  const marktSheet = useSheet(marktOffen, () => setMarktOffen(false));
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
@@ -581,8 +591,8 @@ export default function TeamBuilder({
    * bei jedem Tipp, sonst wird es zum Dauerbrummen. Android Chrome setzt es
    * um, iOS Safari kennt die Schnittstelle nicht und ignoriert den Aufruf.
    */
-  function tippImpuls(dauer = 12) {
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(dauer);
+  function tippImpuls(muster: number | number[] = 12) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(muster);
   }
 
   function togglePlayer(player: PlayerOption) {
@@ -917,12 +927,16 @@ export default function TeamBuilder({
       setToast({ kind: "error", text: t.errNoVice });
       return;
     }
-    tippImpuls(18);
     startTransition(async () => {
       const result = await saveSquad(squad);
       if (result?.error) {
+        // Zwei kurze Impulse als Fehlermuster — unterscheidbar vom Erfolg.
+        tippImpuls([12, 60, 12]);
         setToast({ kind: "error", text: result.error });
       } else {
+        tippImpuls(24);
+        setGespeichert(true);
+        window.setTimeout(() => setGespeichert(false), 1600);
         // Gespeichert heisst: Der Tausch ist vollzogen. Geisterkarten und
         // ihre Zuordnungen sind damit erledigt, sonst blieben sie als
         // Stapel stehen, obwohl es nichts mehr rueckgaengig zu machen gibt.
@@ -1031,11 +1045,16 @@ export default function TeamBuilder({
               className="fade-in fixed inset-0 z-40 cursor-default bg-black/40"
             />
             <div
+              ref={aktionsSheet}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t.playerActions(player.name)}
+              tabIndex={-1}
               style={popoverStyle}
               className={
                 popoverStyle
-                  ? "pop-in fixed z-50 w-80 overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
-                  : "sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl"
+                  ? "pop-in fixed z-50 w-80 overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-2xl outline-none"
+                  : "sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none"
               }
             >
               <div className="mb-3">
@@ -1136,7 +1155,14 @@ export default function TeamBuilder({
               onClick={zu}
               className="fade-in fixed inset-0 z-40 cursor-default bg-black/40"
             />
-            <div className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl">
+            <div
+              ref={marktKarteSheet}
+              role="dialog"
+              aria-modal="true"
+              aria-label={player.name}
+              tabIndex={-1}
+              className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
+            >
               <SpielerKarte player={player} t={t} />
               {player.manualStats && (
                 <div className="mt-3 rounded-xl bg-brand-deep/5 p-3">
@@ -1611,7 +1637,18 @@ export default function TeamBuilder({
             onClick={handleSave}
             className="pressable w-full max-w-xs rounded-full bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
           >
-            {isPending ? t.saving : gameweekOpen ? t.save : t.locked}
+            {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="kringel inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent" />
+                  {t.saving}
+                </span>
+              ) : gespeichert ? (
+                <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
+              ) : gameweekOpen ? (
+                t.save
+              ) : (
+                t.locked
+              )}
           </button>
         </div>
       </section>
@@ -1624,7 +1661,7 @@ export default function TeamBuilder({
           immer im Daumenbereich, zusammen mit dem Kaderstand und dem
           Zugang zum Markt. */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
-        <div className="mx-auto max-w-md px-3 pb-3">
+        <div className="mx-auto max-w-md px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="chamfer bg-brand-deep px-3 py-2.5 shadow-2xl shadow-black/40">
             <div className="mb-2 flex items-baseline justify-between text-[11px] font-semibold text-white/60">
               <span>
@@ -1649,7 +1686,18 @@ export default function TeamBuilder({
                 onClick={handleSave}
                 className="pressable flex-[1.3] rounded-full bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
               >
-                {isPending ? t.saving : gameweekOpen ? t.save : t.locked}
+                {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="kringel inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent" />
+                  {t.saving}
+                </span>
+              ) : gespeichert ? (
+                <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
+              ) : gameweekOpen ? (
+                t.save
+              ) : (
+                t.locked
+              )}
               </button>
             </div>
           </div>
@@ -1663,7 +1711,10 @@ export default function TeamBuilder({
         } lg:static lg:z-auto lg:block lg:w-[22rem] lg:shrink-0 lg:bg-transparent lg:p-0`}
       >
         <div
-          className={`${marktOffen ? "sheet-up " : ""}flex min-h-0 flex-1 flex-col overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4 lg:flex-none`}
+          ref={marktSheet}
+          {...(marktOffen ? { role: "dialog" as const, "aria-modal": true, tabIndex: -1 } : {})}
+          aria-label={t.pickPlayers}
+          className={`${marktOffen ? "sheet-up " : ""}flex min-h-0 flex-1 flex-col overflow-hidden chamfer bg-white shadow-sm outline-none lg:sticky lg:top-4 lg:flex-none`}
         >
           <div className="brand-gradient flex items-center justify-between px-4 py-3 text-sm font-bold text-white">
             {t.pickPlayers}
@@ -1748,7 +1799,7 @@ export default function TeamBuilder({
               </select>
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto lg:max-h-[34rem] lg:flex-none">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-[34rem] lg:flex-none">
             {filtered.map((p) => {
               const picked = squad.some((s) => s.playerId === p.id);
               return (

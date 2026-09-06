@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Space_Grotesk } from "next/font/google";
 import AuthHashError from "@/components/auth-hash-error";
@@ -19,6 +19,21 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Angeli — Swiss League Fantasy",
   description: "Fantasy Football für die Schweizer Liga, Saison 26/27",
+};
+
+/**
+ * `viewportFit: "cover"` ist die Voraussetzung dafür, dass `env(safe-area-
+ * inset-*)` überhaupt Werte liefert. Ohne das lag die feste Aktionsleiste der
+ * Aufstellung auf iPhones mit Home-Indicator teilweise darunter.
+ *
+ * `themeColor` färbt die Browserleiste im Markengrün — der billigste Weg,
+ * damit sich eine Website weniger nach Browser anfühlt.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a2e19",
 };
 
 export default async function RootLayout({

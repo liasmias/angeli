@@ -115,9 +115,33 @@ h2 {
 
 /* ===== Micro-Interactions ===== */
 
+/* Drei Stufen statt acht gewachsener Werte. Vorher standen 0.12 / 0.13 /
+   0.15 / 0.2 / 0.22 / 0.26 / 0.28 / 0.3 s nebeneinander — der Unterschied
+   war nicht zu sehen, nur zu pflegen. */
+:root {
+  --dauer-schnell: 0.15s;
+  --dauer-normal: 0.25s;
+  --dauer-gross: 0.35s;
+  /* Schnell los, weich aus — fuer Dinge, die hereinfahren. */
+  --kurve-aus: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Ueberschwingt leicht — fuer Dinge, die erscheinen. */
+  --kurve-pop: cubic-bezier(0.2, 0.9, 0.35, 1.2);
+}
+
+/* Bedienelemente sind kein Text: Langes Druecken soll eine Aktion ausloesen,
+   nicht die Textauswahl von iOS aufrufen. */
+button,
+[role="button"],
+.pressable,
+.pressable-subtle {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* Wachsen beim Hover, Schrumpfen beim Klick — für Buttons & Karten */
 .pressable {
-  transition: transform 0.13s ease, box-shadow 0.13s ease;
+  transition: transform var(--dauer-schnell) ease, box-shadow var(--dauer-schnell) ease;
 }
 /* Nur auf Geräten mit echtem Hover — iOS Safari lässt :hover nach dem
    Antippen kleben, der Button bliebe dauerhaft vergrössert. */
@@ -132,7 +156,7 @@ h2 {
 
 /* Dezente Variante für Listenzeilen (kein Grow, nur Press) */
 .pressable-subtle {
-  transition: transform 0.12s ease, background-color 0.15s ease;
+  transition: transform var(--dauer-schnell) ease, background-color var(--dauer-schnell) ease;
 }
 .pressable-subtle:active {
   transform: scale(0.98);
@@ -153,7 +177,7 @@ h2 {
   }
 }
 .pop-in {
-  animation: pop-in 0.28s cubic-bezier(0.2, 0.9, 0.35, 1.2);
+  animation: pop-in var(--dauer-normal) var(--kurve-pop);
 }
 
 /* Sheets fahren von unten herein statt aufzublitzen — dieselbe Kurve wie
@@ -169,7 +193,7 @@ h2 {
   }
 }
 .sheet-up {
-  animation: sheet-up 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: sheet-up var(--dauer-normal) var(--kurve-aus);
 }
 @media (min-width: 1024px) {
   .sheet-up {
@@ -187,7 +211,7 @@ h2 {
   }
 }
 .fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--dauer-schnell) ease-out;
 }
 
 /* Statistik-Kacheln setzen sich versetzt, damit die Karte gelesen wirkt
@@ -203,7 +227,7 @@ h2 {
   }
 }
 .tile-in {
-  animation: tile-in 0.3s cubic-bezier(0.2, 0.9, 0.35, 1.2) backwards;
+  animation: tile-in var(--dauer-normal) var(--kurve-pop) backwards;
 }
 
 /* Wer Bewegung abbestellt hat, bekommt die Endzustaende sofort. */
@@ -238,7 +262,7 @@ h2 {
   bottom: 1.5rem;
   transform: translateX(-50%);
   z-index: 50;
-  animation: toast-in 0.22s ease-out;
+  animation: toast-in var(--dauer-schnell) ease-out;
 }
 
 /* Rasen mit Streifen + Mittellinie/-kreis + Strafräumen */
@@ -312,4 +336,20 @@ h2 {
   border: 2px solid #ffffff55;
   border-radius: 50%;
   pointer-events: none;
+}
+
+/* Ladekringel im Speichern-Knopf — der Textwechsel allein sagt nicht, dass
+   gerade etwas laeuft. */
+@keyframes kringel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.kringel {
+  animation: kringel 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kringel {
+    animation-duration: 2s;
+  }
 }
