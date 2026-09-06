@@ -244,9 +244,10 @@ export default async function TeamPage({
       supabase
         .from("fixtures")
         .select(
-          "home_club_id, away_club_id, home:clubs!fixtures_home_club_id_fkey(short_name), away:clubs!fixtures_away_club_id_fkey(short_name)"
+          "kickoff, home_club_id, away_club_id, home:clubs!fixtures_home_club_id_fkey(short_name), away:clubs!fixtures_away_club_id_fkey(short_name)"
         )
-        .eq("gameweek_id", angezeigt.id),
+        .eq("gameweek_id", angezeigt.id)
+        .order("kickoff"),
     ]);
 
   const totalPointsByPlayer = new Map<number, number>();
@@ -278,17 +279,23 @@ export default async function TeamPage({
     }
   }
 
-  // Gegner des kommenden Spieltags pro Verein — (H)eim oder (A)uswärts.
-  const opponentByClub = new Map<number, string>();
+  // Partien des angezeigten Spieltags je Verein — (H)eim oder (A)uswärts.
+  //
+  // Bewusst eine Liste statt eines einzelnen Werts: In einer Double
+  // Gameweek hat ein Verein zwei Partien, und die zweite überschrieb bisher
+  // die erste. Spieltag 8 ist die erste solche Runde — dort spielen Thun,
+  // Servette, Lugano, St. Gallen, GC und Sion zweimal, weil die am 23.08.
+  // verschobenen Partien am 15./16.09. nachgeholt werden.
+  const partienByClub = new Map<number, string[]>();
+  const merke = (clubId: number | null, eintrag: string) => {
+    if (!clubId) return;
+    partienByClub.set(clubId, [...(partienByClub.get(clubId) ?? []), eintrag]);
+  };
   for (const f of gwFixtures ?? []) {
     const home = Array.isArray(f.home) ? f.home[0] : f.home;
     const away = Array.isArray(f.away) ? f.away[0] : f.away;
-    if (f.home_club_id && away?.short_name) {
-      opponentByClub.set(f.home_club_id, `${away.short_name} (H)`);
-    }
-    if (f.away_club_id && home?.short_name) {
-      opponentByClub.set(f.away_club_id, `${home.short_name} (A)`);
-    }
+    if (away?.short_name) merke(f.home_club_id, `${away.short_name} (H)`);
+    if (home?.short_name) merke(f.away_club_id, `${home.short_name} (A)`);
   }
 
   const chipState = (["wildcard", "bench_boost"] as const).map((chip) => {
@@ -303,6 +310,7 @@ export default async function TeamPage({
 
   const playerOptions: PlayerOption[] = (players ?? []).map((p) => {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
+    const partien = p.club_id ? (partienByClub.get(p.club_id) ?? []) : [];
     return {
       id: p.id,
       name: shortenPlayerName(p.first_name, p.last_name),
@@ -318,7 +326,16 @@ export default async function TeamPage({
       manualStats: p.manual_stats,
       cleanSheets:
         p.position === "GK" || p.position === "DEF" ? (zuNullByPlayer.get(p.id) ?? 0) : null,
-      nextOpponent: p.club_id ? (opponentByClub.get(p.club_id) ?? null) : null,
+      // Auf der Trikotkarte ist nur wenig Platz: bei einer Partie der volle
+      // Eintrag, bei zweien nur die Kürzel — Heim/Auswärts steht dann in der
+      // Spielerkarte.
+      nextOpponent:
+        partien.length === 0
+          ? null
+          : partien.length === 1
+            ? partien[0]
+            : partien.map((x) => x.split(" ")[0]).join("·"),
+      nextFixtures: partien,
       minutes: minutenByPlayer.get(p.id) ?? 0,
       appearances: einsaetzeByPlayer.get(p.id) ?? 0,
       yellowCards: gelbByPlayer.get(p.id) ?? 0,

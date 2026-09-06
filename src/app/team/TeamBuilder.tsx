@@ -46,8 +46,11 @@ export interface PlayerOption {
   flagNote: string | null;
   /** Statistik wird von Hand nachgetragen — Punkte erscheinen verzögert. */
   manualStats: boolean;
-  /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei. */
+  /** Gegner am kommenden Spieltag, z. B. "ZUR (A)" — null bei spielfrei.
+   *  Bei zwei Partien nur die Kuerzel, etwa "GC·SIO". */
   nextOpponent: string | null;
+  /** Alle Partien des Spieltags, je "GC (H)". Zwei bei einer Double Gameweek. */
+  nextFixtures: string[];
   /** Saisonwerte fuer die Spielerkarte. */
   minutes: number;
   appearances: number;
@@ -186,13 +189,17 @@ function PlayerCard({
             war bisher ein Bindestrich und ging auf dem Handy unter — bei
             verschobenen Runden ist es aber die wichtigste Information vor
             der Deadline. Darum als Wort und in Magenta. */}
+        {/* Zwei Partien an einem Spieltag heben sich in Lime ab — sonst
+            saehe eine Double Gameweek aus wie ein gewoehnlicher Gegner. */}
         <div
           className={`w-full truncate rounded-b px-1 py-0.5 text-center leading-4 sm:px-1.5 ${
             showPrice
               ? "bg-brand-accent text-[9px] font-bold text-brand-deep sm:text-xs"
-              : player.nextOpponent
-                ? "bg-brand-deep text-[10px] font-medium text-white/90 sm:text-xs"
-                : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
+              : player.nextFixtures.length > 1
+                ? "bg-brand-lime text-[9px] font-bold text-brand-deep sm:text-xs"
+                : player.nextOpponent
+                  ? "bg-brand-deep text-[10px] font-medium text-white/90 sm:text-xs"
+                  : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
           }`}
         >
           {showPrice ? player.price.toFixed(1) : (player.nextOpponent ?? t.blank)}
@@ -245,17 +252,23 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-brand-deep/5 px-3 py-2">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
-          {t.cardNextGame}
-        </span>
-        <span
-          className={`truncate text-xs font-bold ${
-            player.nextOpponent ? "text-brand-deep" : "text-brand-magenta"
-          }`}
-        >
-          {player.nextOpponent ?? t.cardNoGame}
-        </span>
+      <div className="mt-3 rounded-xl bg-brand-deep/5 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+            {player.nextFixtures.length > 1 ? t.cardTwoGames : t.cardNextGame}
+          </span>
+          <span
+            className={`truncate text-xs font-bold ${
+              player.nextFixtures.length > 1
+                ? "text-brand-grass"
+                : player.nextOpponent
+                  ? "text-brand-deep"
+                  : "text-brand-magenta"
+            }`}
+          >
+            {player.nextFixtures.length === 0 ? t.cardNoGame : player.nextFixtures.join("  ·  ")}
+          </span>
+        </div>
       </div>
 
       {player.flagNote && (
@@ -481,6 +494,8 @@ export default function TeamBuilder({
     if (pos) countByPosition[pos]++;
   }
   const startingCount = squad.filter((s) => s.isStarting).length;
+  // Double Gameweek: mindestens ein Verein hat zwei Partien in dieser Runde.
+  const doubleGameweek = players.some((p) => p.nextFixtures.length > 1);
   const hasCaptain = squad.some((s) => s.isCaptain);
 
   /** Positionsverteilung der aktuellen Startelf. */
@@ -1217,6 +1232,11 @@ export default function TeamBuilder({
                 </span>
               )}
             </span>
+            {doubleGameweek && (
+              <span className="whitespace-nowrap rounded-full bg-brand-lime px-2 py-0.5 text-[11px] font-bold text-brand-deep">
+                {t.doubleGameweek}
+              </span>
+            )}
             {countdown && (
               <span className="whitespace-nowrap text-[11px] font-bold text-brand-magenta">
                 {t.deadlineIn(countdown)}
