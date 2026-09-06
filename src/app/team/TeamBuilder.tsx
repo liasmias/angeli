@@ -189,14 +189,14 @@ function PlayerCard({
             war bisher ein Bindestrich und ging auf dem Handy unter — bei
             verschobenen Runden ist es aber die wichtigste Information vor
             der Deadline. Darum als Wort und in Magenta. */}
-        {/* Zwei Partien an einem Spieltag heben sich in Lime ab — sonst
-            saehe eine Double Gameweek aus wie ein gewoehnlicher Gegner. */}
+        {/* Zwei Partien sehen aus wie eine, nur enger gesetzt — beide passen
+            dadurch vollstaendig hinein, samt Heim/Auswaerts. */}
         <div
           className={`w-full truncate rounded-b px-1 py-0.5 text-center leading-4 sm:px-1.5 ${
             showPrice
               ? "bg-brand-accent text-[9px] font-bold text-brand-deep sm:text-xs"
               : player.nextFixtures.length > 1
-                ? "bg-brand-lime text-[9px] font-bold text-brand-deep sm:text-xs"
+                ? "bg-brand-deep text-[8px] font-medium text-white/90 sm:text-[11px]"
                 : player.nextOpponent
                   ? "bg-brand-deep text-[10px] font-medium text-white/90 sm:text-xs"
                   : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"

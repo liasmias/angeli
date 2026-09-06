@@ -326,15 +326,10 @@ export default async function TeamPage({
       manualStats: p.manual_stats,
       cleanSheets:
         p.position === "GK" || p.position === "DEF" ? (zuNullByPlayer.get(p.id) ?? 0) : null,
-      // Auf der Trikotkarte ist nur wenig Platz: bei einer Partie der volle
-      // Eintrag, bei zweien nur die Kürzel — Heim/Auswärts steht dann in der
-      // Spielerkarte.
-      nextOpponent:
-        partien.length === 0
-          ? null
-          : partien.length === 1
-            ? partien[0]
-            : partien.map((x) => x.split(" ")[0]).join("·"),
+      // Bei zwei Partien beide vollständig, durch einen Punkt getrennt. Die
+      // Trikotkarte setzt die Schrift dafür kleiner: "SIO (A)·LUG (H)" misst
+      // bei 8 px 55 px, die schmalste Karte bietet 59 px.
+      nextOpponent: partien.length === 0 ? null : partien.join("·"),
       nextFixtures: partien,
       minutes: minutenByPlayer.get(p.id) ?? 0,
       appearances: einsaetzeByPlayer.get(p.id) ?? 0,
