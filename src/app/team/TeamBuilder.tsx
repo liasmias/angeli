@@ -175,7 +175,7 @@ function PlayerCard({
         onClick={onTap}
         disabled={!onTap}
         aria-label={t.playerActions(player.name)}
-        className={`flex w-full cursor-pointer flex-col items-center rounded-lg transition-transform duration-150 group-hover:scale-105 disabled:cursor-default ${
+        className={`flex w-full cursor-pointer flex-col items-center rounded-lg transition-transform duration-150 group-hover:scale-105 active:scale-[0.94] disabled:cursor-default disabled:active:scale-100 ${
           highlight ? "ring-2 ring-brand-accent" : ""
         }`}
       >
@@ -279,8 +279,12 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         {t.cardSeason}
       </p>
       <dl className="mt-1.5 grid grid-cols-4 gap-1.5">
-        {werte.map(([label, wert]) => (
-          <div key={label} className="rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center">
+        {werte.map(([label, wert], i) => (
+          <div
+            key={label}
+            style={{ animationDelay: `${i * 28}ms` }}
+            className="tile-in rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center"
+          >
             <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/45">
               {label}
             </dt>
@@ -570,6 +574,17 @@ export default function TeamBuilder({
     });
   }
 
+  /**
+   * Kurzer Vibrationsimpuls als Rückmeldung.
+   *
+   * Nur an den Stellen, an denen sich der Kader tatsächlich ändert — nicht
+   * bei jedem Tipp, sonst wird es zum Dauerbrummen. Android Chrome setzt es
+   * um, iOS Safari kennt die Schnittstelle nicht und ignoriert den Aufruf.
+   */
+  function tippImpuls(dauer = 12) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(dauer);
+  }
+
   function togglePlayer(player: PlayerOption) {
     // Freie Geisterkarte derselben Position: Der Neue uebernimmt ihren Platz.
     const geist = transferModus
@@ -607,6 +622,7 @@ export default function TeamBuilder({
       // Neue Spieler rücken nur dann in die Startelf, wenn die Formation das
       // hergibt — sonst auf die Bank.
       const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
+      tippImpuls();
       const neuerPick = { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false };
       if (!geist) return [...prev, neuerPick];
       // An die Stelle des Vorgaengers setzen, damit die Reihenfolge im
@@ -701,6 +717,7 @@ export default function TeamBuilder({
   }
 
   function removePlayer(playerId: number) {
+    tippImpuls();
     // War der Spieler Nachfolger einer Geisterkarte, wird deren Platz wieder
     // frei — sonst haenge die Zuordnung an einem Spieler, der weg ist.
     setErsatz((st) => st.filter((r) => r.reinId !== playerId && r.rausId !== playerId));
@@ -900,6 +917,7 @@ export default function TeamBuilder({
       setToast({ kind: "error", text: t.errNoVice });
       return;
     }
+    tippImpuls(18);
     startTransition(async () => {
       const result = await saveSquad(squad);
       if (result?.error) {
@@ -1010,14 +1028,14 @@ export default function TeamBuilder({
               type="button"
               aria-label={t.sheetClose}
               onClick={zu}
-              className="fixed inset-0 z-40 cursor-default bg-black/40"
+              className="fade-in fixed inset-0 z-40 cursor-default bg-black/40"
             />
             <div
               style={popoverStyle}
               className={
                 popoverStyle
-                  ? "fixed z-50 w-80 overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
-                  : "fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl"
+                  ? "pop-in fixed z-50 w-80 overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
+                  : "sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl"
               }
             >
               <div className="mb-3">
@@ -1116,9 +1134,9 @@ export default function TeamBuilder({
               type="button"
               aria-label={t.sheetClose}
               onClick={zu}
-              className="fixed inset-0 z-40 cursor-default bg-black/40"
+              className="fade-in fixed inset-0 z-40 cursor-default bg-black/40"
             />
-            <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl">
+            <div className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl">
               <SpielerKarte player={player} t={t} />
               {player.manualStats && (
                 <div className="mt-3 rounded-xl bg-brand-deep/5 p-3">
@@ -1641,10 +1659,12 @@ export default function TeamBuilder({
       <aside
         ref={marketRef}
         className={`${
-          marktOffen ? "fixed inset-0 z-40 flex flex-col bg-brand-deep/60 p-3" : "hidden"
+          marktOffen ? "fade-in fixed inset-0 z-40 flex flex-col bg-brand-deep/60 p-3" : "hidden"
         } lg:static lg:z-auto lg:block lg:w-[22rem] lg:shrink-0 lg:bg-transparent lg:p-0`}
       >
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4 lg:flex-none">
+        <div
+          className={`${marktOffen ? "sheet-up " : ""}flex min-h-0 flex-1 flex-col overflow-hidden chamfer bg-white shadow-sm lg:sticky lg:top-4 lg:flex-none`}
+        >
           <div className="brand-gradient flex items-center justify-between px-4 py-3 text-sm font-bold text-white">
             {t.pickPlayers}
             <button

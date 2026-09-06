@@ -156,6 +156,71 @@ h2 {
   animation: pop-in 0.28s cubic-bezier(0.2, 0.9, 0.35, 1.2);
 }
 
+/* Sheets fahren von unten herein statt aufzublitzen — dieselbe Kurve wie
+   in nativen Apps: schnell los, weich aus. Nur auf schmalen Schirmen; ab
+   der Breite, ab der der Markt als Spalte danebensteht, gibt es nichts
+   einzublenden. */
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-up {
+  animation: sheet-up 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (min-width: 1024px) {
+  .sheet-up {
+    animation: none;
+  }
+}
+
+/* Verdunkelung dahinter blendet auf, statt hart umzuschalten. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Statistik-Kacheln setzen sich versetzt, damit die Karte gelesen wirkt
+   und nicht gedruckt. Die Verzögerung kommt je Kachel aus dem Markup. */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tile-in {
+  animation: tile-in 0.3s cubic-bezier(0.2, 0.9, 0.35, 1.2) backwards;
+}
+
+/* Wer Bewegung abbestellt hat, bekommt die Endzustaende sofort. */
+@media (prefers-reduced-motion: reduce) {
+  .sheet-up,
+  .fade-in,
+  .tile-in,
+  .pop-in,
+  .toast {
+    animation: none;
+  }
+  .pressable,
+  .pressable-subtle {
+    transition: none;
+  }
+}
+
 /* Toast-Meldungen */
 @keyframes toast-in {
   from {
