@@ -4,25 +4,58 @@ import StatsTable, { type StatsRow } from "./StatsTable";
 import { getLang } from "@/lib/lang";
 import { getOwnershipPercent } from "@/lib/ownership";
 import { getDictionary } from "@/lib/i18n";
+import { alleZeilen } from "@/lib/supabase/paginate";
 
 export default async function StatsPage() {
   const supabase = await createClient();
   const lang = await getLang();
   const t = getDictionary(lang).stats;
 
-  const [{ data: players }, { data: points }, { data: gameweeks }, { data: ratingRows }, ownership] = await Promise.all([
+  // fantasy_points und player_stats wachsen um rund 230 Zeilen je Spieltag und
+  // haben das Zeilenlimit von PostgREST inzwischen gerissen (1469 Zeilen). Ohne
+  // Seitenabruf fehlte still der jüngste Spieltag — genau die Spalte, die
+  // niemandem auffiel, weil die Saisonsummen ja plausibel blieben.
+  const [{ data: players }, points, { data: gameweeks }, ratingRows, ownership] = await Promise.all([
     supabase
       .from("players")
       .select("id, first_name, last_name, position, price, clubs(name, short_name)")
       .eq("is_active", true),
-    supabase.from("fantasy_points").select("player_id, gameweek_id, points, breakdown"),
+    alleZeilen<{
+      player_id: number;
+      gameweek_id: number;
+      points: number;
+      breakdown: Record<string, number> | null;
+    }>((von, bis) =>
+      supabase.from("fantasy_points").select("player_id, gameweek_id, points, breakdown").range(von, bis)
+    ),
     supabase.from("gameweeks").select("id, number").order("number", { ascending: false }),
-    supabase.from("player_stats").select("player_id, rating, goals, assists, minutes, goals_conceded"),
+    alleZeilen<{
+      player_id: number;
+      gameweek_id: number;
+      rating: number | null;
+      goals: number | null;
+      assists: number | null;
+      minutes: number | null;
+      goals_conceded: number | null;
+    }>((von, bis) =>
+      supabase
+        .from("player_stats")
+        .select("player_id, gameweek_id, rating, goals, assists, minutes, goals_conceded")
+        .range(von, bis)
+    ),
     getOwnershipPercent(),
   ]);
 
+  // Preisbewegung seit Saisonstart — FPL zeigt sie direkt neben dem Preis,
+  // weil sie mitentscheidet, ob ein Transfer sich noch lohnt.
+  const { data: preisRows } = await supabase.from("price_changes").select("player_id, delta");
+  const preisDelta = new Map<number, number>();
+  for (const r of preisRows ?? []) {
+    preisDelta.set(r.player_id, (preisDelta.get(r.player_id) ?? 0) + Number(r.delta));
+  }
+
   const latestGameweekWithPoints = (gameweeks ?? []).find((gw) =>
-    (points ?? []).some((p) => p.gameweek_id === gw.id)
+    points.some((p) => p.gameweek_id === gw.id)
   );
 
   // Durchschnittliches Rating ueber alle Spieltage, in denen es eines gab —
@@ -31,7 +64,9 @@ export default async function StatsPage() {
   const toreSumme = new Map<number, number>();
   const assistsSumme = new Map<number, number>();
   const zuNullSumme = new Map<number, number>();
-  for (const r of ratingRows ?? []) {
+  const minutenSumme = new Map<number, number>();
+  for (const r of ratingRows) {
+    minutenSumme.set(r.player_id, (minutenSumme.get(r.player_id) ?? 0) + (r.minutes ?? 0));
     toreSumme.set(r.player_id, (toreSumme.get(r.player_id) ?? 0) + (r.goals ?? 0));
     assistsSumme.set(r.player_id, (assistsSumme.get(r.player_id) ?? 0) + (r.assists ?? 0));
     // Zu-null wie im Regelwerk: ab 60 Minuten ohne Gegentor.
@@ -43,13 +78,30 @@ export default async function StatsPage() {
     ratingSumme.set(r.player_id, { summe: e.summe + Number(r.rating), anzahl: e.anzahl + 1 });
   }
 
+  // Form wie bei FPL: der Schnitt der jüngsten Spieltage statt der Saisonsumme.
+  // FPL rechnet über 30 Tage, was dort rund vier Runden sind — hier direkt vier
+  // Runden, damit die Zahl unabhängig vom Spielplan vergleichbar bleibt.
+  const FORM_RUNDEN = 4;
+  // Nur Runden, die schon gewertet sind. `gameweeks` ist absteigend sortiert und
+  // beginnt deshalb mit den noch kommenden Spieltagen — ohne diesen Filter
+  // bestünde das Fenster ausschliesslich aus Runden ohne einen einzigen Punkt.
+  const gespielteIds = new Set(points.map((p) => p.gameweek_id));
+  const formIds = new Set(
+    (gameweeks ?? []).filter((g) => gespielteIds.has(g.id)).slice(0, FORM_RUNDEN).map((g) => g.id)
+  );
+  const formSumme = new Map<number, { summe: number; anzahl: number }>();
+
   const totalsByPlayer = new Map<number, number>();
   const latestByPlayer = new Map<number, number>();
   const bonusByPlayer = new Map<number, number>();
-  for (const p of points ?? []) {
+  for (const p of points) {
     totalsByPlayer.set(p.player_id, (totalsByPlayer.get(p.player_id) ?? 0) + p.points);
-    const b = Number((p.breakdown as Record<string, number> | null)?.bonus ?? 0);
+    const b = Number(p.breakdown?.bonus ?? 0);
     if (b) bonusByPlayer.set(p.player_id, (bonusByPlayer.get(p.player_id) ?? 0) + b);
+    if (formIds.has(p.gameweek_id)) {
+      const e = formSumme.get(p.player_id) ?? { summe: 0, anzahl: 0 };
+      formSumme.set(p.player_id, { summe: e.summe + p.points, anzahl: e.anzahl + 1 });
+    }
     if (latestGameweekWithPoints && p.gameweek_id === latestGameweekWithPoints.id) {
       latestByPlayer.set(p.player_id, p.points);
     }
@@ -69,6 +121,19 @@ export default async function StatsPage() {
       assists: assistsSumme.get(p.id) ?? 0,
       bonus: bonusByPlayer.get(p.id) ?? 0,
       owned: ownership.get(p.id) ?? 0,
+      minutes: minutenSumme.get(p.id) ?? 0,
+      priceDelta: preisDelta.get(p.id) ?? 0,
+      form: (() => {
+        const e = formSumme.get(p.id);
+        return e && e.anzahl > 0 ? e.summe / e.anzahl : null;
+      })(),
+      // Punkte je Mio. — bei FPL der Massstab dafür, ob ein Spieler sein Geld
+      // wert ist. Ohne Punkte bleibt die Spalte leer statt auf 0 zu fallen.
+      valuePerMillion: (() => {
+        const gesamt = totalsByPlayer.get(p.id) ?? 0;
+        const preis = Number(p.price);
+        return gesamt > 0 && preis > 0 ? gesamt / preis : null;
+      })(),
       // Nur für Torhüter und Verteidiger — bei anderen Positionen zählt
       // die Wertung nicht, die Spalte zeigt dort einen Strich.
       cleanSheets:

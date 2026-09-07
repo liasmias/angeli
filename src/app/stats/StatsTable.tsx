@@ -22,11 +22,41 @@ export interface StatsRow {
   cleanSheets: number | null;
   /** Schnitt der API-Bewertung; null, wenn nie bewertet. */
   rating: number | null;
+  /** Einsatzminuten der Saison. */
+  minutes: number;
+  /** Schnitt der Fantasy-Punkte über die letzten vier Spieltage. */
+  form: number | null;
+  /** Saisonpunkte je Mio. Marktwert. */
+  valuePerMillion: number | null;
+  /** Preisbewegung seit Saisonstart, in Mio. */
+  priceDelta: number;
 }
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
-type SortKey = "totalPoints" | "latestPoints" | "price" | "name" | "rating" | "goals" | "assists" | "cleanSheets" | "bonus" | "owned";
+type SortKey =
+  | "totalPoints"
+  | "latestPoints"
+  | "price"
+  | "name"
+  | "rating"
+  | "goals"
+  | "assists"
+  | "cleanSheets"
+  | "bonus"
+  | "owned"
+  | "form"
+  | "minutes"
+  | "valuePerMillion";
+
+/**
+ * Preisgrenzen für den Budgetfilter.
+ *
+ * FPL filtert die Liste nach Höchstpreis, weil die eigentliche Frage beim
+ * Transfer selten "wer ist der Beste" lautet, sondern "wer ist der Beste, den
+ * ich mir noch leisten kann".
+ */
+const PREIS_GRENZEN = [4.5, 5, 5.5, 6, 6.5, 7, 8, 9, 10, 12];
 
 export default function StatsTable({
   rows,
@@ -40,6 +70,7 @@ export default function StatsTable({
   const t = getDictionary(lang).stats;
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
+  const [maxPreis, setMaxPreis] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("totalPoints");
   const [sortDesc, setSortDesc] = useState(true);
@@ -51,6 +82,7 @@ export default function StatsTable({
       (r) =>
         (filterPos === "ALL" || r.position === filterPos) &&
         (filterClub === "ALL" || r.club === filterClub) &&
+        (maxPreis === null || r.price <= maxPreis) &&
         (search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
     );
     const dir = sortDesc ? -1 : 1;
@@ -60,7 +92,7 @@ export default function StatsTable({
       const bv = (b[sortKey] ?? -Infinity) as number;
       return dir * (av - bv);
     });
-  }, [rows, filterPos, filterClub, search, sortKey, sortDesc]);
+  }, [rows, filterPos, filterClub, maxPreis, search, sortKey, sortDesc]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDesc((d) => !d);
@@ -115,6 +147,19 @@ export default function StatsTable({
               </option>
             ))}
           </select>
+          <select
+            value={maxPreis ?? "ALL"}
+            onChange={(e) => setMaxPreis(e.target.value === "ALL" ? null : Number(e.target.value))}
+            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
+            aria-label={t.maxPrice}
+          >
+            <option value="ALL">{t.maxPrice}</option>
+            {PREIS_GRENZEN.map((g) => (
+              <option key={g} value={g}>
+                ≤ {g.toFixed(1)}
+              </option>
+            ))}
+          </select>
           {/* Auf dem Handy sind Preis- und Rating-Spalten ausgeblendet, ihre
               klickbaren Köpfe damit unerreichbar — dieses Feld übernimmt dort
               die Sortierung. Ab sm reichen die Spaltenköpfe. */}
@@ -130,6 +175,9 @@ export default function StatsTable({
           >
             <option value="totalPoints">{t.sortPoints}</option>
             <option value="latestPoints">{t.sortLatest}</option>
+            <option value="form">{t.sortForm}</option>
+            <option value="valuePerMillion">{t.sortValue}</option>
+            <option value="minutes">{t.sortMinutes}</option>
             <option value="price">{t.sortPrice}</option>
             <option value="rating">{t.sortRating}</option>
             <option value="goals">{t.sortGoals}</option>
@@ -163,6 +211,21 @@ export default function StatsTable({
               <th className="hidden px-3 py-2 text-right sm:table-cell">
                 <button type="button" onClick={() => toggleSort("price")} className="uppercase">
                   {t.price}{sortIndicator("price")}
+                </button>
+              </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("form")} className="uppercase" title={t.formTitle}>
+                  {t.form}{sortIndicator("form")}
+                </button>
+              </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("valuePerMillion")} className="uppercase" title={t.valueTitle}>
+                  {t.value}{sortIndicator("valuePerMillion")}
+                </button>
+              </th>
+              <th className="hidden px-3 py-2 text-right sm:table-cell">
+                <button type="button" onClick={() => toggleSort("minutes")} className="uppercase" title={t.minutesTitle}>
+                  {t.minutes}{sortIndicator("minutes")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
@@ -233,6 +296,9 @@ export default function StatsTable({
                       {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
                       <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
+                        {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
+                        {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
+                        {r.minutes > 0 && ` · ${r.minutes}′`}
                         {r.rating !== null && ` · Ø★ ${r.rating.toFixed(1)}`}
                         {r.goals > 0 && ` · ⚽ ${r.goals}`}
                         {r.assists > 0 && ` · 🅰 ${r.assists}`}
@@ -247,6 +313,25 @@ export default function StatsTable({
                 <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.position}</td>
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell">
                   {r.price.toFixed(1)}
+                  {r.priceDelta !== 0 && (
+                    <span
+                      className={`ml-1 text-[11px] font-bold ${
+                        r.priceDelta > 0 ? "text-brand-grass" : "text-brand-magenta"
+                      }`}
+                      title={t.priceDeltaTitle(r.priceDelta)}
+                    >
+                      {r.priceDelta > 0 ? "▲" : "▼"}
+                    </span>
+                  )}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums font-semibold text-brand-deep/70 sm:table-cell">
+                  {r.form === null ? "—" : r.form.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.minutes}
                 </td>
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
                   {r.rating === null ? "—" : r.rating.toFixed(1)}
@@ -280,7 +365,7 @@ export default function StatsTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 13 : 12} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="px-3 py-8 text-center text-brand-deep/50">
                   {t.noneFound}
                 </td>
               </tr>
