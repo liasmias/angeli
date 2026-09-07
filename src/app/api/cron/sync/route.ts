@@ -3,7 +3,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturesByIds, getFixturePlayerStats } from "@/lib/football-api/client";
 import { recomputePlayerPoints } from "@/lib/gameweek-scoring";
 import { computeAutoSubs } from "@/lib/auto-subs";
-import { PREIS_AB_SPIELTAG, PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
+import {
+  PREIS_AB_SPIELTAG,
+  PREIS_ANSTIEG,
+  PREIS_MINIMUM,
+  PREIS_MIN_MINUTEN,
+  PREIS_PUNKTE_FUER_ANSTIEG,
+  PREIS_PUNKTE_GEGEN_SENKUNG,
+  PREIS_RATING_SCHWELLE,
+  PREIS_SENKUNG,
+  PREIS_SENKUNG_SCHWELLE,
+} from "@/lib/pricing";
 import type { Position } from "@/lib/database.types";
 
 // Status-Codes von API-Football.
@@ -390,55 +400,109 @@ export async function GET(request: Request) {
     }
   }
 
-  // Preisanstieg: Rating >= Schwelle an diesem UND dem vorherigen Spieltag
-  // → +0.3 Mio. Läuft erst nach Rundenende, damit das Rating final ist.
+  // Preisbewegung nach Rundenende — das Rating ist erst dann final.
+  //
+  // Bewertet wird das Paar aus den beiden letzten Runden, in denen der
+  // Spieler wirklich gespielt hat (PREIS_MIN_MINUTEN). Runden darunter sind
+  // neutral: Sie zählen weder als stark noch als schwach und unterbrechen
+  // keine Serie. Vorher zählte jeder Kurzeinsatz voll mit, und ein Spieler
+  // verlor an Wert für dreizehn Minuten auf dem Platz.
+  //
+  // Zusätzlich muss die Ausbeute das Rating stützen: Ein Anstieg braucht
+  // Punkte, eine Senkung bleibt aus, wenn der Spieler trotzdem geliefert hat.
+  //
   // price_changes hält je Spieler und Runde höchstens einen Eintrag — der
-  // Schritt ist dadurch beliebig wiederholbar, ohne doppelt zu erhöhen.
+  // Schritt ist dadurch beliebig wiederholbar, ohne doppelt zu buchen.
   let priceRises = 0;
-  if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0) {
-    const vorherigeRunde = (alleGws ?? []).find((g) => g.number === gameweek.number - 1);
-    // Spieltag 1 zaehlt nicht in Bewertungspaare (PREIS_AB_SPIELTAG):
-    // er lag vor dem Beitritt der Mitglieder und steckt schon in den
-    // Startpreisen. Erstes Paar ist damit 2+3.
-    if (vorherigeRunde && vorherigeRunde.number >= PREIS_AB_SPIELTAG) {
-      const [{ data: aktuelleTop }, { data: vorherigeTop }, { data: aktuelleTief }, { data: vorherigeTief }] =
-        await Promise.all([
-          supabase
-            .from("player_stats")
-            .select("player_id")
-            .eq("gameweek_id", gameweek.id)
-            .gte("rating", PREIS_RATING_SCHWELLE),
-          supabase
-            .from("player_stats")
-            .select("player_id")
-            .eq("gameweek_id", vorherigeRunde.id)
-            .gte("rating", PREIS_RATING_SCHWELLE),
-          // Schwach nur, wer gespielt UND ein Rating unter der Schwelle hat —
-          // wer gar nicht zum Einsatz kam (rating NULL), fällt nicht darunter.
-          supabase
-            .from("player_stats")
-            .select("player_id")
-            .eq("gameweek_id", gameweek.id)
-            .lt("rating", PREIS_SENKUNG_SCHWELLE),
-          supabase
-            .from("player_stats")
-            .select("player_id")
-            .eq("gameweek_id", vorherigeRunde.id)
-            .lt("rating", PREIS_SENKUNG_SCHWELLE),
-        ]);
+  if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0 && gameweek.number > PREIS_AB_SPIELTAG) {
+    // Alle Runden ab PREIS_AB_SPIELTAG bis einschliesslich dieser. Spieltag 1
+    // bleibt aussen vor: Er lag vor dem Beitritt der Mitglieder und steckt
+    // bereits in den Startpreisen.
+    const beruecksichtigt = (alleGws ?? []).filter(
+      (g) => g.number >= PREIS_AB_SPIELTAG && g.number <= gameweek.number
+    );
+    const nummerVonGw = new Map(beruecksichtigt.map((g) => [g.id, g.number]));
+    const ids = beruecksichtigt.map((g) => g.id);
 
-      // Je Spieler und Runde genau eine Preisbewegung; das Vorzeichen von
-      // delta unterscheidet Anstieg und Senkung.
-      const bewegungen: { playerId: number; delta: number }[] = [];
-      const topVorher = new Set((vorherigeTop ?? []).map((r) => r.player_id));
-      for (const r of aktuelleTop ?? []) {
-        if (topVorher.has(r.player_id)) bewegungen.push({ playerId: r.player_id, delta: PREIS_ANSTIEG });
+    // Seitenweise: player_stats und fantasy_points wachsen über das
+    // Zeilenlimit von PostgREST hinaus.
+    const holeAlle = async <T,>(
+      seite: (von: number, bis: number) => PromiseLike<{ data: T[] | null }>
+    ): Promise<T[]> => {
+      const alle: T[] = [];
+      for (let von = 0; ; von += 1000) {
+        const { data } = await seite(von, von + 999);
+        if (!data?.length) break;
+        alle.push(...data);
+        if (data.length < 1000) break;
       }
-      const tiefVorher = new Set((vorherigeTief ?? []).map((r) => r.player_id));
-      for (const r of aktuelleTief ?? []) {
-        if (tiefVorher.has(r.player_id)) bewegungen.push({ playerId: r.player_id, delta: -PREIS_SENKUNG });
-      }
+      return alle;
+    };
 
+    const werte = await holeAlle<{
+      player_id: number;
+      gameweek_id: number;
+      minutes: number;
+      rating: number | null;
+    }>((von, bis) =>
+      supabase
+        .from("player_stats")
+        .select("player_id, gameweek_id, minutes, rating")
+        .in("gameweek_id", ids)
+        .range(von, bis)
+    );
+    const punkte = await holeAlle<{ player_id: number; gameweek_id: number; points: number }>(
+      (von, bis) =>
+        supabase
+          .from("fantasy_points")
+          .select("player_id, gameweek_id, points")
+          .in("gameweek_id", ids)
+          .range(von, bis)
+    );
+    const punkteVon = new Map(punkte.map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
+
+    // Je Spieler die Runden mit echtem Einsatz, nach Spieltagsnummer sortiert.
+    const runden = new Map<number, { nummer: number; rating: number; punkte: number }[]>();
+    for (const w of werte) {
+      if (w.rating === null || (w.minutes ?? 0) < PREIS_MIN_MINUTEN) continue;
+      const nummer = nummerVonGw.get(w.gameweek_id);
+      if (nummer === undefined) continue;
+      const liste = runden.get(w.player_id) ?? [];
+      liste.push({
+        nummer,
+        rating: Number(w.rating),
+        punkte: punkteVon.get(`${w.player_id}:${w.gameweek_id}`) ?? 0,
+      });
+      runden.set(w.player_id, liste);
+    }
+
+    const bewegungen: { playerId: number; delta: number }[] = [];
+    for (const [playerId, liste] of runden) {
+      liste.sort((a, b) => a.nummer - b.nummer);
+      const paar = liste.slice(-2);
+      // Nur wenn die aktuelle Runde die jüngere Hälfte des Paars ist —
+      // sonst hätte ein Spieler ohne Einsatz weiter Bewegung bekommen.
+      if (paar.length < 2 || paar[1].nummer !== gameweek.number) continue;
+      const [a, b] = paar;
+      const summe = a.punkte + b.punkte;
+      if (
+        a.rating >= PREIS_RATING_SCHWELLE &&
+        b.rating >= PREIS_RATING_SCHWELLE &&
+        summe >= PREIS_PUNKTE_FUER_ANSTIEG
+      ) {
+        bewegungen.push({ playerId, delta: PREIS_ANSTIEG });
+      } else if (
+        a.rating < PREIS_SENKUNG_SCHWELLE &&
+        b.rating < PREIS_SENKUNG_SCHWELLE &&
+        summe < PREIS_PUNKTE_GEGEN_SENKUNG
+      ) {
+        bewegungen.push({ playerId, delta: -PREIS_SENKUNG });
+      }
+    }
+
+    // Je Spieler und Runde genau eine Preisbewegung; das Vorzeichen von
+    // delta unterscheidet Anstieg und Senkung.
+    {
       for (const b of bewegungen) {
         const { data: spieler } = await supabase
           .from("players")

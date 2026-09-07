@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_PER_CLUB, MAX_STARTERS, MIN_STARTERS, POSITION_LABEL } from "@/lib/formation";
-import { PREIS_AB_SPIELTAG, PREIS_ANSTIEG, PREIS_MINIMUM, PREIS_RATING_SCHWELLE, PREIS_SENKUNG, PREIS_SENKUNG_SCHWELLE } from "@/lib/pricing";
+import {
+  PREIS_AB_SPIELTAG,
+  PREIS_ANSTIEG,
+  PREIS_MINIMUM,
+  PREIS_MIN_MINUTEN,
+  PREIS_PUNKTE_GEGEN_SENKUNG,
+  PREIS_RATING_SCHWELLE,
+  PREIS_SENKUNG,
+  PREIS_SENKUNG_SCHWELLE,
+} from "@/lib/pricing";
 import { BONUS_AB_SPIELTAG } from "@/lib/bonus";
 import { getLang } from "@/lib/lang";
 
@@ -125,10 +134,14 @@ export default async function RegelnPage() {
               {MAX_STARTERS.MID} midfielders and {MAX_STARTERS.FWD} forwards.
             </p>
             <p className="rounded-lg bg-brand-deep/5 p-3">
-              <b>Automatic price changes:</b> if a player reaches a rating of at least{" "}
-              <b>{PREIS_RATING_SCHWELLE}</b> in two consecutive gameweeks, his price goes up
-              by <b>{PREIS_ANSTIEG}m</b>. If he stays below <b>{PREIS_SENKUNG_SCHWELLE}</b>{" "}
-              twice in a row, it drops by <b>{PREIS_SENKUNG}m</b> (never below {PREIS_MINIMUM}).
+              <b>Automatic price changes:</b> only gameweeks with at least{" "}
+              <b>{PREIS_MIN_MINUTEN} minutes</b> on the pitch count — a short cameo
+              changes nothing, in either direction. Across a player&rsquo;s last two
+              such gameweeks: a rating of <b>{PREIS_RATING_SCHWELLE}</b> or better in
+              both raises his price by <b>{PREIS_ANSTIEG}m</b>; staying below{" "}
+              <b>{PREIS_SENKUNG_SCHWELLE}</b> in both drops it by <b>{PREIS_SENKUNG}m</b>{" "}
+              (never below {PREIS_MINIMUM}). A drop is waived if he still scored{" "}
+              <b>{PREIS_PUNKTE_GEGEN_SENKUNG} points</b> or more across the two.
               Counting starts at gameweek {PREIS_AB_SPIELTAG}, so the first change happens after
               gameweek {PREIS_AB_SPIELTAG + 1}. Your existing team keeps its full value — even
               above the base budget.
@@ -281,12 +294,15 @@ export default async function RegelnPage() {
             {MAX_STARTERS.FWD} {POSITION_LABEL.FWD}.
           </p>
           <p className="rounded-lg bg-brand-deep/5 p-3">
-            <b>Automatische Preisanpassung:</b> Erreicht ein Spieler an zwei
-            aufeinanderfolgenden Spieltagen ein Rating von mindestens{" "}
-            <b>{PREIS_RATING_SCHWELLE}</b>, steigt sein Preis um{" "}
-            <b>{PREIS_ANSTIEG} Mio.</b> Bleibt er zweimal in Folge unter{" "}
-            <b>{PREIS_SENKUNG_SCHWELLE}</b>, sinkt er um <b>{PREIS_SENKUNG} Mio.</b>{" "}
-            (nie unter {PREIS_MINIMUM}). Gezählt wird ab Spieltag {PREIS_AB_SPIELTAG} —
+            <b>Automatische Preisanpassung:</b> Gezählt werden nur Spieltage mit
+            mindestens <b>{PREIS_MIN_MINUTEN} Einsatzminuten</b> — ein Kurzeinsatz
+            ändert nichts, in keine Richtung. Über die letzten beiden solchen
+            Spieltage: Ein Rating von <b>{PREIS_RATING_SCHWELLE}</b> oder besser in
+            beiden hebt den Preis um <b>{PREIS_ANSTIEG} Mio.</b>, zweimal unter{" "}
+            <b>{PREIS_SENKUNG_SCHWELLE}</b> senkt ihn um <b>{PREIS_SENKUNG} Mio.</b>{" "}
+            (nie unter {PREIS_MINIMUM}). Die Senkung entfällt, wenn er über die beiden
+            Spieltage trotzdem <b>{PREIS_PUNKTE_GEGEN_SENKUNG} Punkte</b> oder mehr
+            geholt hat. Gezählt wird ab Spieltag {PREIS_AB_SPIELTAG} —
             die erste Anpassung kommt also nach Spieltag {PREIS_AB_SPIELTAG + 1}. Dein bereits
             gekauftes Team behält dabei seinen vollen Wert — auch über dem Basis-Budget.
           </p>
