@@ -298,6 +298,51 @@ export default async function TeamPage({
     if (home?.short_name) merke(f.away_club_id, `${home.short_name} (A)`);
   }
 
+  // ---------- Terminvorschau fuer die Spielerkarte ----------
+  //
+  // Beim Transfer zaehlt nicht nur, wie ein Spieler bisher gepunktet hat,
+  // sondern gegen wen er als Naechstes antritt. Fuenf Runden sind genug, um
+  // eine Serie zu erkennen, und kurz genug, dass Verschiebungen sie nicht
+  // laufend entwerten.
+  const VORSCHAU_RUNDEN = 5;
+  const { data: vorschauGws } = await supabase
+    .from("gameweeks")
+    .select("id, number")
+    .eq("season", settings.season)
+    .gte("number", angezeigt.number)
+    .order("number")
+    .limit(VORSCHAU_RUNDEN);
+  const vorschauNummer = new Map((vorschauGws ?? []).map((g) => [g.id, g.number]));
+  const { data: vorschauFixtures } = await supabase
+    .from("fixtures")
+    .select(
+      "gameweek_id, home_club_id, away_club_id, home:clubs!fixtures_home_club_id_fkey(short_name), away:clubs!fixtures_away_club_id_fkey(short_name)"
+    )
+    .in("gameweek_id", [...vorschauNummer.keys()])
+    .order("kickoff");
+
+  const vorschauByClub = new Map<number, { gw: number; opponent: string; home: boolean }[]>();
+  const merkeVorschau = (
+    clubId: number | null,
+    eintrag: { gw: number; opponent: string; home: boolean }
+  ) => {
+    if (!clubId) return;
+    vorschauByClub.set(clubId, [...(vorschauByClub.get(clubId) ?? []), eintrag]);
+  };
+  for (const f of vorschauFixtures ?? []) {
+    // gameweek_id ist nullable — verschobene Partien haengen bewusst an
+    // keiner Runde, bis ein neuer Termin feststeht.
+    const nummer = f.gameweek_id === null ? undefined : vorschauNummer.get(f.gameweek_id);
+    if (nummer === undefined) continue;
+    const home = Array.isArray(f.home) ? f.home[0] : f.home;
+    const away = Array.isArray(f.away) ? f.away[0] : f.away;
+    if (away?.short_name) merkeVorschau(f.home_club_id, { gw: nummer, opponent: away.short_name, home: true });
+    if (home?.short_name) merkeVorschau(f.away_club_id, { gw: nummer, opponent: home.short_name, home: false });
+  }
+  // Nach Runde sortieren: Die Reihenfolge kam bisher von der Anstosszeit, und
+  // eine spaet angesetzte Partie waere sonst vor einer frueheren Runde gelandet.
+  for (const liste of vorschauByClub.values()) liste.sort((a, b) => a.gw - b.gw);
+
   const chipState = (["wildcard", "bench_boost"] as const).map((chip) => {
     const row = (chipRows ?? []).find((c) => c.chip === chip);
     const gwRow = row ? (Array.isArray(row.gameweeks) ? row.gameweeks[0] : row.gameweeks) : null;
@@ -331,6 +376,7 @@ export default async function TeamPage({
       // bei 8 px 55 px, die schmalste Karte bietet 59 px.
       nextOpponent: partien.length === 0 ? null : partien.join("·"),
       nextFixtures: partien,
+      upcoming: p.club_id ? (vorschauByClub.get(p.club_id) ?? []) : [],
       minutes: minutenByPlayer.get(p.id) ?? 0,
       appearances: einsaetzeByPlayer.get(p.id) ?? 0,
       yellowCards: gelbByPlayer.get(p.id) ?? 0,

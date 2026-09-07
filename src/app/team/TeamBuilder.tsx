@@ -52,6 +52,9 @@ export interface PlayerOption {
   nextOpponent: string | null;
   /** Alle Partien des Spieltags, je "GC (H)". Zwei bei einer Double Gameweek. */
   nextFixtures: string[];
+  /** Die naechsten Runden mit Gegner und Heimrecht — fuer die Terminleiste
+   *  auf der Spielerkarte. Eine Runde kann zwei Eintraege haben. */
+  upcoming: { gw: number; opponent: string; home: boolean }[];
   /** Saisonwerte fuer die Spielerkarte. */
   minutes: number;
   appearances: number;
@@ -271,6 +274,37 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
           </span>
         </div>
       </div>
+
+      {player.upcoming.length > 0 && (
+        <>
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+            {t.cardUpcoming}
+          </p>
+          {/* Ein Block je Partie. Heimspiele dunkel, Auswaertsspiele hell —
+              der Unterschied ist so auch ohne das (H)/(A) zu sehen. */}
+          <div className="mt-1.5 flex gap-1.5">
+            {player.upcoming.map((f, i) => (
+              <div
+                key={`${f.gw}-${f.opponent}-${i}`}
+                style={{ animationDelay: `${i * 28}ms` }}
+                className={`tile-in flex-1 rounded-lg px-1 py-1.5 text-center ${
+                  f.home
+                    ? "bg-brand-deep text-white"
+                    : "bg-brand-deep/8 text-brand-deep"
+                }`}
+              >
+                <p className="text-[9px] font-semibold uppercase leading-tight opacity-55">
+                  GW {f.gw}
+                </p>
+                <p className="truncate text-xs font-bold leading-tight">{f.opponent}</p>
+                <p className="text-[9px] font-semibold leading-tight opacity-55">
+                  {f.home ? "(H)" : "(A)"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {player.flagNote && (
         <p className="mt-2 text-[11px] leading-snug text-brand-deep/60">{player.flagNote}</p>
