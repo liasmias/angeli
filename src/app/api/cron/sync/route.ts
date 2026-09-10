@@ -414,6 +414,9 @@ export async function GET(request: Request) {
   // price_changes hält je Spieler und Runde höchstens einen Eintrag — der
   // Schritt ist dadurch beliebig wiederholbar, ohne doppelt zu buchen.
   let priceRises = 0;
+  // Zurückgenommene Buchungen — getrennt gezählt, damit im Sync-Protokoll zu
+  // sehen ist, ob eine Runde nachträglich revidiert wurde.
+  let priceReverts = 0;
   if (offeneSpiele === 0 && liveSpiele === 0 && beendeteSpiele > 0 && gameweek.number > PREIS_AB_SPIELTAG) {
     // Alle Runden ab PREIS_AB_SPIELTAG bis einschliesslich dieser. Spieltag 1
     // bleibt aussen vor: Er lag vor dem Beitritt der Mitglieder und steckt
@@ -500,28 +503,76 @@ export async function GET(request: Request) {
       }
     }
 
+    // ---------- Abgleich statt einmaliger Buchung ----------
+    //
+    // Die Preisbewegung wurde bisher gebucht, sobald die letzte Partie
+    // abgepfiffen war, und danach nie wieder angefasst. API-Football
+    // revidiert Bewertungen aber noch Stunden nach Schlusspfiff: Am 07.09.
+    // sind um 12:12 neun Ratings aus Runde 7 nach oben korrigiert worden,
+    // und neun Preisänderungen standen damit ohne Grundlage da — Racioppi
+    // war mit Rating 6.3 gesenkt worden, das später auf 8.0 stieg.
+    //
+    // Deshalb wird bei jedem Lauf der ganze Spieltag gegengeprüft: Was die
+    // Regel nach heutigen Daten ergibt, wird gebucht; was gebucht ist, die
+    // Regel aber nicht mehr hergibt, wird zurückgenommen. Weil der Block
+    // nur für den zuletzt gesperrten Spieltag läuft, endet die Nachprüfung
+    // von selbst, sobald die nächste Runde sperrt.
+    const sollDelta = new Map(bewegungen.map((b) => [b.playerId, b.delta]));
+    const { data: gebucht } = await supabase
+      .from("price_changes")
+      .select("player_id, delta")
+      .eq("gameweek_id", gameweek.id);
+
+    const preisVon = async (playerId: number) => {
+      const { data } = await supabase.from("players").select("price").eq("id", playerId).single();
+      return data ? Number(data.price) : null;
+    };
+
+    // Zurücknehmen, was nicht mehr passt. Verglichen wird die Richtung, nicht
+    // der Betrag: Am Preisminimum wird eine Senkung gekappt gebucht (−0.2
+    // statt −0.3), und das ist weiterhin dieselbe Bewegung.
+    for (const g of gebucht ?? []) {
+      const soll = sollDelta.get(g.player_id);
+      if (soll !== undefined && Math.sign(soll) === Math.sign(Number(g.delta))) continue;
+      const alt = await preisVon(g.player_id);
+      if (alt === null) continue;
+      const { error: deleteError } = await supabase
+        .from("price_changes")
+        .delete()
+        .eq("player_id", g.player_id)
+        .eq("gameweek_id", gameweek.id);
+      if (deleteError) continue;
+      await supabase
+        .from("players")
+        .update({ price: Math.round((alt - Number(g.delta)) * 10) / 10 })
+        .eq("id", g.player_id);
+      priceReverts++;
+    }
+
     // Je Spieler und Runde genau eine Preisbewegung; das Vorzeichen von
     // delta unterscheidet Anstieg und Senkung.
-    {
-      for (const b of bewegungen) {
-        const { data: spieler } = await supabase
-          .from("players")
-          .select("price")
-          .eq("id", b.playerId)
-          .single();
-        if (!spieler) continue;
-        const alt = Number(spieler.price);
-        const neu = Math.max(PREIS_MINIMUM, Math.round((alt + b.delta) * 10) / 10);
-        if (neu === alt) continue; // schon am Minimum — keine Bewegung buchen
-        // Insert schlägt fehl, wenn für diese Runde schon gebucht wurde
-        // (unique) oder die Migration noch fehlt — beides: überspringen.
-        const { error: insertError } = await supabase
-          .from("price_changes")
-          .insert({ player_id: b.playerId, gameweek_id: gameweek.id, delta: neu - alt });
-        if (insertError) continue;
-        await supabase.from("players").update({ price: neu }).eq("id", b.playerId);
-        priceRises++;
-      }
+    const bereitsGebucht = new Set(
+      (gebucht ?? [])
+        .filter((g) => {
+          const soll = sollDelta.get(g.player_id);
+          return soll !== undefined && Math.sign(soll) === Math.sign(Number(g.delta));
+        })
+        .map((g) => g.player_id)
+    );
+    for (const b of bewegungen) {
+      if (bereitsGebucht.has(b.playerId)) continue;
+      const alt = await preisVon(b.playerId);
+      if (alt === null) continue;
+      const neu = Math.max(PREIS_MINIMUM, Math.round((alt + b.delta) * 10) / 10);
+      if (neu === alt) continue; // schon am Minimum — keine Bewegung buchen
+      // Insert schlägt fehl, wenn für diese Runde schon gebucht wurde
+      // (unique) oder die Migration noch fehlt — beides: überspringen.
+      const { error: insertError } = await supabase
+        .from("price_changes")
+        .insert({ player_id: b.playerId, gameweek_id: gameweek.id, delta: neu - alt });
+      if (insertError) continue;
+      await supabase.from("players").update({ price: neu }).eq("id", b.playerId);
+      priceRises++;
     }
   }
 
@@ -638,6 +689,7 @@ export async function GET(request: Request) {
     ohneSpielerdaten: ohneDaten,
     captainSwaps,
     priceRises,
+    priceReverts,
     deadlinesAdjusted,
   });
 }
