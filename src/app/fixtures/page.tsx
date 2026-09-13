@@ -6,6 +6,7 @@ import { loadPlayerDetails, type PlayerDetail } from "@/lib/player-detail";
 import type { PastPlayer } from "@/app/team/PastGameweek";
 import type { Position } from "@/lib/database.types";
 import BestPlayerChips from "./BestPlayerChips";
+import { alleZeilen } from "@/lib/supabase/paginate";
 
 const FINISHED = new Set(["FT", "AET", "PEN"]);
 // Dieselben Live-Status wie im Sync — Zwischenstände laufender Partien.
@@ -26,15 +27,32 @@ export default async function FixturesPage() {
   const lang = await getLang();
   const t = getDictionary(lang).fixtures;
 
-  const [{ data: gameweeks }, { data: fixtures }, { data: stats }, { data: points }, { data: players }] =
+  // player_stats und fantasy_points wachsen um rund 230 Zeilen je Spieltag und
+  // liegen inzwischen bei je 1469. PostgREST liefert stumm nur die ersten 1000 —
+  // ohne Seitenabruf fehlten genau die jüngsten Runden, und die Partien des
+  // letzten Spieltags standen ohne ihre besten Spieler da.
+  const [{ data: gameweeks }, { data: fixtures }, stats, points, { data: players }] =
     await Promise.all([
       supabase.from("gameweeks").select("id, number, deadline").order("number"),
       supabase
         .from("fixtures")
         .select("id, gameweek_id, kickoff, status, home_goals, away_goals, home:clubs!fixtures_home_club_id_fkey(name, short_name), away:clubs!fixtures_away_club_id_fkey(name, short_name)")
         .order("kickoff"),
-      supabase.from("player_stats").select("player_id, fixture_id, gameweek_id, goals, assists"),
-      supabase.from("fantasy_points").select("player_id, gameweek_id, points"),
+      alleZeilen<{
+        player_id: number;
+        fixture_id: number | null;
+        gameweek_id: number;
+        goals: number;
+        assists: number;
+      }>((von, bis) =>
+        supabase
+          .from("player_stats")
+          .select("player_id, fixture_id, gameweek_id, goals, assists")
+          .range(von, bis)
+      ),
+      alleZeilen<{ player_id: number; gameweek_id: number; points: number }>((von, bis) =>
+        supabase.from("fantasy_points").select("player_id, gameweek_id, points").range(von, bis)
+      ),
       supabase.from("players").select("id, first_name, last_name, position, clubs(short_name)"),
     ]);
 
@@ -48,10 +66,10 @@ export default async function FixturesPage() {
       }];
     })
   );
-  const pointsByPlayerGw = new Map((points ?? []).map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
+  const pointsByPlayerGw = new Map(points.map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
 
   const bestByFixture = new Map<number, BestPlayer[]>();
-  for (const s of stats ?? []) {
+  for (const s of stats) {
     if (s.fixture_id === null) continue;
     const info = spielerById.get(s.player_id);
     const entry: BestPlayer = {
