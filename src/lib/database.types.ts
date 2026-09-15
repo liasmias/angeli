@@ -136,6 +136,9 @@ type PlayerStatsOverridesRow = {
   id: number;
   player_id: number;
   gameweek_id: number;
+  /** Partie, auf die sich die Korrektur bezieht. null = gilt für die ganze
+   *  Runde — so sind alle Einträge vor der Double Gameweek gespeichert. */
+  fixture_id: number | null;
   note: string | null;
   updated_by: string | null;
   updated_at: string;
@@ -338,7 +341,11 @@ export interface Database {
       };
       player_stats_overrides: {
         Row: PlayerStatsOverridesRow;
-        Insert: Omit<PlayerStatsOverridesRow, "id"> & { id?: number; updated_at?: string };
+        Insert: Omit<PlayerStatsOverridesRow, "id" | "fixture_id"> & {
+          id?: number;
+          fixture_id?: number | null;
+          updated_at?: string;
+        };
         Update: Partial<PlayerStatsOverridesRow>;
         Relationships: [];
       };

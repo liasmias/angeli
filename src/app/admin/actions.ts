@@ -84,7 +84,10 @@ export async function saveStatOverride(formData: FormData) {
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "player_id,gameweek_id" }
+    // fixture_id gehört seit der Double Gameweek zum Schlüssel. Das Formular
+    // trägt weiterhin rundenweit ein (fixture_id bleibt null); die
+    // Punkteberechnung wendet eine solche Korrektur genau einmal an.
+    { onConflict: "player_id,gameweek_id,fixture_id" }
   );
 
   await recomputePlayerPoints(supabase, playerId, gameweekId);

@@ -302,7 +302,10 @@ export async function GET(request: Request) {
           // liess frische Daten alt aussehen.
           synced_at: new Date().toISOString(),
         },
-        { onConflict: "player_id,gameweek_id" }
+        // Die Partie gehört zum Schlüssel: In einer Double Gameweek hat ein
+        // Spieler zwei Zeilen. Ohne fixture_id überschrieb die zweite Partie
+        // die erste samt Toren und Minuten.
+        { onConflict: "player_id,gameweek_id,fixture_id" }
       );
       touchedPlayerIds.add(playerId);
       statsSynced++;
@@ -323,11 +326,18 @@ export async function GET(request: Request) {
       .select("squad_id, player_id, is_starting, is_captain, is_vice_captain, bench_order, auto_subbed, players(position)")
       .eq("gameweek_id", gameweek.id);
 
+    // Minuten der ganzen Runde je Spieler — in einer Double Gameweek über
+    // beide Partien summiert. Für die Auto-Einwechslung zählt, ob jemand
+    // überhaupt gespielt hat; wer in einer von zwei Partien auflief, ist
+    // nicht auszuwechseln.
     const { data: minutenRows } = await supabase
       .from("player_stats")
       .select("player_id, minutes")
       .eq("gameweek_id", gameweek.id);
-    const minutenByPlayer = new Map((minutenRows ?? []).map((m) => [m.player_id, m.minutes]));
+    const minutenByPlayer = new Map<number, number>();
+    for (const m of minutenRows ?? []) {
+      minutenByPlayer.set(m.player_id, (minutenByPlayer.get(m.player_id) ?? 0) + (m.minutes ?? 0));
+    }
 
     type AufstellungsZeile = NonNullable<typeof aufstellungen>[number];
     const proKader = new Map<number, AufstellungsZeile[]>();
@@ -464,19 +474,40 @@ export async function GET(request: Request) {
     );
     const punkteVon = new Map(punkte.map((p) => [`${p.player_id}:${p.gameweek_id}`, p.points]));
 
-    // Je Spieler die Runden mit echtem Einsatz, nach Spieltagsnummer sortiert.
-    const runden = new Map<number, { nummer: number; rating: number; punkte: number }[]>();
+    // Erst je Spieler und RUNDE zusammenfassen — seit der Double Gameweek kann
+    // eine Runde zwei Statistikzeilen haben. Eine Runde zählt als ein Eintrag
+    // im Bewertungspaar: Minuten summiert, Bewertung gemittelt. Sonst könnte
+    // ein einziger Spieltag das ganze Paar füllen und die Form einer Woche
+    // allein über den Preis entscheiden.
+    const proRunde = new Map<string, { minuten: number; summe: number; anzahl: number }>();
     for (const w of werte) {
-      if (w.rating === null || (w.minutes ?? 0) < PREIS_MIN_MINUTEN) continue;
       const nummer = nummerVonGw.get(w.gameweek_id);
       if (nummer === undefined) continue;
-      const liste = runden.get(w.player_id) ?? [];
+      const schluessel = `${w.player_id}:${w.gameweek_id}`;
+      const e = proRunde.get(schluessel) ?? { minuten: 0, summe: 0, anzahl: 0 };
+      e.minuten += w.minutes ?? 0;
+      if (w.rating !== null) {
+        e.summe += Number(w.rating);
+        e.anzahl += 1;
+      }
+      proRunde.set(schluessel, e);
+    }
+
+    // Je Spieler die Runden mit echtem Einsatz, nach Spieltagsnummer sortiert.
+    const runden = new Map<number, { nummer: number; rating: number; punkte: number }[]>();
+    for (const [schluessel, e] of proRunde) {
+      if (e.anzahl === 0 || e.minuten < PREIS_MIN_MINUTEN) continue;
+      const [playerId, gameweekId] = schluessel.split(":").map(Number);
+      const nummer = nummerVonGw.get(gameweekId);
+      if (nummer === undefined) continue;
+      const liste = runden.get(playerId) ?? [];
       liste.push({
         nummer,
-        rating: Number(w.rating),
-        punkte: punkteVon.get(`${w.player_id}:${w.gameweek_id}`) ?? 0,
+        rating: e.summe / e.anzahl,
+        // fantasy_points hält bereits die Rundensumme über beide Partien.
+        punkte: punkteVon.get(schluessel) ?? 0,
       });
-      runden.set(w.player_id, liste);
+      runden.set(playerId, liste);
     }
 
     const bewegungen: { playerId: number; delta: number }[] = [];

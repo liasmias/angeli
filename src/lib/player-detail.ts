@@ -54,21 +54,28 @@ export async function loadPlayerDetails(
         .eq("gameweek_id", gameweekId),
     ]);
 
-  // Pro Club die Partie dieses Spieltags — daraus Gegner und Endstand.
-  const partieByClub = new Map<number, { opponent: string; score: string | null; kickoff: string | null }>();
+  // Pro Club die Partien dieses Spieltags — daraus Gegner und Endstand.
+  // Bewusst eine Liste: In einer Double Gameweek hat ein Verein zwei Partien,
+  // und die zweite überschrieb bisher die erste.
+  const partienByClub = new Map<number, { opponent: string; score: string | null; kickoff: string | null }[]>();
+  const merke = (
+    clubId: number | null,
+    eintrag: { opponent: string; score: string | null; kickoff: string | null }
+  ) => {
+    if (!clubId) return;
+    partienByClub.set(clubId, [...(partienByClub.get(clubId) ?? []), eintrag]);
+  };
   for (const f of fixtures ?? []) {
     const home = Array.isArray(f.home) ? f.home[0] : f.home;
     const away = Array.isArray(f.away) ? f.away[0] : f.away;
     const tore = f.home_goals !== null && f.away_goals !== null;
-    if (f.home_club_id) {
-      partieByClub.set(f.home_club_id, {
-        opponent: `${away?.short_name ?? "?"} (H)`,
-        score: tore ? `${f.home_goals}:${f.away_goals}` : null,
-        kickoff: f.kickoff,
-      });
-    }
-    if (f.away_club_id) {
-      partieByClub.set(f.away_club_id, {
+    merke(f.home_club_id, {
+      opponent: `${away?.short_name ?? "?"} (H)`,
+      score: tore ? `${f.home_goals}:${f.away_goals}` : null,
+      kickoff: f.kickoff,
+    });
+    {
+      merke(f.away_club_id, {
         opponent: `${home?.short_name ?? "?"} (A)`,
         score: tore ? `${f.away_goals}:${f.home_goals}` : null,
         kickoff: f.kickoff,
@@ -76,29 +83,52 @@ export async function loadPlayerDetails(
     }
   }
 
-  const statsById = new Map((stats ?? []).map((s) => [s.player_id, s]));
+  // Alle Zeilen je Spieler — bei zwei Partien zwei Stück.
+  const zeilenById = new Map<number, NonNullable<typeof stats>>();
+  for (const s of stats ?? []) {
+    zeilenById.set(s.player_id, [...(zeilenById.get(s.player_id) ?? []), s] as NonNullable<typeof stats>);
+  }
   const pointsById = new Map((points ?? []).map((p) => [p.player_id, p]));
   const clubById = new Map((players ?? []).map((p) => [p.id, p.club_id]));
 
   const ergebnis: Record<number, PlayerDetail> = {};
   for (const id of playerIds) {
-    const s = statsById.get(id);
+    const zeilen = zeilenById.get(id) ?? [];
     const p = pointsById.get(id);
-    const partie = clubById.get(id) ? partieByClub.get(clubById.get(id) as number) : undefined;
+    const clubId = clubById.get(id);
+    const partien = clubId ? (partienByClub.get(clubId) ?? []) : [];
+
+    // Rohwerte über alle Partien der Runde summieren; die Punkte in
+    // fantasy_points sind bereits die Rundensumme.
+    const summiert: StatFields = { ...LEER };
+    for (const z of zeilen) {
+      summiert.minutes += z.minutes;
+      summiert.goals += z.goals;
+      summiert.assists += z.assists;
+      summiert.goals_conceded += z.goals_conceded;
+      summiert.saves += z.saves;
+      summiert.penalties_saved += z.penalties_saved;
+      summiert.penalties_conceded += z.penalties_conceded;
+      summiert.yellow_cards += z.yellow_cards;
+      summiert.red_cards += z.red_cards;
+      summiert.own_goals += z.own_goals;
+    }
+
+    // Bewertung gemittelt — eine einzelne Zahl für die Runde, wie bei der
+    // Preisregel. Zeilen ohne Bewertung bleiben aussen vor.
+    const bewertet = zeilen.filter((z) => z.rating !== null);
+    const rating =
+      bewertet.length > 0
+        ? bewertet.reduce((summe, z) => summe + Number(z.rating), 0) / bewertet.length
+        : null;
+
     ergebnis[id] = {
-      stats: s
-        ? {
-            minutes: s.minutes, goals: s.goals, assists: s.assists,
-            goals_conceded: s.goals_conceded, saves: s.saves,
-            penalties_saved: s.penalties_saved, penalties_conceded: s.penalties_conceded,
-            yellow_cards: s.yellow_cards, red_cards: s.red_cards, own_goals: s.own_goals,
-          }
-        : LEER,
+      stats: zeilen.length > 0 ? summiert : LEER,
       breakdown: (p?.breakdown as Record<string, number>) ?? {},
-      rating: s?.rating ?? null,
-      opponent: partie?.opponent ?? null,
-      score: partie?.score ?? null,
-      kickoff: partie?.kickoff ?? null,
+      rating,
+      opponent: partien.length === 0 ? null : partien.map((f) => f.opponent).join(" · "),
+      score: partien.length === 0 ? null : partien.map((f) => f.score ?? "–").join(" · "),
+      kickoff: partien[0]?.kickoff ?? null,
     };
   }
   return ergebnis;
