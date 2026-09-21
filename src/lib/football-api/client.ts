@@ -95,18 +95,57 @@ interface ApiFixturePlayersResponse {
   players: ApiPlayerFixtureStats[];
 }
 
+interface ApiFixtureEvent {
+  type: string;
+  detail: string;
+  player: { id: number | null; name: string | null };
+}
+
+/**
+ * Eigentore je Spieler aus der Ereignisliste.
+ *
+ * Der Statistik-Endpunkt kennt kein Eigentor-Feld — K. Sow traf am 20.09.
+ * gegen Lugano ins eigene Tor, und in seiner Zeile stand davon nichts. Die
+ * Ereignisliste führt es als Tor mit detail "Own Goal". Ein Fehlschlag hier
+ * darf den Sync nicht stoppen: Dann bleibt es bei 0, wie bisher.
+ */
+async function getOwnGoalsByPlayer(fixtureId: number): Promise<Map<number, number>> {
+  const eigentore = new Map<number, number>();
+  try {
+    const events = await apiFootballFetch<ApiFixtureEvent[]>("/fixtures/events", {
+      fixture: String(fixtureId),
+    });
+    for (const e of events) {
+      if (e.type !== "Goal" || e.detail !== "Own Goal" || !e.player.id) continue;
+      eigentore.set(e.player.id, (eigentore.get(e.player.id) ?? 0) + 1);
+    }
+  } catch {
+    // bewusst leer — siehe oben
+  }
+  return eigentore;
+}
+
 export async function getFixturePlayerStats(
   fixtureId: number
-): Promise<Array<{ apiFootballPlayerId: number; teamApiId: number; rating: number | null; stats: StatFields }>> {
-  const teams = await apiFootballFetch<ApiFixturePlayersResponse[]>("/fixtures/players", {
-    fixture: String(fixtureId),
-  });
+): Promise<Array<{
+  apiFootballPlayerId: number;
+  /** Anzeigename der API — für die Meldung, wenn die ID fehlt. */
+  name: string;
+  teamApiId: number;
+  rating: number | null;
+  stats: StatFields;
+}>> {
+  const [teams, eigentore] = await Promise.all([
+    apiFootballFetch<ApiFixturePlayersResponse[]>("/fixtures/players", { fixture: String(fixtureId) }),
+    getOwnGoalsByPlayer(fixtureId),
+  ]);
 
   return teams.flatMap((team) =>
     team.players.map((entry) => {
       const s = entry.statistics[0];
       return {
         apiFootballPlayerId: entry.player.id,
+        name: entry.player.name,
         teamApiId: team.team.id,
         // Bewertung der API, rein informativ — zaehlt nicht fuer die Punkte.
         rating: s?.games.rating ? Number(s.games.rating) : null,
@@ -120,9 +159,8 @@ export async function getFixturePlayerStats(
           penalties_conceded: s?.penalty.commited ?? 0,
           yellow_cards: s?.cards.yellow ?? 0,
           red_cards: s?.cards.red ?? 0,
-          // Not exposed by this endpoint at all — always 0 from the sync,
-          // only ever set through an admin override.
-          own_goals: 0,
+          // Nicht im Statistik-Endpunkt — kommt aus der Ereignisliste.
+          own_goals: eigentore.get(entry.player.id) ?? 0,
         },
       };
     })

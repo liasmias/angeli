@@ -229,6 +229,8 @@ export async function GET(request: Request) {
   let beendeteSpiele = 0;
   let offeneSpiele = 0;
 
+  // Spieler mit Einsatz, die keiner Zeile im Spiel zuzuordnen waren.
+  const nichtZugeordnet: string[] = [];
   for (const fixture of fixtures) {
     const homeClubId = clubIdByApiId.get(fixture.teams.home.id);
     const awayClubId = clubIdByApiId.get(fixture.teams.away.id);
@@ -285,7 +287,16 @@ export async function GET(request: Request) {
     const playerStats = await getFixturePlayerStats(fixture.fixture.id);
     for (const entry of playerStats) {
       const playerId = playerIdByApiId.get(entry.apiFootballPlayerId);
-      if (!playerId) continue;
+      if (!playerId) {
+        // Gespielt, aber nicht zuzuordnen — das ist der Fall, der sonst
+        // unbemerkt bleibt. Silas Huber stand in Runde 8 und 9 mit ID 0 in der
+        // API und bekam zwei Runden lang keine Punkte, bis ein Mitglied es
+        // meldete. Wer ohne Einsatz fehlt, ist dagegen belanglos.
+        if (entry.stats.minutes > 0) {
+          nichtZugeordnet.push(`${entry.name} (API ${entry.apiFootballPlayerId})`);
+        }
+        continue;
+      }
 
       const teamConceded = concededByTeam.get(entry.teamApiId) ?? 0;
       await supabase.from("player_stats").upsert(
@@ -701,7 +712,10 @@ export async function GET(request: Request) {
       last_sync_at: new Date().toISOString(),
       last_sync_note:
         `GW ${gameweek.number}: ${statsSynced} Statistiken, ${liveSpiele} live, ${beendeteSpiele} beendet` +
-        (ohneDaten.length ? ` — ohne Spielerdaten: ${ohneDaten.join(", ")}` : ""),
+        (ohneDaten.length ? ` — ohne Spielerdaten: ${ohneDaten.join(", ")}` : "") +
+        (nichtZugeordnet.length
+          ? ` — nicht zugeordnet: ${[...new Set(nichtZugeordnet)].join(", ")}`
+          : ""),
     })
     .eq("id", 1)
     .then(({ error }) => {
@@ -718,6 +732,7 @@ export async function GET(request: Request) {
     playersRecomputed: touchedPlayerIds.size,
     autoSubs,
     ohneSpielerdaten: ohneDaten,
+    nichtZugeordnet: [...new Set(nichtZugeordnet)],
     captainSwaps,
     priceRises,
     priceReverts,
