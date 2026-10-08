@@ -97,6 +97,14 @@ export async function GET(request: Request) {
   const NACHLAUF_MS = 3.5 * 60 * 60 * 1000; // Spiel + Nachspielzeit + Bonus
   const NACHZUEGLER_MS = 8 * 60 * 60 * 1000; // Schlussstand fehlt noch
   const AUFFRISCHUNG_MS = 6 * 60 * 60 * 1000; // Spielplan-Kontrolle
+  // Nach dieser Frist gilt die Statistik einer Partie als endgültig.
+  //
+  // API-Football bessert Werte noch wochenlang nach: Am 08.10. wurde eine
+  // Parade von Gertmonas aus der Partie vom 19.09. gestrichen, und zwei
+  // Kadern verschwand rückwirkend ein Punkt. Für Mitglieder ist das
+  // ununterscheidbar von einem Fehler, egal welche Zahl stimmt. Ab hier
+  // ändert nur noch eine Admin-Korrektur etwas.
+  const EINFRIEREN_MS = 72 * 60 * 60 * 1000;
 
   const { data: bekannteFixtures } = await supabase
     .from("fixtures")
@@ -231,6 +239,18 @@ export async function GET(request: Request) {
 
   // Spieler mit Einsatz, die keiner Zeile im Spiel zuzuordnen waren.
   const nichtZugeordnet: string[] = [];
+  // Eingefrorene Partien, für die Statusnotiz.
+  const eingefroren: string[] = [];
+
+  // Partien, zu denen schon Statistik vorliegt. Die Frist greift nur für
+  // diese: Käme eine Partie wegen einer Störung erst nach drei Tagen an,
+  // würde sie sonst nie erfasst.
+  const { data: schonErfasst } = await supabase
+    .from("player_stats")
+    .select("fixture_id")
+    .eq("gameweek_id", gameweek.id);
+  const mitDaten = new Set((schonErfasst ?? []).map((z) => z.fixture_id));
+
   for (const fixture of fixtures) {
     const homeClubId = clubIdByApiId.get(fixture.teams.home.id);
     const awayClubId = clubIdByApiId.get(fixture.teams.away.id);
@@ -283,6 +303,18 @@ export async function GET(request: Request) {
       [fixture.teams.home.id, fixture.goals.away ?? 0],
       [fixture.teams.away.id, fixture.goals.home ?? 0],
     ]);
+
+    // Endgültige Partie nicht mehr anfassen — siehe EINFRIEREN_MS.
+    const anpfiff = fixture.fixture.date ? new Date(fixture.fixture.date).getTime() : null;
+    if (
+      anpfiff !== null &&
+      jetzt - anpfiff > EINFRIEREN_MS &&
+      fixtureRow?.id !== undefined &&
+      mitDaten.has(fixtureRow.id)
+    ) {
+      eingefroren.push(`${fixture.teams.home.name}–${fixture.teams.away.name}`);
+      continue;
+    }
 
     const playerStats = await getFixturePlayerStats(fixture.fixture.id);
     for (const entry of playerStats) {
@@ -715,7 +747,8 @@ export async function GET(request: Request) {
         (ohneDaten.length ? ` — ohne Spielerdaten: ${ohneDaten.join(", ")}` : "") +
         (nichtZugeordnet.length
           ? ` — nicht zugeordnet: ${[...new Set(nichtZugeordnet)].join(", ")}`
-          : ""),
+          : "") +
+        (eingefroren.length ? ` — eingefroren: ${eingefroren.length}` : ""),
     })
     .eq("id", 1)
     .then(({ error }) => {
@@ -733,6 +766,7 @@ export async function GET(request: Request) {
     autoSubs,
     ohneSpielerdaten: ohneDaten,
     nichtZugeordnet: [...new Set(nichtZugeordnet)],
+    eingefroren,
     captainSwaps,
     priceRises,
     priceReverts,
