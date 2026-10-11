@@ -202,8 +202,40 @@ export async function GET(request: Request) {
   const { data: clubs } = await supabase.from("clubs").select("id, api_football_team_id");
   const clubIdByApiId = new Map((clubs ?? []).filter((c) => c.api_football_team_id !== null).map((c) => [c.api_football_team_id as number, c.id]));
 
-  const { data: players } = await supabase.from("players").select("id, api_football_player_id");
+  const { data: players } = await supabase
+    .from("players")
+    .select("id, api_football_player_id, first_name, last_name, club_id, is_active");
   const playerIdByApiId = new Map((players ?? []).filter((p) => p.api_football_player_id !== null).map((p) => [p.api_football_player_id as number, p.id]));
+
+  // Rückfall über den Namen, wenn die API-ID nicht trägt.
+  //
+  // API-Football liefert einzelne Spieler mal mit echter ID, mal mit ID 0:
+  // Silas Huber stand in Runde 8, 10 und 11 mit 0 in der Statistik, in Runde 9
+  // mit seiner richtigen. Jedes Mal fehlten seine Punkte, bis ein Mitglied es
+  // meldete. Zugeordnet wird nur, wenn im selben Club genau EIN aktiver
+  // Spieler denselben Nachnamen trägt — bei zwei Kandidaten bleibt es offen
+  // und erscheint in der Statusnotiz, statt einen falschen zu treffen.
+  const normal = (t: string) =>
+    t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const nachname = (voll: string) => {
+    const teile = normal(voll).replace(/^[a-z]\.\s*/, "").split(/\s+/);
+    return teile[teile.length - 1] ?? "";
+  };
+  const perNamen = new Map<string, number[]>();
+  for (const p of players ?? []) {
+    if (!p.is_active || !p.club_id) continue;
+    const schluessel = `${p.club_id}:${nachname([p.first_name, p.last_name].filter(Boolean).join(" "))}`;
+    perNamen.set(schluessel, [...(perNamen.get(schluessel) ?? []), p.id]);
+  }
+  const spielerFinden = (apiId: number, name: string, teamApiId: number) => {
+    if (apiId) return playerIdByApiId.get(apiId);
+    // Nur bei ID 0: Eine unbekannte echte ID ist meist ein anderer Spieler,
+    // etwa ein Junior mit gleichem Nachnamen im selben Club.
+    const clubId = clubIdByApiId.get(teamApiId);
+    if (!clubId || !name) return undefined;
+    const treffer = perNamen.get(`${clubId}:${nachname(name)}`) ?? [];
+    return treffer.length === 1 ? treffer[0] : undefined;
+  };
 
   // Von Hand terminierte Partien: Ihre Runde bei API-Football stimmt nicht
   // mehr mit unserer überein. Wir schneiden sie aus der Rundenliste heraus und
@@ -318,7 +350,7 @@ export async function GET(request: Request) {
 
     const playerStats = await getFixturePlayerStats(fixture.fixture.id);
     for (const entry of playerStats) {
-      const playerId = playerIdByApiId.get(entry.apiFootballPlayerId);
+      const playerId = spielerFinden(entry.apiFootballPlayerId, entry.name, entry.teamApiId);
       if (!playerId) {
         // Gespielt, aber nicht zuzuordnen — das ist der Fall, der sonst
         // unbemerkt bleibt. Silas Huber stand in Runde 8 und 9 mit ID 0 in der
