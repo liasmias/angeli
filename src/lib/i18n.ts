@@ -275,6 +275,11 @@ const de = {
   },
   leaderboard: {
     title: "Rangliste",
+    viewTotal: "Gesamt",
+    viewGameweek: "Spieltag",
+    gwPick: "Spieltag wählen",
+    gwIntro: (n: number) =>
+      `Punkte aus Spieltag ${n}, inklusive Kapitän, Bench Boost und Transferabzügen. Manuelle Korrekturen zählen nur in der Gesamtwertung.`,
     intro:
       "Auf einen Namen tippen, um dessen Aufstellung zu sehen — sichtbar werden Teams erst nach der Deadline des jeweiligen Spieltags.",
     team: "Team",
@@ -613,6 +618,11 @@ const en: typeof de = {
   },
   leaderboard: {
     title: "Leaderboard",
+    viewTotal: "Overall",
+    viewGameweek: "Gameweek",
+    gwPick: "Choose gameweek",
+    gwIntro: (n: number) =>
+      `Points from gameweek ${n}, including captain, Bench Boost and transfer hits. Manual adjustments only count overall.`,
     intro: "Tap a name to see their lineup — teams become visible after each gameweek's deadline.",
     team: "Team",
     points: "Points",
