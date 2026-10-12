@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
@@ -53,6 +53,64 @@ function loadFavorites(): string[] {
   }
 }
 
+/**
+ * Eine Ranglistenzeile — bewusst ausserhalb von LeaderboardTable.
+ *
+ * Vorher war sie innerhalb definiert. Damit war "Zeile" bei jedem Render ein
+ * neuer Komponententyp, und React baute bei jedem Tastendruck in der Suche
+ * und jedem Stern alle Zeilen vollständig ab und neu auf — samt Verlust von
+ * Fokus und Hover-Zustand. Mit memo wird eine Zeile nur neu gezeichnet, wenn
+ * sich ihre eigenen Werte ändern.
+ */
+const Zeile = memo(function Zeile({
+  row,
+  istFavorit,
+  onToggle,
+  t,
+}: {
+  row: StandingRow;
+  istFavorit: boolean;
+  onToggle: (username: string) => void;
+  t: ReturnType<typeof getDictionary>["leaderboard"];
+}) {
+  return (
+    <li className="flex items-center">
+      <button
+        type="button"
+        onClick={() => onToggle(row.username)}
+        aria-label={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
+        title={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
+        className={`pressable ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg ${
+          istFavorit ? "text-amber-400" : "text-brand-deep/25 hover:text-amber-400"
+        }`}
+      >
+        {istFavorit ? "★" : "☆"}
+      </button>
+      <Link
+        href={`/squad/${encodeURIComponent(row.username)}`}
+        className="pressable-subtle flex min-w-0 flex-1 items-center justify-between gap-3 py-3 pl-1 pr-5 hover:bg-brand-deep/5"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="w-8 shrink-0 text-center font-bold tabular-nums text-brand-deep/40">
+            {MEDALS[row.rank - 1] ?? row.rank}
+          </span>
+          <span className="truncate font-semibold text-brand-deep">{row.username}</span>
+        </span>
+        <span className="ml-auto flex shrink-0 items-center">
+          <Bewegung wert={row.movement} />
+        </span>
+        {/* Ohne Pfeil: Die ganze Zeile ist bereits ein Link, das Zeichen war
+            nur Dekoration — auf dem Handy brachen dafuer die Namen ab. */}
+        <span className="flex shrink-0 items-center">
+          <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
+            {row.total_points}
+          </span>
+        </span>
+      </Link>
+    </li>
+  );
+});
+
 export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; lang: Lang }) {
   const t = getDictionary(lang).leaderboard;
   const [search, setSearch] = useState("");
@@ -60,7 +118,8 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
   // localStorage gibt es erst im Browser — nach dem ersten Render laden.
   useEffect(() => setFavorites(loadFavorites()), []);
 
-  function toggleFavorite(username: string) {
+  // Stabile Referenz, sonst hebelt eine neue Funktion je Render das memo aus.
+  const toggleFavorite = useCallback((username: string) => {
     setFavorites((prev) => {
       const next = prev.includes(username)
         ? prev.filter((f) => f !== username)
@@ -72,59 +131,22 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
       }
       return next;
     });
-  }
+  }, []);
 
   const favoriteRows = useMemo(
     () => rows.filter((r) => favorites.includes(r.username)),
     [rows, favorites]
   );
+  // Das Eingabefeld folgt sofort, die Liste darf einen Moment hinterher sein —
+  // so blockiert das Filtern nie das Tippen.
+  const suche = useDeferredValue(search);
   const visible = useMemo(
     () =>
-      search === ""
+      suche === ""
         ? rows
-        : rows.filter((r) => r.username.toLowerCase().includes(search.toLowerCase())),
-    [rows, search]
+        : rows.filter((r) => r.username.toLowerCase().includes(suche.toLowerCase())),
+    [rows, suche]
   );
-
-  function Zeile({ row }: { row: StandingRow }) {
-    const istFavorit = favorites.includes(row.username);
-    return (
-      <li className="flex items-center">
-        <button
-          type="button"
-          onClick={() => toggleFavorite(row.username)}
-          aria-label={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
-          title={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
-          className={`pressable ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg ${
-            istFavorit ? "text-amber-400" : "text-brand-deep/25 hover:text-amber-400"
-          }`}
-        >
-          {istFavorit ? "★" : "☆"}
-        </button>
-        <Link
-          href={`/squad/${encodeURIComponent(row.username)}`}
-          className="pressable-subtle flex min-w-0 flex-1 items-center justify-between gap-3 py-3 pl-1 pr-5 hover:bg-brand-deep/5"
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <span className="w-8 shrink-0 text-center font-bold tabular-nums text-brand-deep/40">
-              {MEDALS[row.rank - 1] ?? row.rank}
-            </span>
-            <span className="truncate font-semibold text-brand-deep">{row.username}</span>
-          </span>
-          <span className="ml-auto flex shrink-0 items-center">
-            <Bewegung wert={row.movement} />
-          </span>
-          {/* Ohne Pfeil: Die ganze Zeile ist bereits ein Link, das Zeichen war
-              nur Dekoration — auf dem Handy brachen dafuer die Namen ab. */}
-          <span className="flex shrink-0 items-center">
-            <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
-              {row.total_points}
-            </span>
-          </span>
-        </Link>
-      </li>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -136,7 +158,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
           </div>
           <ol className="divide-y divide-brand-deep/5">
             {favoriteRows.map((row) => (
-              <Zeile key={row.user_id} row={row} />
+              <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} onToggle={toggleFavorite} t={t} />
             ))}
           </ol>
         </div>
@@ -157,7 +179,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
         </div>
         <ol className="divide-y divide-brand-deep/5">
           {visible.map((row) => (
-            <Zeile key={row.user_id} row={row} />
+            <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} onToggle={toggleFavorite} t={t} />
           ))}
           {rows.length > 0 && visible.length === 0 && (
             <li className="px-5 py-8 text-center text-sm text-brand-deep/50">{t.noMatch}</li>

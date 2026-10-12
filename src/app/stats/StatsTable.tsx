@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { Position } from "@/lib/database.types";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
@@ -58,6 +58,113 @@ type SortKey =
  */
 const PREIS_GRENZEN = [4.5, 5, 5.5, 6, 6.5, 7, 8, 9, 10, 12];
 
+/** Zeilen je Nachladeschritt. */
+const SCHRITT = 50;
+
+/**
+ * Eine Tabellenzeile. memo: Ändert sich nur der Filter, bleiben die übrigen
+ * Zeilen unangetastet, statt dass React jede einzelne neu vergleicht.
+ */
+const StatsZeile = memo(function StatsZeile({
+  r,
+  nummer,
+  t,
+  mitGw,
+}: {
+  r: StatsRow;
+  nummer: number;
+  t: ReturnType<typeof getDictionary>["stats"];
+  mitGw: boolean;
+}) {
+  return (
+              <tr className="hover:bg-brand-deep/5">
+                <td className="px-2 py-2 tabular-nums text-brand-deep/40 sm:px-3">{nummer}</td>
+                <td className="px-2 py-2 sm:px-3">
+                  <span className="flex items-center gap-2 font-semibold text-brand-deep">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/jerseys/${r.club}.png`}
+                      alt=""
+                      width={22}
+                      height={22}
+                      loading="lazy"
+                      decoding="async"
+                      className="shrink-0 select-none"
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate">{r.name}</span>
+                      {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
+                      <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
+                        {r.club} · {r.position} · {r.price.toFixed(1)}
+                        {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
+                        {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
+                        {r.minutes > 0 && ` · ${r.minutes}′`}
+                        {r.rating !== null && ` · Ø★ ${r.rating.toFixed(1)}`}
+                        {r.goals > 0 && ` · ⚽ ${r.goals}`}
+                        {r.assists > 0 && ` · 🅰 ${r.assists}`}
+                        {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
+                        {r.bonus > 0 && ` · ⭐ ${r.bonus}`}
+                        {r.owned > 0 && ` · 👥 ${r.owned}%`}
+                      </span>
+                    </span>
+                  </span>
+                </td>
+                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.club}</td>
+                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell">
+                  {r.price.toFixed(1)}
+                  {r.priceDelta !== 0 && (
+                    <span
+                      className={`ml-1 text-[11px] font-bold ${
+                        r.priceDelta > 0 ? "text-brand-grass" : "text-brand-magenta"
+                      }`}
+                      title={t.priceDeltaTitle(r.priceDelta)}
+                    >
+                      {r.priceDelta > 0 ? "▲" : "▼"}
+                    </span>
+                  )}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums font-semibold text-brand-deep/70 sm:table-cell">
+                  {r.form === null ? "—" : r.form.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.minutes}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.rating === null ? "—" : r.rating.toFixed(1)}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.goals}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.assists}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.cleanSheets ?? "—"}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.bonus}
+                </td>
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                  {r.owned} %
+                </td>
+                {mitGw && (
+                  <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
+                    {r.latestPoints ?? "—"}
+                  </td>
+                )}
+                <td className="px-2 py-2 text-right sm:px-3">
+                  <span className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
+                    {r.totalPoints}
+                  </span>
+                </td>
+              </tr>
+  );
+});
+
 export default function StatsTable({
   rows,
   latestGameweekNumber,
@@ -72,6 +179,9 @@ export default function StatsTable({
   const [filterClub, setFilterClub] = useState<string>("ALL");
   const [maxPreis, setMaxPreis] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  // Das Eingabefeld folgt jedem Tastendruck sofort, die Tabelle darf einen
+  // Moment hinterher sein — so blockiert das Filtern nie das Tippen.
+  const suche = useDeferredValue(search);
   const [sortKey, setSortKey] = useState<SortKey>("totalPoints");
   const [sortDesc, setSortDesc] = useState(true);
 
@@ -83,7 +193,7 @@ export default function StatsTable({
         (filterPos === "ALL" || r.position === filterPos) &&
         (filterClub === "ALL" || r.club === filterClub) &&
         (maxPreis === null || r.price <= maxPreis) &&
-        (search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
+        (suche === "" || r.name.toLowerCase().includes(suche.toLowerCase()))
     );
     const dir = sortDesc ? -1 : 1;
     return [...filtered].sort((a, b) => {
@@ -92,7 +202,41 @@ export default function StatsTable({
       const bv = (b[sortKey] ?? -Infinity) as number;
       return dir * (av - bv);
     });
-  }, [rows, filterPos, filterClub, maxPreis, search, sortKey, sortDesc]);
+  }, [rows, filterPos, filterClub, maxPreis, suche, sortKey, sortDesc]);
+
+  // ---------- Schrittweises Rendern ----------
+  //
+  // Alle 382 Zeilen auf einmal ergaben über 9000 DOM-Knoten. Jeder Klick auf
+  // einen Spaltenkopf musste sie alle neu ordnen und neu zeichnen — gemessen
+  // rund 130 ms auf einem schnellen Rechner, auf einem Handy ein Mehrfaches.
+  // Gerendert werden jetzt die ersten SCHRITT Zeilen; weitere folgen, sobald
+  // man in ihre Nähe scrollt. Sortieren und Filtern bleiben über alle Spieler,
+  // es wird nur weniger gezeichnet.
+  const [anzahl, setAnzahl] = useState(SCHRITT);
+  // Bei neuer Sortierung oder neuem Filter wieder oben anfangen — direkt im
+  // Render statt in einem Effekt, damit kein Zwischenbild entsteht.
+  const ansichtSchluessel = `${filterPos}|${filterClub}|${maxPreis}|${suche}|${sortKey}|${sortDesc}`;
+  const [letzteAnsicht, setLetzteAnsicht] = useState(ansichtSchluessel);
+  if (letzteAnsicht !== ansichtSchluessel) {
+    setLetzteAnsicht(ansichtSchluessel);
+    setAnzahl(SCHRITT);
+  }
+  const gerendert = visible.slice(0, anzahl);
+
+  const fuehler = useRef<HTMLTableRowElement | null>(null);
+  useEffect(() => {
+    const el = fuehler.current;
+    if (!el) return;
+    const beobachter = new IntersectionObserver(
+      (eintraege) => {
+        if (eintraege.some((e) => e.isIntersecting)) setAnzahl((n) => n + SCHRITT);
+      },
+      // Früh nachladen, damit beim normalen Scrollen nie ein Ende sichtbar wird.
+      { rootMargin: "800px 0px" }
+    );
+    beobachter.observe(el);
+    return () => beobachter.disconnect();
+  }, [gerendert.length, visible.length]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDesc((d) => !d);
@@ -278,91 +422,14 @@ export default function StatsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-deep/5">
-            {visible.map((r, i) => (
-              <tr key={r.id} className="hover:bg-brand-deep/5">
-                <td className="px-2 py-2 tabular-nums text-brand-deep/40 sm:px-3">{i + 1}</td>
-                <td className="px-2 py-2 sm:px-3">
-                  <span className="flex items-center gap-2 font-semibold text-brand-deep">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/jerseys/${r.club}.png`}
-                      alt=""
-                      width={22}
-                      height={22}
-                      className="shrink-0 select-none"
-                    />
-                    <span className="min-w-0">
-                      <span className="block truncate">{r.name}</span>
-                      {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
-                      <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
-                        {r.club} · {r.position} · {r.price.toFixed(1)}
-                        {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
-                        {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
-                        {r.minutes > 0 && ` · ${r.minutes}′`}
-                        {r.rating !== null && ` · Ø★ ${r.rating.toFixed(1)}`}
-                        {r.goals > 0 && ` · ⚽ ${r.goals}`}
-                        {r.assists > 0 && ` · 🅰 ${r.assists}`}
-                        {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
-                        {r.bonus > 0 && ` · ⭐ ${r.bonus}`}
-                        {r.owned > 0 && ` · 👥 ${r.owned}%`}
-                      </span>
-                    </span>
-                  </span>
-                </td>
-                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.club}</td>
-                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.position}</td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell">
-                  {r.price.toFixed(1)}
-                  {r.priceDelta !== 0 && (
-                    <span
-                      className={`ml-1 text-[11px] font-bold ${
-                        r.priceDelta > 0 ? "text-brand-grass" : "text-brand-magenta"
-                      }`}
-                      title={t.priceDeltaTitle(r.priceDelta)}
-                    >
-                      {r.priceDelta > 0 ? "▲" : "▼"}
-                    </span>
-                  )}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums font-semibold text-brand-deep/70 sm:table-cell">
-                  {r.form === null ? "—" : r.form.toFixed(1)}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1)}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.minutes}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.rating === null ? "—" : r.rating.toFixed(1)}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.goals}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.assists}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.cleanSheets ?? "—"}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.bonus}
-                </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
-                  {r.owned} %
-                </td>
-                {latestGameweekNumber !== null && (
-                  <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
-                    {r.latestPoints ?? "—"}
-                  </td>
-                )}
-                <td className="px-2 py-2 text-right sm:px-3">
-                  <span className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 font-bold tabular-nums text-brand-deep">
-                    {r.totalPoints}
-                  </span>
-                </td>
-              </tr>
+            {gerendert.map((r, i) => (
+              <StatsZeile key={r.id} r={r} nummer={i + 1} t={t} mitGw={latestGameweekNumber !== null} />
             ))}
+            {gerendert.length < visible.length && (
+              <tr ref={fuehler} aria-hidden>
+                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="h-10" />
+              </tr>
+            )}
             {visible.length === 0 && (
               <tr>
                 <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="px-3 py-8 text-center text-brand-deep/50">

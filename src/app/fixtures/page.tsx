@@ -98,10 +98,16 @@ export default async function FixturesPage() {
     for (const b of top) menge.add(b.playerId);
     chipIdsByGw.set(gwId, menge);
   }
-  const detailsByGw = new Map<number, Record<number, PlayerDetail>>();
-  for (const [gwId, ids] of chipIdsByGw) {
-    detailsByGw.set(gwId, await loadPlayerDetails(supabase, gwId, [...ids]));
-  }
+  // Parallel statt nacheinander: Jede Runde kostet vier Abfragen, und bei
+  // zehn gespielten Runden warteten vierzig Datenbank-Rundreisen aufeinander.
+  // Das war der Grossteil der 1,2 s bis zum ersten Byte dieser Seite.
+  const detailsByGw = new Map<number, Record<number, PlayerDetail>>(
+    await Promise.all(
+      [...chipIdsByGw].map(
+        async ([gwId, ids]) => [gwId, await loadPlayerDetails(supabase, gwId, [...ids])] as const
+      )
+    )
+  );
 
   const now = Date.now();
   // Aktueller Spieltag zuoberst: der erste, dessen Deadline noch bevorsteht —
