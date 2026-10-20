@@ -82,21 +82,6 @@ h2 {
   }
 }
 
-/* Sanftes Grössen-Pulsieren für den Späteinsteiger-Sticker — Opazität
-   bleibt konstant, damit der Text jederzeit lesbar ist. */
-@keyframes badge-pulse {
-  0%,
-  100% {
-    scale: 1;
-  }
-  50% {
-    scale: 1.07;
-  }
-}
-.pulse-badge {
-  animation: badge-pulse 1.8s ease-in-out infinite;
-}
-
 /* Endlosband der Club-Trikots auf der Startseite. Die Liste liegt doppelt
    im DOM; bei −50% ist die zweite Hälfte deckungsgleich mit dem Start —
    die Schleife hat dadurch keinen sichtbaren Sprung. */
