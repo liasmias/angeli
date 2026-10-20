@@ -32,3 +32,24 @@ export function shortenPlayerName(firstName: string | null, lastName: string): s
 
   return `${parts[0][0].toUpperCase()}. ${parts.slice(surnameStart).join(" ")}`;
 }
+
+/**
+ * Der Nachname allein, ohne Vornamen oder Initiale.
+ *
+ * "A. Sanches" → "Sanches", "M. Di Giusto" → "Di Giusto",
+ * "Yannik Bettkober" → "Bettkober", "Daniel Dos Santos" → "Dos Santos".
+ * Einzelnamen ("Boteli", "Metinho") bleiben, wie sie sind.
+ */
+export function surnameOf(firstName: string | null, lastName: string): string {
+  const kurz = shortenPlayerName(firstName, lastName);
+  // Alle führenden Initialen, nicht nur die erste: "B. H. Freimann" ergab
+  // sonst den Nachnamen "H. Freimann" und entging der Doppelprüfung mit
+  // "B. Freimann".
+  return kurz.replace(/^(?:\p{Lu}\.\s*)+/u, "").trim() || kurz;
+}
+
+/** Vergleichsschlüssel: Akzente und Gross-/Kleinschreibung zählen nicht —
+ *  "Stevanovic" und "Stevanović" gelten als derselbe Nachname. */
+export function surnameKey(name: string): string {
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}

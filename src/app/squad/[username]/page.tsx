@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getGameweekPoints, getRank } from "@/lib/gameweek-summary";
 import { shortenPlayerName } from "@/lib/player-name";
+import { getDisplayNames } from "@/lib/player-display";
 import GameweekNav from "@/app/team/GameweekNav";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
@@ -23,6 +24,8 @@ export default async function SquadPage({
   params: Promise<{ username: string }>;
   searchParams: Promise<{ gw?: string }>;
 }) {
+  // Anzeigenamen früh anstossen — läuft parallel zu den übrigen Abfragen.
+  const namenLaden = getDisplayNames();
   const [{ username: rawUsername }, { gw }] = await Promise.all([params, searchParams]);
   const username = decodeURIComponent(rawUsername);
   const supabase = await createClient();
@@ -112,12 +115,13 @@ export default async function SquadPage({
     (snapshot ?? []).map((r) => r.player_id)
   );
 
+  const namen = await namenLaden;
   const players: PastPlayer[] = (snapshot ?? []).map((r) => {
     const p = Array.isArray(r.players) ? r.players[0] : r.players;
     const club = p ? (Array.isArray(p.clubs) ? p.clubs[0] : p.clubs) : null;
     return {
       playerId: r.player_id,
-      name: p ? shortenPlayerName(p.first_name, p.last_name) : "?",
+      name: namen.get(r.player_id) ?? (p ? shortenPlayerName(p.first_name, p.last_name) : "?"),
       club: club?.short_name ?? club?.name ?? "—",
       position: p?.position ?? "MID",
       isStarting: r.is_starting,

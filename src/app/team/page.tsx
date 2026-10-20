@@ -3,6 +3,7 @@ import { getTransferBudget } from "@/lib/transfers";
 import { alleZeilen } from "@/lib/supabase/paginate";
 import { getGameweekPoints, getRank, getRankAt } from "@/lib/gameweek-summary";
 import { shortenPlayerName } from "@/lib/player-name";
+import { getDisplayNames } from "@/lib/player-display";
 import GameweekNav from "./GameweekNav";
 import PastGameweek, { type PastPlayer } from "./PastGameweek";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
@@ -16,6 +17,8 @@ export default async function TeamPage({
 }: {
   searchParams: Promise<{ gw?: string }>;
 }) {
+  // Anzeigenamen früh anstossen — läuft parallel zu den übrigen Abfragen.
+  const namenLaden = getDisplayNames();
   const { gw } = await searchParams;
   const supabase = await createClient();
   const lang = await getLang();
@@ -164,12 +167,13 @@ export default async function TeamPage({
       (snapshot ?? []).map((r) => r.player_id)
     );
 
+    const namen = await namenLaden;
     const pastPlayers: PastPlayer[] = (snapshot ?? []).map((r) => {
       const p = Array.isArray(r.players) ? r.players[0] : r.players;
       const club = p ? (Array.isArray(p.clubs) ? p.clubs[0] : p.clubs) : null;
       return {
         playerId: r.player_id,
-        name: p ? shortenPlayerName(p.first_name, p.last_name) : "?",
+        name: namen.get(r.player_id) ?? (p ? shortenPlayerName(p.first_name, p.last_name) : "?"),
         club: club?.short_name ?? club?.name ?? "—",
         position: p?.position ?? "MID",
         isStarting: r.is_starting,
@@ -353,12 +357,13 @@ export default async function TeamPage({
     };
   });
 
+  const namen = await namenLaden;
   const playerOptions: PlayerOption[] = (players ?? []).map((p) => {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
     const partien = p.club_id ? (partienByClub.get(p.club_id) ?? []) : [];
     return {
       id: p.id,
-      name: shortenPlayerName(p.first_name, p.last_name),
+      name: namen.get(p.id) ?? shortenPlayerName(p.first_name, p.last_name),
       position: p.position,
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",

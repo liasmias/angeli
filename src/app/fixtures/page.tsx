@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
+import { getDisplayNames } from "@/lib/player-display";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
 import { loadPlayerDetails, type PlayerDetail } from "@/lib/player-detail";
@@ -23,6 +24,8 @@ interface BestPlayer {
 }
 
 export default async function FixturesPage() {
+  // Anzeigenamen früh anstossen — läuft parallel zu den übrigen Abfragen.
+  const namenLaden = getDisplayNames();
   const supabase = await createClient();
   const lang = await getLang();
   const t = getDictionary(lang).fixtures;
@@ -56,11 +59,12 @@ export default async function FixturesPage() {
       supabase.from("players").select("id, first_name, last_name, position, clubs(short_name)"),
     ]);
 
+  const namen = await namenLaden;
   const spielerById = new Map(
     (players ?? []).map((p) => {
       const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
       return [p.id, {
-        name: shortenPlayerName(p.first_name, p.last_name),
+        name: namen.get(p.id) ?? shortenPlayerName(p.first_name, p.last_name),
         club: club?.short_name ?? "—",
         position: p.position,
       }];

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { shortenPlayerName } from "@/lib/player-name";
+import { getDisplayNames } from "@/lib/player-display";
 import StatsTable, { type StatsRow } from "./StatsTable";
 import { getLang } from "@/lib/lang";
 import { getOwnershipPercent } from "@/lib/ownership";
@@ -7,6 +8,8 @@ import { getDictionary } from "@/lib/i18n";
 import { alleZeilen } from "@/lib/supabase/paginate";
 
 export default async function StatsPage() {
+  // Anzeigenamen früh anstossen — läuft parallel zu den übrigen Abfragen.
+  const namenLaden = getDisplayNames();
   const supabase = await createClient();
   const lang = await getLang();
   const t = getDictionary(lang).stats;
@@ -107,11 +110,12 @@ export default async function StatsPage() {
     }
   }
 
+  const namen = await namenLaden;
   const rows: StatsRow[] = (players ?? []).map((p) => {
     const club = Array.isArray(p.clubs) ? p.clubs[0] : p.clubs;
     return {
       id: p.id,
-      name: shortenPlayerName(p.first_name, p.last_name),
+      name: namen.get(p.id) ?? shortenPlayerName(p.first_name, p.last_name),
       position: p.position,
       price: Number(p.price),
       club: club?.short_name ?? club?.name ?? "—",
