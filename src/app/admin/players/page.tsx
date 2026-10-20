@@ -96,7 +96,7 @@ export default async function AdminPlayersPage() {
           />
           <button
             type="submit"
-            className="pressable rounded-full bg-brand-accent px-5 py-2 font-bold text-brand-deep sm:col-span-2 sm:justify-self-start"
+            className="pressable fase-knopf bg-brand-accent px-5 py-2 font-bold text-brand-deep sm:col-span-2 sm:justify-self-start"
           >
             Spieler anlegen
           </button>

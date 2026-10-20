@@ -78,6 +78,23 @@ body:has(main.startseite) {
     linear-gradient(115deg, var(--brand-deep) 0%, #145c30 60%, #082616 100%);
 }
 
+/* Knöpfe mit derselben gefasten Ecke wie Karten und Fenster, nur kleiner.
+   Ein Rahmen würde an den Fasen abgeschnitten — umrandete Knöpfe bekommen
+   deshalb eine halbtransparente Fläche statt eines Rands. */
+.fase-knopf {
+  --fase: 7px;
+  clip-path: polygon(
+    var(--fase) 0,
+    calc(100% - var(--fase)) 0,
+    100% var(--fase),
+    100% calc(100% - var(--fase)),
+    calc(100% - var(--fase)) 100%,
+    var(--fase) 100%,
+    0 calc(100% - var(--fase)),
+    0 var(--fase)
+  );
+}
+
 /* ===== Gefaste Ecken (Chamfer) =====
    Fenster/Karten bekommen statt Rundungen einen Fasenschnitt — vier
    abgeschnittene Ecken, geometrisch ein Achteck. Moderne Browser können

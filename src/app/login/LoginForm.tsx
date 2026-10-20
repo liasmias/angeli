@@ -40,7 +40,7 @@ export default function LoginForm({ lang }: { lang: Lang }) {
           <button
             disabled={pending}
             type="submit"
-            className="pressable mt-1 rounded-full bg-brand-accent px-3 py-2.5 font-bold text-brand-deep disabled:opacity-50"
+            className="pressable mt-1 fase-knopf bg-brand-accent px-3 py-2.5 font-bold text-brand-deep disabled:opacity-50"
           >
             {pending ? t.checking : t.login}
           </button>

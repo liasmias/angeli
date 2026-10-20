@@ -130,7 +130,7 @@ export default function MobileMenu({
                   <form action={logout}>
                     <button
                       type="submit"
-                      className="pressable rounded-lg border border-white/30 px-4 py-2.5 text-sm font-semibold text-white"
+                      className="pressable fase-knopf bg-white/10 px-4 py-2.5 text-sm font-semibold text-white"
                     >
                       {labels.logout}
                     </button>
@@ -140,13 +140,13 @@ export default function MobileMenu({
                 <div className="flex items-center gap-3">
                   <Link
                     href="/login"
-                    className="flex-1 rounded-lg border border-white/30 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                    className="flex-1 fase-knopf bg-white/10 px-4 py-2.5 text-center text-sm font-semibold text-white"
                   >
                     {labels.login}
                   </Link>
                   <Link
                     href="/signup"
-                    className="pressable flex-1 rounded-lg bg-brand-accent px-4 py-2.5 text-center text-sm font-bold text-brand-deep"
+                    className="pressable flex-1 fase-knopf bg-brand-accent px-4 py-2.5 text-center text-sm font-bold text-brand-deep"
                   >
                     {labels.signup}
                   </Link>

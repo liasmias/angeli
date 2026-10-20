@@ -1688,7 +1688,7 @@ export default function TeamBuilder({
             type="button"
             disabled={isPending || !gameweekOpen}
             onClick={handleSave}
-            className="pressable w-full max-w-xs rounded-full bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
+            className="pressable w-full max-w-xs fase-knopf bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
           >
             {isPending ? (
                 <span className="flex items-center justify-center gap-2">
@@ -1729,7 +1729,7 @@ export default function TeamBuilder({
               <button
                 type="button"
                 onClick={() => setMarktOffen(true)}
-                className="pressable flex-1 rounded-full bg-white/10 px-3 py-3 text-sm font-bold text-white"
+                className="pressable flex-1 fase-knopf bg-white/10 px-3 py-3 text-sm font-bold text-white"
               >
                 {t.openMarket}
               </button>
@@ -1737,7 +1737,7 @@ export default function TeamBuilder({
                 type="button"
                 disabled={isPending || !gameweekOpen}
                 onClick={handleSave}
-                className="pressable flex-[1.3] rounded-full bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
+                className="pressable flex-[1.3] fase-knopf bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
               >
                 {isPending ? (
                 <span className="flex items-center justify-center gap-2">

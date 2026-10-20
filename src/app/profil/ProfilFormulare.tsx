@@ -47,7 +47,7 @@ export function UsernameFormular({ lang, aktuell }: { lang: Lang; aktuell: strin
         <button
           type="submit"
           disabled={pending}
-          className="pressable rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
+          className="pressable fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
         >
           {pending ? t.saving : t.save}
         </button>
@@ -102,7 +102,7 @@ export function PasswortFormular({ lang }: { lang: Lang }) {
         <button
           type="submit"
           disabled={pending}
-          className="pressable self-start rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
+          className="pressable self-start fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
         >
           {pending ? t.saving : t.passwordTitle}
         </button>
@@ -133,7 +133,7 @@ export function LoeschenFormular({ lang, username }: { lang: Lang; username: str
           <button
             type="submit"
             disabled={pending}
-            className="pressable self-start rounded-full bg-brand-danger px-5 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="pressable self-start fase-knopf bg-brand-danger px-5 py-2 text-sm font-bold text-white disabled:opacity-50"
           >
             {pending ? t.deleting : t.deleteButton}
           </button>
@@ -164,7 +164,7 @@ export function MeldungFormular({ lang }: { lang: Lang }) {
         <button
           type="submit"
           disabled={pending}
-          className="pressable self-start rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
+          className="pressable self-start fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
         >
           {pending ? t.reportSending : t.reportSend}
         </button>

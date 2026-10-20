@@ -59,7 +59,7 @@ export default async function Nav() {
       <button
         type="submit"
         title={lang === "de" ? "Switch to English" : "Auf Deutsch wechseln"}
-        className="pressable rounded-full border border-white/30 px-2.5 py-1 text-xs font-bold uppercase tracking-wide hover:border-brand-accent hover:text-brand-accent"
+        className="pressable fase-knopf bg-white/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide hover:bg-white/20 hover:text-brand-accent"
       >
         {lang === "de" ? "EN" : "DE"}
       </button>
@@ -86,14 +86,14 @@ export default async function Nav() {
               <Link
                 href="/profil"
                 title={t.account}
-                className="pressable rounded-full bg-white/10 px-3 py-1 text-white/90 hover:bg-white/20 hover:text-brand-accent"
+                className="pressable fase-knopf bg-white/10 px-3 py-1 text-white/90 hover:bg-white/20 hover:text-brand-accent"
               >
                 {username}
               </Link>
               <form action={logout}>
                 <button
                   type="submit"
-                  className="pressable rounded-full border border-white/30 px-3 py-1 hover:border-brand-accent hover:text-brand-accent"
+                  className="pressable fase-knopf bg-white/10 px-3 py-1 hover:bg-white/20 hover:text-brand-accent"
                 >
                   {t.logout}
                 </button>
@@ -106,7 +106,7 @@ export default async function Nav() {
               </Link>
               <Link
                 href="/signup"
-                className="pressable rounded-full bg-brand-accent px-4 py-1.5 font-semibold text-brand-deep"
+                className="pressable fase-knopf bg-brand-accent px-4 py-1.5 font-semibold text-brand-deep"
               >
                 {t.signup}
               </Link>

@@ -24,8 +24,8 @@ export default async function Home() {
 
   return (
     <main className="startseite brand-gradient-hero relative flex min-h-0 flex-1 flex-col overflow-hidden text-white">
-      <div className="mx-auto grid min-h-0 w-full max-w-6xl flex-1 grid-rows-[auto_minmax(0,1fr)] gap-4 px-6 pb-4 pt-5 sm:grid-cols-[1.1fr_1fr] sm:grid-rows-1 sm:items-center sm:gap-10 sm:py-10">
-        <div className="flex flex-col items-start gap-3 sm:gap-6">
+      <div className="mx-auto grid min-h-0 w-full max-w-6xl flex-1 grid-rows-[auto_minmax(0,1fr)] gap-8 px-6 pb-8 pt-9 sm:grid-cols-[1.1fr_1fr] sm:grid-rows-1 sm:items-center sm:gap-10 sm:py-10">
+        <div className="flex flex-col items-start gap-4 sm:gap-6">
           <span className="rounded-full bg-brand-accent px-4 py-1 text-xs font-bold uppercase tracking-wide text-brand-deep sm:text-sm">
             {t.season}
           </span>
@@ -42,18 +42,18 @@ export default async function Home() {
           <p className="max-w-xl text-[15px] leading-snug text-white/80 sm:text-lg [@media(max-height:720px)]:hidden">
             {t.tagline}
           </p>
-          <div className="flex gap-2.5 sm:gap-4 sm:pt-2">
+          <div className="flex gap-3 pt-1 sm:gap-4 sm:pt-2">
             {user ? (
               <>
                 <Link
                   href="/team"
-                  className="pressable rounded-full bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.toTeam}
                 </Link>
                 <Link
                   href="/leaderboard"
-                  className="pressable rounded-full border-2 border-white/40 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:border-brand-accent hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-white/10 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.leaderboard}
                 </Link>
@@ -62,13 +62,13 @@ export default async function Home() {
               <>
                 <Link
                   href="/signup"
-                  className="pressable rounded-full bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.cta}
                 </Link>
                 <Link
                   href="/login"
-                  className="pressable rounded-full border-2 border-white/40 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:border-brand-accent hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-white/10 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.login}
                 </Link>
@@ -99,7 +99,9 @@ export default async function Home() {
         </div>
       </div>
 
-      <section aria-hidden className="shrink-0 overflow-hidden border-t border-white/10 bg-white py-3 sm:py-4">
+      {/* Nur am Desktop: Auf dem Handy nahm das Band Platz weg, den Text und
+          Screenshots brauchen — die Seite wirkte gedrängt. */}
+      <section aria-hidden className="hidden shrink-0 overflow-hidden border-t border-white/10 bg-white py-4 sm:block">
         <div className="jersey-marquee flex w-max items-center gap-10">
           {[...TRIKOTS, ...TRIKOTS].map((code, i) => (
             /* eslint-disable-next-line @next/next/no-img-element */

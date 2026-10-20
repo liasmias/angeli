@@ -171,7 +171,7 @@ export default async function AdminPage() {
           />
           <button
             type="submit"
-            className="pressable rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
+            className="pressable fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
           >
             Speichern
           </button>
@@ -180,13 +180,13 @@ export default async function AdminPage() {
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
           href="/admin/players"
-          className="pressable inline-block rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
+          className="pressable inline-block fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
         >
           Spieler & Preise verwalten →
         </Link>
         <Link
           href="/admin/users"
-          className="pressable inline-block rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
+          className="pressable inline-block fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent"
         >
           Mitglieder verwalten →
         </Link>

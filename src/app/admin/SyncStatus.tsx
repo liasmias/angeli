@@ -57,7 +57,7 @@ export default function SyncStatus({
               setMeldung(await triggerSync());
             })
           }
-          className="pressable rounded-full bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
+          className="pressable fase-knopf bg-brand-deep px-5 py-2 text-sm font-bold text-brand-accent disabled:opacity-50"
         >
           {pending ? "Synchronisiert…" : "Jetzt synchronisieren"}
         </button>
