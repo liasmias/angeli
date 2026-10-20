@@ -3,6 +3,7 @@
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getDictionary, type Lang } from "@/lib/i18n";
+import { Suchfeld } from "@/components/feld";
 
 export interface StandingRow {
   user_id: string;
@@ -164,12 +165,11 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
         </div>
       )}
 
-      <input
-        type="search"
+      <Suchfeld
+        aufSeite
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t.search}
-        className="rounded-lg border border-brand-deep/15 bg-white px-3 py-2 text-sm outline-none focus:border-brand-magenta"
       />
 
       <div className="overflow-hidden chamfer bg-white shadow-sm">

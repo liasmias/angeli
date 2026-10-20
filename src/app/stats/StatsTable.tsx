@@ -3,6 +3,7 @@
 import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { Position } from "@/lib/database.types";
 import { getDictionary, type Lang } from "@/lib/i18n";
+import { Auswahl, Suchfeld } from "@/components/feld";
 
 export interface StatsRow {
   id: number;
@@ -91,23 +92,6 @@ function sortLabel(key: SortKey, t: ReturnType<typeof getDictionary>["stats"]): 
     bonus: t.bonus, owned: t.owned,
   };
   return labels[key] ?? "";
-}
-
-/**
- * Pfeil für die Auswahlfelder. Der Systempfeil sass je nach Browser direkt
- * am Rand und ragte in schmalen Feldern fast hinaus; dieser hat einen festen
- * Platz mit Abstand und klickt durch (pointer-events-none).
- */
-function Pfeil() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 12 12"
-      className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-brand-deep/55"
-    >
-      <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 /** Zeilen je Nachladeschritt. */
@@ -338,78 +322,65 @@ export default function StatsTable({
             die 431 px brauchte bei 334 px Platz — das Suchfeld schrumpfte auf
             26 px, und die Sortierung wurde rechts abgeschnitten. */}
         <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-          <input
-            type="search"
-            style={{ WebkitAppearance: "none" }}
+          <Suchfeld
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.search}
-            className="w-full min-w-0 rounded-lg bg-brand-deep/5 px-3 py-2 text-base text-brand-deep outline-none placeholder:text-brand-deep/50 focus:bg-brand-deep/[0.07] focus:ring-2 focus:ring-brand-magenta/30 sm:flex-1 sm:py-1.5 sm:text-sm"
+            className="sm:flex-1"
           />
           <div className="grid grid-cols-3 gap-2 sm:flex">
-          <div className="relative min-w-0">
-            <select
-              value={filterClub}
-              onChange={(e) => setFilterClub(e.target.value)}
-              className="w-full min-w-0 appearance-none rounded-lg bg-brand-deep/5 py-2 pl-2.5 pr-6 text-[15px] text-brand-deep outline-none focus:bg-brand-deep/[0.07] focus:ring-2 focus:ring-brand-magenta/30 sm:py-1.5 sm:text-sm"
-            >
-              <option value="ALL">{t.club}</option>
-              {clubs.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <Pfeil />
-          </div>
-          <div className="relative min-w-0">
-            <select
-              value={maxPreis ?? "ALL"}
-              onChange={(e) => setMaxPreis(e.target.value === "ALL" ? null : Number(e.target.value))}
-              className="w-full min-w-0 appearance-none rounded-lg bg-brand-deep/5 py-2 pl-2.5 pr-6 text-[15px] text-brand-deep outline-none focus:bg-brand-deep/[0.07] focus:ring-2 focus:ring-brand-magenta/30 sm:py-1.5 sm:text-sm"
-              aria-label={t.maxPrice}
-            >
-              {/* Kurzform als Platzhalter: "Höchstpreis" passte auf dem Handy nicht
-                  in das Drittel der Zeile. Für Screenreader bleibt aria-label. */}
-              <option value="ALL">{t.maxPriceShort}</option>
-              {PREIS_GRENZEN.map((g) => (
-                <option key={g} value={g}>
-                  ≤ {g.toFixed(1)}
-                </option>
-              ))}
-            </select>
-            <Pfeil />
-          </div>
+          <Auswahl
+            value={filterClub}
+            onChange={(e) => setFilterClub(e.target.value)}
+          >
+            <option value="ALL">{t.club}</option>
+            {clubs.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Auswahl>
+          <Auswahl
+            value={maxPreis ?? "ALL"}
+            onChange={(e) => setMaxPreis(e.target.value === "ALL" ? null : Number(e.target.value))}
+            aria-label={t.maxPrice}
+          >
+            {/* Kurzform als Platzhalter: "Höchstpreis" passte auf dem Handy nicht
+                in das Drittel der Zeile. Für Screenreader bleibt aria-label. */}
+            <option value="ALL">{t.maxPriceShort}</option>
+            {PREIS_GRENZEN.map((g) => (
+              <option key={g} value={g}>
+                ≤ {g.toFixed(1)}
+              </option>
+            ))}
+          </Auswahl>
           {/* Auf dem Handy sind Preis- und Rating-Spalten ausgeblendet, ihre
               klickbaren Köpfe damit unerreichbar — dieses Feld übernimmt dort
               die Sortierung. Ab sm reichen die Spaltenköpfe. */}
-          <div className="relative min-w-0 sm:hidden">
-            <select
-              value={sortKey}
-              onChange={(e) => {
-                const key = e.target.value as SortKey;
-                setSortKey(key);
-                setSortDesc(key !== "name");
-              }}
-              className="w-full min-w-0 appearance-none rounded-lg bg-brand-deep/5 py-2 pl-2.5 pr-6 text-[15px] text-brand-deep outline-none focus:bg-brand-deep/[0.07] focus:ring-2 focus:ring-brand-magenta/30 sm:py-1.5 sm:text-sm"
-              aria-label={t.sortBy}
-            >
-              <option value="totalPoints">{t.sortPoints}</option>
-              <option value="latestPoints">{t.sortLatest}</option>
-              <option value="form">{t.sortForm}</option>
-              <option value="valuePerMillion">{t.sortValue}</option>
-              <option value="minutes">{t.sortMinutes}</option>
-              <option value="price">{t.sortPrice}</option>
-              <option value="rating">{t.sortRating}</option>
-              <option value="goals">{t.sortGoals}</option>
-              <option value="assists">{t.sortAssists}</option>
-              <option value="cleanSheets">{t.sortCleanSheets}</option>
-              <option value="bonus">{t.sortBonus}</option>
-              <option value="owned">{t.sortOwned}</option>
-              <option value="name">{t.sortName}</option>
-            </select>
-            <Pfeil />
-          </div>
+          <Auswahl
+          huelle="sm:hidden"
+            value={sortKey}
+            onChange={(e) => {
+              const key = e.target.value as SortKey;
+              setSortKey(key);
+              setSortDesc(key !== "name");
+            }}
+            aria-label={t.sortBy}
+          >
+            <option value="totalPoints">{t.sortPoints}</option>
+            <option value="latestPoints">{t.sortLatest}</option>
+            <option value="form">{t.sortForm}</option>
+            <option value="valuePerMillion">{t.sortValue}</option>
+            <option value="minutes">{t.sortMinutes}</option>
+            <option value="price">{t.sortPrice}</option>
+            <option value="rating">{t.sortRating}</option>
+            <option value="goals">{t.sortGoals}</option>
+            <option value="assists">{t.sortAssists}</option>
+            <option value="cleanSheets">{t.sortCleanSheets}</option>
+            <option value="bonus">{t.sortBonus}</option>
+            <option value="owned">{t.sortOwned}</option>
+            <option value="name">{t.sortName}</option>
+          </Auswahl>
           </div>
         </div>
       </div>
