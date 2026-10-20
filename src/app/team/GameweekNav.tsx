@@ -66,7 +66,7 @@ function Kachel({
       </span>
       <span
         className={`w-full truncate px-2 pb-1.5 text-[10px] font-semibold ${
-          hervorgehoben ? "bg-brand-magenta/90 py-1 text-white" : "text-brand-deep/50"
+          hervorgehoben ? "bg-brand-magenta/90 py-1 text-white" : "text-brand-deep/65"
         }`}
       >
         {label}
@@ -111,14 +111,14 @@ export default function GameweekNav(props: GameweekNavProps) {
       </div>
 
       {isLive && (
-        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">
+        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/70">
           <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-brand-magenta align-middle" aria-hidden />
           {t.liveHint}
         </p>
       )}
 
       {!isPast && deadlineDatum && (
-        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/60">
+        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/70">
           {t.deadline}{" "}
           <span className="font-semibold text-brand-deep">
             {deadlineDatum.toLocaleString(lang === "en" ? "en-GB" : "de-CH", {

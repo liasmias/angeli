@@ -145,7 +145,7 @@ export default async function FixturesPage() {
                 return (
                   <li key={f.id} className="flex items-center gap-3 px-5 py-3">
                     <span className="flex-1 text-right font-semibold text-brand-deep">{home?.name ?? "?"}</span>
-                    <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold text-brand-deep/60">
+                    <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold text-brand-deep/70">
                       —
                     </span>
                     <span className="flex-1 font-semibold text-brand-deep">{away?.name ?? "?"}</span>
@@ -153,7 +153,7 @@ export default async function FixturesPage() {
                 );
               })}
             </ul>
-            <p className="border-t border-brand-deep/5 px-5 py-3 text-xs text-brand-deep/60">
+            <p className="border-t border-brand-deep/5 px-5 py-3 text-xs text-brand-deep/70">
               {t.postponedHint}
             </p>
           </section>
@@ -201,7 +201,7 @@ export default async function FixturesPage() {
                           )}
                         </span>
                       ) : (
-                        <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold tabular-nums text-brand-deep/60">
+                        <span className="rounded-lg bg-brand-deep/5 px-3 py-1 text-xs font-semibold tabular-nums text-brand-deep/70">
                           {f.kickoff
                             ? new Date(f.kickoff).toLocaleString("de-CH", {
                                 weekday: "short",
@@ -234,7 +234,7 @@ export default async function FixturesPage() {
                           </div>
                         </summary>
                         <div className="border-t border-brand-deep/5 bg-brand-deep/[0.03] px-5 py-3 text-sm">
-                          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-deep/50">
+                          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
                             {t.bestPlayers}
                           </div>
                           <BestPlayerChips
@@ -276,7 +276,7 @@ export default async function FixturesPage() {
           );
         })}
         {(fixtures ?? []).length === 0 && (
-          <p className="chamfer bg-white px-5 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
+          <p className="chamfer bg-white px-5 py-8 text-center text-sm text-brand-deep/65 shadow-sm">
             Noch keine Spiele importiert.
           </p>
         )}

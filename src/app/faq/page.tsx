@@ -55,7 +55,7 @@ export default async function FaqPage() {
         <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">
           Frequently asked questions
         </h1>
-        <p className="mb-6 text-sm text-brand-deep/60">
+        <p className="mb-6 text-sm text-brand-deep/70">
           The rules themselves are on the{" "}
           <Link href="/regeln" className="font-semibold text-brand-magenta underline">
             rules page
@@ -184,7 +184,7 @@ export default async function FaqPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Häufige Fragen</h1>
-      <p className="mb-6 text-sm text-brand-deep/60">
+      <p className="mb-6 text-sm text-brand-deep/70">
         Die Regeln selbst stehen auf der{" "}
         <Link href="/regeln" className="font-semibold text-brand-magenta underline">
           Regelseite

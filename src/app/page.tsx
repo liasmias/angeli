@@ -92,7 +92,7 @@ export default async function Home() {
 
       {/* Nur mobil sichtbar — auf dem Desktop gibt es nichts zu installieren. */}
       <section className="border-b border-brand-deep/10 bg-white px-6 py-3 sm:hidden">
-        <p className="text-center text-xs font-bold uppercase tracking-wide text-brand-deep/60">
+        <p className="text-center text-xs font-bold uppercase tracking-wide text-brand-deep/70">
           {t.installTitle}
         </p>
         <p className="mt-1 text-center text-xs leading-relaxed text-brand-deep/70">

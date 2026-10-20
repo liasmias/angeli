@@ -53,7 +53,7 @@ export default function LoginForm({ lang }: { lang: Lang }) {
             {t.forgot}
           </Link>
         </p>
-        <p className="mt-2 text-sm text-brand-deep/60">
+        <p className="mt-2 text-sm text-brand-deep/70">
           {t.noAccount}{" "}
           <Link href="/signup" className="font-semibold text-brand-magenta underline">
             {t.signup}

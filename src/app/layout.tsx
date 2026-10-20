@@ -19,6 +19,15 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Angeli — Swiss League Fantasy",
   description: "Fantasy Football für die Schweizer Liga, Saison 26/27",
+  // Vom Home-Bildschirm aus als eigenständige App ohne Safari-Leisten.
+  // "black-translucent" lässt die grüne Navigationsleiste unter die
+  // Statusleiste laufen, wie bei einer nativen App; die Leiste rückt ihren
+  // Inhalt dafür um die Safe Area nach unten (siehe Nav).
+  appleWebApp: {
+    capable: true,
+    title: "Angeli",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 /**
@@ -80,7 +89,7 @@ export default async function RootLayout({
             im Browser ausgewertet werden — daher hier, auf jeder Seite. */}
         <AuthHashError />
         {children}
-        <footer className="mt-auto px-4 py-4 text-center text-[11px] leading-relaxed text-brand-deep/45">
+        <footer className="mt-auto px-4 py-4 text-center text-[11px] leading-relaxed text-brand-deep/65">
           <p>
             {t.disclaimer}{" "}
             <Link href="/impressum" className="font-semibold underline hover:text-brand-magenta">

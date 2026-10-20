@@ -51,7 +51,7 @@ export default async function AdminUsersPage() {
   return (
     <>
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Mitglieder</h1>
-      <p className="mb-6 text-sm text-brand-deep/60">
+      <p className="mb-6 text-sm text-brand-deep/70">
         {total} Account{total === 1 ? "" : "s"}
         {blocked > 0 && ` · ${blocked} gesperrt`}. Gesperrte Accounts können sich nicht mehr
         einloggen und erscheinen nicht in der Rangliste. Punkte lassen sich manuell gutschreiben
@@ -85,15 +85,15 @@ export default async function AdminUsersPage() {
                       Admin
                     </span>
                   )}
-                  {isSelf && <span className="ml-2 text-xs text-brand-deep/40">(du)</span>}
-                  <span className="ml-2 text-xs text-brand-deep/50">
+                  {isSelf && <span className="ml-2 text-xs text-brand-deep/65">(du)</span>}
+                  <span className="ml-2 text-xs text-brand-deep/65">
                     seit {new Date(p.created_at).toLocaleDateString("de-CH", { timeZone: "Europe/Zurich" })}
                   </span>
                   <div className="mt-0.5 text-xs">
                     {p.is_blocked ? (
                       <span className="font-bold text-brand-danger">gesperrt</span>
                     ) : (
-                      <span className="text-brand-deep/60">
+                      <span className="text-brand-deep/70">
                         {pointsByUser.get(p.id) ?? 0} Punkte in der Rangliste
                         {korrekturSumme !== 0 && (
                           <span className="ml-1 font-bold text-brand-magenta">
@@ -194,7 +194,7 @@ export default async function AdminUsersPage() {
                           <span className="min-w-0 flex-1 truncate">
                             {a.reason || "ohne Begründung"}
                           </span>
-                          <span className="text-brand-deep/40">
+                          <span className="text-brand-deep/65">
                             {new Date(a.created_at).toLocaleDateString("de-CH", { timeZone: "Europe/Zurich" })}
                           </span>
                           <form action={removePointAdjustment.bind(null, a.id)}>
@@ -216,7 +216,7 @@ export default async function AdminUsersPage() {
           );
         })}
         {total === 0 && (
-          <p className="chamfer bg-white px-4 py-8 text-center text-sm text-brand-deep/50 shadow-sm">
+          <p className="chamfer bg-white px-4 py-8 text-center text-sm text-brand-deep/65 shadow-sm">
             Noch keine Mitglieder registriert.
           </p>
         )}

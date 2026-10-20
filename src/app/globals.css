@@ -8,6 +8,9 @@
      accent → Aktionen, magenta → Links auf Weiss, danger → Fehler. */
   --brand-deep: #0a2e19;
   --brand-grass: #1f8b44;
+  /* Dasselbe Grün für kleinen Text: #1f8b44 erreicht auf Weiss nur 4,34 : 1,
+     die iOS-Richtlinien verlangen 4,5 : 1. Flächen behalten das Markengrün. */
+  --brand-grass-text: #1a7a3b;
   --brand-lime: #8ef2a8;
   --brand-accent: #ff7dff;
   --brand-magenta: #c21fc2;
@@ -19,6 +22,7 @@
   --color-foreground: var(--foreground);
   --color-brand-deep: var(--brand-deep);
   --color-brand-grass: var(--brand-grass);
+  --color-brand-grass-text: var(--brand-grass-text);
   --color-brand-magenta: var(--brand-magenta);
   --color-brand-accent: var(--brand-accent);
   --color-brand-lime: var(--brand-lime);
@@ -231,7 +235,17 @@ button,
 }
 
 /* Wer Bewegung abbestellt hat, bekommt die Endzustaende sofort. */
+/* Ladeplatzhalter: ruhiges Pulsieren statt Spinner. */
+@keyframes skelett-puls {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0.55 }
+}
+.skelett {
+  animation: skelett-puls 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .skelett,
   .sheet-up,
   .fade-in,
   .tile-in,

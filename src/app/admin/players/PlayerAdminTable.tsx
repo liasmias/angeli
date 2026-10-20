@@ -101,7 +101,7 @@ export default function PlayerAdminTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[34rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
+            <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/65">
               <th className="px-3 py-2">Vorname</th>
               <th className="px-3 py-2">Nachname</th>
               <th className="px-2 py-2 sm:px-3">Club</th>
@@ -147,7 +147,7 @@ export default function PlayerAdminTable({
                     ))}
                   </select>
                 </td>
-                <td className="hidden px-3 py-1.5 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="hidden px-3 py-1.5 text-brand-deep/70 sm:table-cell">{r.position}</td>
                 <td className="px-2 py-1.5 sm:px-3">
                   <span className="flex items-center gap-1.5">
                     <select
@@ -204,7 +204,7 @@ export default function PlayerAdminTable({
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={7} className="px-3 py-8 text-center text-brand-deep/65">
                   Keine Spieler gefunden.
                 </td>
               </tr>

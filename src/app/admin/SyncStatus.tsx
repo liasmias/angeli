@@ -45,7 +45,7 @@ export default function SyncStatus({
                 : `Letzter Sync vor ${alterMin} Min. — Cron prüfen!`}
           </div>
           {lastSyncNote && (
-            <p className="mt-0.5 text-xs text-brand-deep/60">{lastSyncNote}</p>
+            <p className="mt-0.5 text-xs text-brand-deep/70">{lastSyncNote}</p>
           )}
         </div>
         <button

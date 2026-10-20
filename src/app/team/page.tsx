@@ -187,7 +187,7 @@ export default async function TeamPage({
         <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
         {nav(punkte)}
         {pastPlayers.length === 0 ? (
-          <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/60">
+          <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/70">
             {t.team.noLineup(angezeigt.number)}
           </p>
         ) : (

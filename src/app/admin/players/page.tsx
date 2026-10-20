@@ -35,7 +35,7 @@ export default async function AdminPlayersPage() {
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">
         Spieler verwalten
       </h1>
-      <p className="mb-6 text-sm text-brand-deep/60">
+      <p className="mb-6 text-sm text-brand-deep/70">
         Preise anpassen, Spieler (de)aktivieren und Neuzugänge erfassen. Preisänderungen wirken
         sofort im Team-Builder; bereits gekaufte Spieler behalten ihren Kaufpreis.
       </p>

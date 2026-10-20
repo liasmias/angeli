@@ -78,7 +78,7 @@ const StatsZeile = memo(function StatsZeile({
 }) {
   return (
               <tr className="hover:bg-brand-deep/5">
-                <td className="px-2 py-2 tabular-nums text-brand-deep/40 sm:px-3">{nummer}</td>
+                <td className="px-2 py-2 tabular-nums text-brand-deep/65 sm:px-3">{nummer}</td>
                 <td className="px-2 py-2 sm:px-3">
                   <span className="flex items-center gap-2 font-semibold text-brand-deep">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -94,7 +94,7 @@ const StatsZeile = memo(function StatsZeile({
                     <span className="min-w-0">
                       <span className="block truncate">{r.name}</span>
                       {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
-                      <span className="block text-[11px] font-medium text-brand-deep/50 sm:hidden">
+                      <span className="block text-[11px] font-medium text-brand-deep/65 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
                         {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
                         {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
@@ -109,14 +109,14 @@ const StatsZeile = memo(function StatsZeile({
                     </span>
                   </span>
                 </td>
-                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.club}</td>
-                <td className="hidden px-3 py-2 text-brand-deep/60 sm:table-cell">{r.position}</td>
+                <td className="hidden px-3 py-2 text-brand-deep/70 sm:table-cell">{r.club}</td>
+                <td className="hidden px-3 py-2 text-brand-deep/70 sm:table-cell">{r.position}</td>
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell">
                   {r.price.toFixed(1)}
                   {r.priceDelta !== 0 && (
                     <span
                       className={`ml-1 text-[11px] font-bold ${
-                        r.priceDelta > 0 ? "text-brand-grass" : "text-brand-magenta"
+                        r.priceDelta > 0 ? "text-brand-grass-text" : "text-brand-magenta"
                       }`}
                       title={t.priceDeltaTitle(r.priceDelta)}
                     >
@@ -127,28 +127,28 @@ const StatsZeile = memo(function StatsZeile({
                 <td className="hidden px-3 py-2 text-right tabular-nums font-semibold text-brand-deep/70 sm:table-cell">
                   {r.form === null ? "—" : r.form.toFixed(1)}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1)}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.minutes}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.rating === null ? "—" : r.rating.toFixed(1)}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.goals}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.assists}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.cleanSheets ?? "—"}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.bonus}
                 </td>
-                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/60 sm:table-cell">
+                <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.owned} %
                 </td>
                 {mitGw && (
@@ -343,7 +343,7 @@ export default function StatsTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm sm:min-w-[36rem]">
           <thead>
-            <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/50">
+            <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/65">
               <th className="px-2 py-2 sm:px-3">#</th>
               <th className="px-2 py-2 sm:px-3">
                 <button type="button" onClick={() => toggleSort("name")} className="uppercase">
@@ -432,7 +432,7 @@ export default function StatsTable({
             )}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="px-3 py-8 text-center text-brand-deep/50">
+                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="px-3 py-8 text-center text-brand-deep/65">
                   {t.noneFound}
                 </td>
               </tr>

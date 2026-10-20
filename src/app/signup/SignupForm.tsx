@@ -62,7 +62,7 @@ export default function SignupForm({ lang }: { lang: Lang }) {
             {pending ? t.creating : t.signup}
           </button>
         </form>
-        <p className="mt-5 text-sm text-brand-deep/60">
+        <p className="mt-5 text-sm text-brand-deep/70">
           {t.haveAccount}{" "}
           <Link href="/login" className="font-semibold text-brand-magenta underline">
             {t.login}

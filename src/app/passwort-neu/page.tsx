@@ -11,7 +11,7 @@ export default function PasswortNeuPage() {
     <main className="brand-gradient-hero flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm chamfer bg-white p-8 shadow-xl">
         <h1 className="mb-2 text-2xl font-bold tracking-tight text-brand-deep">Neues Passwort</h1>
-        <p className="mb-6 text-sm text-brand-deep/60">
+        <p className="mb-6 text-sm text-brand-deep/70">
           Wähle ein neues Passwort. Danach bist du direkt eingeloggt.
         </p>
         <form action={formAction} className="flex flex-col gap-3">
@@ -46,7 +46,7 @@ export default function PasswortNeuPage() {
             {pending ? "Wird gespeichert…" : "Passwort speichern"}
           </button>
         </form>
-        <p className="mt-5 text-sm text-brand-deep/60">
+        <p className="mt-5 text-sm text-brand-deep/70">
           Link abgelaufen?{" "}
           <Link href="/passwort-vergessen" className="font-semibold text-brand-magenta underline">
             Neuen anfordern

@@ -90,7 +90,7 @@ export default function ImpressumPage() {
             </a>{" "}
             wenden.
           </p>
-          <p className="text-xs text-brand-deep/50">
+          <p className="text-xs text-brand-deep/65">
             Stand: Juli 2026. Diese Erklärung wird angepasst, wenn sich der Dienst ändert.
           </p>
         </Abschnitt>

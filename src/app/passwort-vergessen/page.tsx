@@ -14,7 +14,7 @@ export default function PasswortVergessenPage() {
         <h1 className="mb-2 text-2xl font-bold tracking-tight text-brand-deep">
           Passwort vergessen
         </h1>
-        <p className="mb-6 text-sm text-brand-deep/60">
+        <p className="mb-6 text-sm text-brand-deep/70">
           Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues
           Passwort setzen kannst.
         </p>
@@ -46,7 +46,7 @@ export default function PasswortVergessenPage() {
             {pending ? "Wird gesendet…" : "Link anfordern"}
           </button>
         </form>
-        <p className="mt-5 text-sm text-brand-deep/60">
+        <p className="mt-5 text-sm text-brand-deep/70">
           <Link href="/login" className="font-semibold text-brand-magenta underline">
             Zurück zum Login
           </Link>

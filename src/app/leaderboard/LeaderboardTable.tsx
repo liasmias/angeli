@@ -19,7 +19,7 @@ function Bewegung({ wert }: { wert: number | null }) {
   if (wert === null) return <span className="w-9 shrink-0" aria-hidden />;
   if (wert === 0) {
     return (
-      <span className="w-9 shrink-0 text-center text-xs font-bold text-brand-deep/25" aria-hidden>
+      <span className="w-9 shrink-0 text-center text-xs font-bold text-brand-deep/55" aria-hidden>
         –
       </span>
     );
@@ -28,7 +28,7 @@ function Bewegung({ wert }: { wert: number | null }) {
   return (
     <span
       className={`w-9 shrink-0 text-center text-xs font-bold tabular-nums ${
-        hoch ? "text-brand-grass" : "text-brand-magenta"
+        hoch ? "text-brand-grass-text" : "text-brand-magenta"
       }`}
       title={`${hoch ? "+" : ""}${wert}`}
     >
@@ -81,7 +81,7 @@ const Zeile = memo(function Zeile({
         aria-label={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
         title={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
         className={`pressable ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg ${
-          istFavorit ? "text-amber-400" : "text-brand-deep/25 hover:text-amber-400"
+          istFavorit ? "text-amber-400" : "text-brand-deep/55 hover:text-amber-400"
         }`}
       >
         {istFavorit ? "★" : "☆"}
@@ -91,7 +91,7 @@ const Zeile = memo(function Zeile({
         className="pressable-subtle flex min-w-0 flex-1 items-center justify-between gap-3 py-3 pl-1 pr-5 hover:bg-brand-deep/5"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <span className="w-8 shrink-0 text-center font-bold tabular-nums text-brand-deep/40">
+          <span className="w-8 shrink-0 text-center font-bold tabular-nums text-brand-deep/65">
             {MEDALS[row.rank - 1] ?? row.rank}
           </span>
           <span className="truncate font-semibold text-brand-deep">{row.username}</span>
@@ -182,16 +182,16 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
             <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} onToggle={toggleFavorite} t={t} />
           ))}
           {rows.length > 0 && visible.length === 0 && (
-            <li className="px-5 py-8 text-center text-sm text-brand-deep/50">{t.noMatch}</li>
+            <li className="px-5 py-8 text-center text-sm text-brand-deep/65">{t.noMatch}</li>
           )}
           {rows.length === 0 && (
-            <li className="px-5 py-8 text-center text-sm text-brand-deep/50">{t.empty}</li>
+            <li className="px-5 py-8 text-center text-sm text-brand-deep/65">{t.empty}</li>
           )}
         </ol>
       </div>
 
       {favoriteRows.length === 0 && rows.length > 0 && (
-        <p className="text-xs text-brand-deep/50">{t.favoritesHint}</p>
+        <p className="text-xs text-brand-deep/65">{t.favoritesHint}</p>
       )}
     </div>
   );

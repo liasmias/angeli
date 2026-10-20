@@ -65,7 +65,7 @@ export default async function SquadPage({
         <h1 className="mb-4 mt-2 text-2xl font-bold tracking-tight text-brand-deep">
           {profile.username}
         </h1>
-        <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/60">
+        <p className="rounded-lg bg-brand-deep/5 px-4 py-6 text-center text-sm text-brand-deep/70">
           {t.notPublic(profile.username)}
         </p>
       </main>

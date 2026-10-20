@@ -100,7 +100,7 @@ export function Popup({
         <div className="flex items-center justify-between gap-3 border-b border-brand-deep/10 bg-brand-deep/5 px-5 py-2.5 text-sm">
           <span className="font-bold text-brand-deep">{t.detailGameweek(gameweekNumber)}</span>
           {d?.kickoff && (
-            <span className="text-brand-deep/60">
+            <span className="text-brand-deep/70">
               {new Date(d.kickoff).toLocaleString(lang === "en" ? "en-GB" : "de-CH", {
                 day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                 timeZone: "Europe/Zurich",
@@ -119,12 +119,12 @@ export function Popup({
 
         {/* Punktetabelle */}
         {zeilen.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-brand-deep/50">{t.detailNoData}</p>
+          <p className="px-5 py-8 text-center text-sm text-brand-deep/65">{t.detailNoData}</p>
         ) : (
           <div className="px-5 pb-5">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-brand-deep/10 text-left text-[11px] font-bold uppercase tracking-wide text-brand-deep/50">
+                <tr className="border-b border-brand-deep/10 text-left text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
                   <th className="py-2">{t.detailStat}</th>
                   <th className="py-2 text-right">{t.detailAmount}</th>
                   <th className="py-2 text-right">{t.detailPoints}</th>
@@ -137,7 +137,7 @@ export function Popup({
                     <td className="py-1.5 text-right tabular-nums text-brand-deep/70">{z.menge}</td>
                     <td
                       className={`py-1.5 text-right font-bold tabular-nums ${
-                        z.punkte < 0 ? "text-brand-danger" : z.punkte > 0 ? "text-emerald-600" : "text-brand-deep/40"
+                        z.punkte < 0 ? "text-brand-danger" : z.punkte > 0 ? "text-emerald-600" : "text-brand-deep/65"
                       }`}
                     >
                       {z.punkte > 0 ? `+${z.punkte}` : z.punkte}
@@ -162,10 +162,10 @@ export function Popup({
               </tfoot>
             </table>
             {p.isCaptain && (
-              <p className="mt-2 text-[11px] text-brand-deep/50">{t.detailCaptainNote}</p>
+              <p className="mt-2 text-[11px] text-brand-deep/65">{t.detailCaptainNote}</p>
             )}
             {d?.rating !== null && d?.rating !== undefined && (
-              <p className="mt-2 text-[11px] text-brand-deep/50">
+              <p className="mt-2 text-[11px] text-brand-deep/65">
                 {t.detailRating}: ★ {d.rating.toFixed(1)}
               </p>
             )}

@@ -149,7 +149,10 @@ function PlayerCard({
             player.flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
           }`}
         >
-          !
+          {/* Zeichen statt nur Farbe: "!" fällt aus, "?" fraglich — sonst
+              unterschieden sich beide nur in Rot und Gelb, was bei
+              Rot-Grün-Schwäche kaum zu erkennen ist. */}
+          {player.flag === "red" ? "!" : "?"}
         </span>
       )}
       {onQuickRemove && (
@@ -221,6 +224,22 @@ function PlayerCard({
  * Vorlagen abwägen wollte, musste die Sortierung umstellen und die Zeile
  * wiederfinden.
  */
+/** Verfügbarkeit als kleines Abzeichen mit Zeichen — nicht nur als Farbpunkt. */
+function FlagMarke({ flag, note, label }: { flag: PlayerFlag; note: string | null; label: string }) {
+  return (
+    <span
+      title={note ?? undefined}
+      role="img"
+      aria-label={note ?? label}
+      className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold leading-none ${
+        flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
+      }`}
+    >
+      {flag === "red" ? "!" : "?"}
+    </span>
+  );
+}
+
 function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
   const werte: [string, string][] = [
     [t.cardPoints, String(player.points)],
@@ -241,16 +260,15 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 truncate font-bold text-brand-deep">
             {player.flag && (
-              <span
-                title={player.flagNote ?? undefined}
-                className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
-                  player.flag === "red" ? "bg-brand-danger" : "bg-amber-400"
-                }`}
+              <FlagMarke
+                flag={player.flag}
+                note={player.flagNote}
+                label={player.flag === "red" ? t.flagRed : t.flagYellow}
               />
             )}
             <span className="truncate">{player.name}</span>
           </p>
-          <p className="text-xs text-brand-deep/60">
+          <p className="text-xs text-brand-deep/70">
             {player.club} · {t.positions[player.position]} · {player.price.toFixed(1)}
           </p>
         </div>
@@ -258,13 +276,13 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
 
       <div className="mt-3 rounded-xl bg-brand-deep/5 px-3 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
             {player.nextFixtures.length > 1 ? t.cardTwoGames : t.cardNextGame}
           </span>
           <span
             className={`truncate text-xs font-bold ${
               player.nextFixtures.length > 1
-                ? "text-brand-grass"
+                ? "text-brand-grass-text"
                 : player.nextOpponent
                   ? "text-brand-deep"
                   : "text-brand-magenta"
@@ -277,7 +295,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
 
       {player.upcoming.length > 0 && (
         <>
-          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
             {t.cardUpcoming}
           </p>
           {/* Ein Block je Partie. Heimspiele dunkel, Auswaertsspiele hell —
@@ -307,10 +325,10 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
       )}
 
       {player.flagNote && (
-        <p className="mt-2 text-[11px] leading-snug text-brand-deep/60">{player.flagNote}</p>
+        <p className="mt-2 text-[11px] leading-snug text-brand-deep/70">{player.flagNote}</p>
       )}
 
-      <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/45">
+      <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
         {t.cardSeason}
       </p>
       <dl className="mt-1.5 grid grid-cols-4 gap-1.5">
@@ -320,7 +338,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
             style={{ animationDelay: `${i * 28}ms` }}
             className="tile-in rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center"
           >
-            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/45">
+            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
               {label}
             </dt>
             <dd className="text-sm font-bold tabular-nums text-brand-deep">{wert}</dd>
@@ -1261,7 +1279,7 @@ export default function TeamBuilder({
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.budget} </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.budget} </span>
               <span
                 className={`font-bold tabular-nums ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
@@ -1271,7 +1289,7 @@ export default function TeamBuilder({
               </span>
               {effectiveCap > settings.budgetCap && (
                 <span
-                  className="ml-1 text-[11px] font-medium text-brand-deep/50"
+                  className="ml-1 text-[11px] font-medium text-brand-deep/65"
                   title={t.capHint}
                 >
                   {t.of} {effectiveCap.toFixed(1)}
@@ -1279,13 +1297,13 @@ export default function TeamBuilder({
               )}
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.squad} </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {squad.length}/{settings.squadSize}
               </span>
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.starters} </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
@@ -1296,7 +1314,7 @@ export default function TeamBuilder({
               )}
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/50">{t.transfers} </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
               {unlimitedTransfers ? (
                 <span className="font-bold text-brand-magenta">{t.unlimited}</span>
               ) : wildcardActive ? (
@@ -1305,7 +1323,7 @@ export default function TeamBuilder({
                 <span className="font-bold tabular-nums text-brand-deep">
                   {freeTransfers} {t.free}
                   {transfersUsed > 0 && (
-                    <span className="font-medium text-brand-deep/50"> · {transfersUsed} {t.used}</span>
+                    <span className="font-medium text-brand-deep/65"> · {transfersUsed} {t.used}</span>
                   )}
                 </span>
               )}
@@ -1323,7 +1341,7 @@ export default function TeamBuilder({
           </div>
           {/* Detail- und Warnzeile: nur zeigen, wenn etwas fehlt oder kostet. */}
           {squad.length < settings.squadSize && (
-            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/50">
+            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/65">
               {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
             </div>
           )}
@@ -1625,14 +1643,14 @@ export default function TeamBuilder({
                       <span
                         className={`rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
                           verbraucht || c.activeNow
-                            ? "bg-brand-deep/10 text-brand-deep/50"
+                            ? "bg-brand-deep/10 text-brand-deep/65"
                             : "bg-brand-accent/25 text-brand-deep"
                         }`}
                       >
                         {verbraucht || c.activeNow ? "0/1" : "1/1"}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/60">
+                    <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/70">
                       {verbraucht ? t.chipUsed(c.usedInGameweek ?? 0) : desc}
                     </p>
                   </div>
@@ -1785,7 +1803,7 @@ export default function TeamBuilder({
                             ? "text-brand-accent/70"
                             : full
                               ? "text-emerald-600"
-                              : "text-brand-deep/40"
+                              : "text-brand-deep/65"
                         }`}
                       >
                         {countByPosition[pos]}/{slotsByPosition[pos]}
@@ -1857,11 +1875,10 @@ export default function TeamBuilder({
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
                       {p.flag && (
-                        <span
-                          title={p.flagNote ?? undefined}
-                          className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
-                            p.flag === "red" ? "bg-brand-danger" : "bg-amber-400"
-                          }`}
+                        <FlagMarke
+                          flag={p.flag}
+                          note={p.flagNote}
+                          label={p.flag === "red" ? t.flagRed : t.flagYellow}
                         />
                       )}
                       {p.manualStats && (
@@ -1875,17 +1892,17 @@ export default function TeamBuilder({
                       )}
                       <span className="truncate">{p.name}</span>
                     </span>
-                    <span className="block truncate text-xs text-brand-deep/50">
+                    <span className="block truncate text-xs text-brand-deep/65">
                       {p.club} · {p.position}
                       {p.owned > 0 && ` · 👥 ${p.owned}%`}
                       {p.nextOpponent && (
-                        <span className="text-brand-deep/40"> · {p.nextOpponent}</span>
+                        <span className="text-brand-deep/65"> · {p.nextOpponent}</span>
                       )}
                     </span>
                   </span>
                   {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
                   <span className="w-11 text-right">
-                    <span className="block text-[10px] font-semibold uppercase text-brand-deep/40">
+                    <span className="block text-[10px] font-semibold uppercase text-brand-deep/65">
                       {t.statShort[marktSpalte]}
                     </span>
                     <span className="block font-bold tabular-nums text-brand-deep">
@@ -1911,7 +1928,7 @@ export default function TeamBuilder({
               );
             })}
             {filtered.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-brand-deep/50">
+              <p className="px-4 py-6 text-center text-sm text-brand-deep/65">
                 {t.noneFound}
               </p>
             )}

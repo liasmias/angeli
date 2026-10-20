@@ -32,7 +32,7 @@ export function UsernameFormular({ lang, aktuell }: { lang: Lang; aktuell: strin
   return (
     <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.usernameTitle}</h2>
-      <p className="mb-4 text-sm text-brand-deep/60">
+      <p className="mb-4 text-sm text-brand-deep/70">
         {t.usernameHint}
       </p>
       <form action={action} className="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -65,7 +65,7 @@ export function PasswortFormular({ lang }: { lang: Lang }) {
   return (
     <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.passwordTitle}</h2>
-      <p className="mb-4 text-sm text-brand-deep/60">
+      <p className="mb-4 text-sm text-brand-deep/70">
         {t.passwordHint}
       </p>
       <form action={action} className="flex flex-col gap-3">
@@ -117,7 +117,7 @@ export function LoeschenFormular({ lang, username }: { lang: Lang; username: str
   return (
     <section className="chamfer border-2 border-brand-danger/20 bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-danger">{t.deleteTitle}</h2>
-      <p className="mb-4 text-sm text-brand-deep/60">
+      <p className="mb-4 text-sm text-brand-deep/70">
         {t.deleteHint}
       </p>
       <details>
@@ -149,7 +149,7 @@ export function MeldungFormular({ lang }: { lang: Lang }) {
   return (
     <section className="chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-1 text-lg font-bold text-brand-deep">{t.reportTitle}</h2>
-      <p className="mb-4 text-sm text-brand-deep/60">{t.reportHint}</p>
+      <p className="mb-4 text-sm text-brand-deep/70">{t.reportHint}</p>
       <form action={action} className="flex flex-col gap-3">
         <textarea
           name="message"

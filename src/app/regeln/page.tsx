@@ -97,7 +97,7 @@ export default async function RegelnPage() {
     return (
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Rules</h1>
-        <p className="mb-6 text-sm text-brand-deep/60">
+        <p className="mb-6 text-sm text-brand-deep/70">
           Everything you need to play — a two-minute read.
         </p>
 
@@ -239,7 +239,7 @@ export default async function RegelnPage() {
             </ul>
           </Abschnitt>
 
-          <p className="text-center text-sm text-brand-deep/60">
+          <p className="text-center text-sm text-brand-deep/70">
             Questions about a specific situation? The{" "}
             <Link href="/faq" className="font-semibold text-brand-magenta underline">
               FAQ
@@ -254,7 +254,7 @@ export default async function RegelnPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">Regeln</h1>
-      <p className="mb-6 text-sm text-brand-deep/60">
+      <p className="mb-6 text-sm text-brand-deep/70">
         Alles, was du zum Mitspielen wissen musst — in zwei Minuten gelesen.
       </p>
 
@@ -399,7 +399,7 @@ export default async function RegelnPage() {
           </ul>
         </Abschnitt>
 
-        <p className="text-center text-sm text-brand-deep/60">
+        <p className="text-center text-sm text-brand-deep/70">
           Fragen zu einer konkreten Situation? Die{" "}
           <Link href="/faq" className="font-semibold text-brand-magenta underline">
             häufigen Fragen

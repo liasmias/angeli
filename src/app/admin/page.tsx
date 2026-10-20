@@ -45,7 +45,7 @@ export default async function AdminPage() {
           )}
         </h2>
         {offeneMeldungen.length === 0 ? (
-          <p className="text-sm text-brand-deep/50">
+          <p className="text-sm text-brand-deep/65">
             Keine offenen Meldungen. {reports === null && "(Migration 0012 schon ausgeführt?)"}
           </p>
         ) : (
@@ -58,7 +58,7 @@ export default async function AdminPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-brand-deep">
                       {profil?.username ?? "?"}
-                      <span className="ml-2 font-medium text-brand-deep/50">
+                      <span className="ml-2 font-medium text-brand-deep/65">
                         {new Date(r.created_at).toLocaleString("de-CH", {
                           day: "numeric",
                           month: "short",
@@ -99,7 +99,7 @@ export default async function AdminPage() {
                       className="w-full rounded-lg border border-brand-deep/15 px-2.5 py-1.5 text-sm outline-none focus:border-brand-magenta"
                     />
                     <div className="flex items-center justify-between gap-3">
-                      <label className="flex items-center gap-1.5 text-xs text-brand-deep/60">
+                      <label className="flex items-center gap-1.5 text-xs text-brand-deep/70">
                         <input type="checkbox" name="resolve" defaultChecked className="accent-emerald-600" />
                         gleich als erledigt markieren
                       </label>
@@ -118,7 +118,7 @@ export default async function AdminPage() {
         )}
         {erledigteMeldungen.length > 0 && (
           <details className="mt-2">
-            <summary className="cursor-pointer text-xs font-semibold text-brand-deep/50">
+            <summary className="cursor-pointer text-xs font-semibold text-brand-deep/65">
               {erledigteMeldungen.length} erledigte anzeigen
             </summary>
             <ul className="mt-2 divide-y divide-brand-deep/5 opacity-60">
@@ -140,7 +140,7 @@ export default async function AdminPage() {
                     <form action={resolveReport.bind(null, r.id, false)}>
                       <button
                         type="submit"
-                        className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-semibold text-brand-deep/60"
+                        className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-semibold text-brand-deep/70"
                       >
                         Wieder öffnen
                       </button>
@@ -157,7 +157,7 @@ export default async function AdminPage() {
           Navigation. Leer speichern blendet sie wieder aus. */}
       <section className="mb-6 chamfer border border-zinc-200 bg-white p-4">
         <h2 className="mb-1 text-sm font-bold text-brand-deep">Ankündigung an alle</h2>
-        <p className="mb-3 text-xs text-brand-deep/60">
+        <p className="mb-3 text-xs text-brand-deep/70">
           Erscheint als Banner auf jeder Seite — z.&nbsp;B. „Punkte von Spieltag 3 werden heute
           Abend korrigiert". Leer speichern entfernt den Banner.
         </p>
