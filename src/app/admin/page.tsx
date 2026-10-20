@@ -75,7 +75,7 @@ export default async function AdminPage() {
                   <form action={resolveReport.bind(null, r.id, true)}>
                     <button
                       type="submit"
-                      className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-bold text-brand-deep hover:border-emerald-500 hover:text-emerald-600"
+                      className="pressable shrink-0 fase-knopf bg-brand-deep/5 px-3 py-1 text-xs font-bold text-brand-deep hover:bg-emerald-50 hover:text-emerald-700"
                     >
                       Erledigt ✓
                     </button>
@@ -105,7 +105,7 @@ export default async function AdminPage() {
                       </label>
                       <button
                         type="submit"
-                        className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
+                        className="pressable fase-knopf bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
                       >
                         Antworten
                       </button>
@@ -140,7 +140,7 @@ export default async function AdminPage() {
                     <form action={resolveReport.bind(null, r.id, false)}>
                       <button
                         type="submit"
-                        className="pressable shrink-0 rounded-full border border-brand-deep/20 px-3 py-1 text-xs font-semibold text-brand-deep/70"
+                        className="pressable shrink-0 fase-knopf bg-brand-deep/5 px-3 py-1 text-xs font-semibold text-brand-deep/70"
                       >
                         Wieder öffnen
                       </button>

@@ -28,7 +28,7 @@ export default function BestPlayerChips({
           key={p.playerId}
           type="button"
           onClick={() => setOffen(p.playerId)}
-          className="pressable-subtle cursor-pointer rounded-full bg-brand-accent/20 px-2.5 py-0.5 text-xs font-bold text-brand-deep hover:bg-brand-accent/40"
+          className="pressable-subtle cursor-pointer fase-knopf bg-brand-accent/20 px-2.5 py-0.5 text-xs font-bold text-brand-deep hover:bg-brand-accent/40"
         >
           {p.name} ({p.pointsEarned})
         </button>

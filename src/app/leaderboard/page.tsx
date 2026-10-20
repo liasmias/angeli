@@ -118,7 +118,7 @@ export default async function LeaderboardPage({
                 key={n}
                 href={`/leaderboard?ansicht=spieltag&gw=${n}`}
                 aria-current={n === runde ? "page" : undefined}
-                className={`pressable-subtle shrink-0 rounded-full px-3 py-1 text-xs font-bold tabular-nums ${
+                className={`pressable-subtle shrink-0 fase-knopf px-3 py-1 text-xs font-bold tabular-nums ${
                   n === runde
                     ? "bg-brand-deep text-brand-accent"
                     : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
@@ -203,11 +203,11 @@ function AnsichtUmschalter({
 }) {
   if (!zeigen) return null;
   const klasse = (aktiv: boolean) =>
-    `pressable-subtle flex-1 rounded-full px-4 py-1.5 text-center text-sm font-bold ${
+    `pressable-subtle flex-1 fase-knopf px-4 py-1.5 text-center text-sm font-bold ${
       aktiv ? "bg-brand-deep text-brand-accent" : "text-brand-deep/70 hover:text-brand-deep"
     }`;
   return (
-    <div className="my-4 flex rounded-full bg-brand-deep/5 p-1">
+    <div className="my-4 flex fase-knopf bg-brand-deep/5 p-1">
       <Link href="/leaderboard" aria-current={!spieltag ? "page" : undefined} className={klasse(!spieltag)}>
         {t.viewTotal}
       </Link>

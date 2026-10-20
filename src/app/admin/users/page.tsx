@@ -118,7 +118,7 @@ export default async function AdminUsersPage() {
                             ? "Admin-Rechte entziehen"
                             : "Zum Admin machen — darf Spieler, Punkte und Mitglieder verwalten"
                         }
-                        className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
+                        className={`pressable fase-knopf px-3 py-1 text-xs font-bold ${
                           isAdmin
                             ? "border border-brand-deep/20 text-brand-deep/70 hover:bg-brand-deep/5"
                             : "bg-brand-deep text-brand-accent"
@@ -133,7 +133,7 @@ export default async function AdminUsersPage() {
                     <form action={setUserBlocked.bind(null, p.id, !p.is_blocked)}>
                       <button
                         type="submit"
-                        className={`pressable rounded-full px-3 py-1 text-xs font-bold ${
+                        className={`pressable fase-knopf px-3 py-1 text-xs font-bold ${
                           p.is_blocked
                             ? "bg-brand-accent text-brand-deep"
                             : "bg-brand-danger text-white"
@@ -168,7 +168,7 @@ export default async function AdminUsersPage() {
                     />
                     <button
                       type="submit"
-                      className="pressable rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
+                      className="pressable fase-knopf bg-brand-deep px-3 py-1 text-xs font-bold text-brand-accent"
                     >
                       Gutschreiben
                     </button>

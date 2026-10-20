@@ -40,7 +40,7 @@ export default function AuthHashError() {
         <span className="font-semibold text-amber-900">{fehler}</span>
         <Link
           href="/passwort-vergessen"
-          className="pressable shrink-0 rounded-full bg-amber-900 px-4 py-1.5 text-xs font-bold text-white"
+          className="pressable shrink-0 fase-knopf bg-amber-900 px-4 py-1.5 text-xs font-bold text-white"
         >
           Neuen Link anfordern
         </Link>

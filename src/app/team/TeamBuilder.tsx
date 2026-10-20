@@ -1248,7 +1248,7 @@ export default function TeamBuilder({
           <button
             type="button"
             onClick={() => setTransferModus(false)}
-            className="pressable shrink-0 rounded-full bg-brand-accent px-3 py-1 font-bold text-brand-deep"
+            className="pressable shrink-0 fase-knopf bg-brand-accent px-3 py-1 font-bold text-brand-deep"
           >
             {t.transferDone}
           </button>
@@ -1264,7 +1264,7 @@ export default function TeamBuilder({
           <button
             type="button"
             onClick={() => setTauschAus(null)}
-            className="pressable shrink-0 rounded-full bg-white/15 px-3 py-1 font-bold"
+            className="pressable shrink-0 fase-knopf bg-white/15 px-3 py-1 font-bold"
           >
             {t.swapCancel}
           </button>
@@ -1667,7 +1667,7 @@ export default function TeamBuilder({
                       type="button"
                       disabled={isPending || !gameweekOpen}
                       onClick={() => handleChip(c.chip, c.activeNow)}
-                      className={`pressable shrink-0 rounded-full px-3 py-1 text-xs font-bold disabled:opacity-40 ${
+                      className={`pressable shrink-0 fase-knopf px-3 py-1 text-xs font-bold disabled:opacity-40 ${
                         c.activeNow
                           ? "bg-brand-deep text-brand-accent"
                           : "bg-brand-accent text-brand-deep"
@@ -1797,7 +1797,7 @@ export default function TeamBuilder({
                     key={pos}
                     type="button"
                     onClick={() => setFilterPos(pos)}
-                    className={`pressable-subtle flex-1 rounded-full px-1 py-3 text-xs font-bold ${
+                    className={`pressable-subtle flex-1 fase-knopf px-1 py-3 text-xs font-bold ${
                       filterPos === pos
                         ? "bg-brand-deep text-brand-accent"
                         : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"

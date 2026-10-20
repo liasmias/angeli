@@ -57,7 +57,7 @@ export default function PlayerAdminTable({
               key={pos}
               type="button"
               onClick={() => setFilterPos(pos)}
-              className={`pressable-subtle rounded-full px-3 py-1 text-xs font-bold ${
+              className={`pressable-subtle fase-knopf px-3 py-1 text-xs font-bold ${
                 filterPos === pos
                   ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"

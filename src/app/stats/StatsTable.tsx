@@ -307,7 +307,7 @@ export default function StatsTable({
               type="button"
               onClick={() => setFilterPos(pos)}
               // Auf dem Handy 36 px hoch — vorher 24, unter dem iOS-Minimum von 28.
-              className={`pressable-subtle h-9 rounded-full px-3.5 text-xs font-bold sm:h-auto sm:px-3 sm:py-1 ${
+              className={`pressable-subtle h-9 fase-knopf px-3.5 text-xs font-bold sm:h-auto sm:px-3 sm:py-1 ${
                 filterPos === pos
                   ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
