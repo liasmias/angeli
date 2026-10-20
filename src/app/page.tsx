@@ -125,7 +125,8 @@ export default async function Home() {
 /**
  * Ein Screenshot ohne eigenen Rahmen: Die Bilder sind genau auf die Karten
  * der App zugeschnitten und tragen deren gefaste Ecken selbst, mit
- * durchsichtigem Rand. Der Schatten folgt per drop-shadow dieser Form.
+ * durchsichtigem Rand. Kontur und Schatten folgen per drop-shadow dieser
+ * Form (siehe .startseite-bild in globals.css).
  */
 function Bildschirm({
   src,
@@ -150,7 +151,7 @@ function Bildschirm({
       decoding="async"
       draggable={false}
       style={{ aspectRatio: `${breite} / ${hoehe}` }}
-      className={`relative h-auto max-w-[400px] select-none drop-shadow-[0_18px_30px_rgba(0,0,0,0.35)] ${className}`}
+      className={`startseite-bild relative h-auto max-w-[400px] select-none ${className}`}
     />
   );
 }
