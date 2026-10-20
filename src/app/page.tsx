@@ -85,12 +85,16 @@ export default async function Home() {
           <Bildschirm
             src="/startseite-stats.webp"
             alt={t.shotStats}
-            className="z-0 w-[min(53cqw,calc(84cqh*0.806))] translate-y-[3%] -rotate-[5deg]"
+            breite={716}
+            hoehe={792}
+            className="z-0 w-[min(54cqw,calc(80cqh*0.904))] translate-y-[2%] -rotate-[5deg]"
           />
           <Bildschirm
             src="/startseite-team.webp"
             alt={t.shotTeam}
-            className="z-10 -ml-[15cqw] w-[min(60cqw,calc(96cqh*0.806))] rotate-[4deg]"
+            breite={716}
+            hoehe={958}
+            className="z-10 -ml-[14cqw] w-[min(58cqw,calc(96cqh*0.747))] rotate-[4deg]"
           />
         </div>
       </div>
@@ -118,22 +122,35 @@ export default async function Home() {
   );
 }
 
-/** Ein Screenshot im schlichten Handyrahmen. */
-function Bildschirm({ src, alt, className }: { src: string; alt: string; className: string }) {
+/**
+ * Ein Screenshot ohne eigenen Rahmen: Die Bilder sind genau auf die Karten
+ * der App zugeschnitten und tragen deren gefaste Ecken selbst, mit
+ * durchsichtigem Rand. Der Schatten folgt per drop-shadow dieser Form.
+ */
+function Bildschirm({
+  src,
+  alt,
+  breite,
+  hoehe,
+  className,
+}: {
+  src: string;
+  alt: string;
+  breite: number;
+  hoehe: number;
+  className: string;
+}) {
   return (
-    <div
-      className={`relative aspect-[780/968] max-w-[440px] overflow-hidden rounded-[22px] bg-white p-1.5 shadow-2xl ring-1 ring-black/10 sm:rounded-[28px] sm:p-2 ${className}`}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        width={390}
-        height={484}
-        decoding="async"
-        draggable={false}
-        className="h-full w-full select-none rounded-[16px] object-cover object-top sm:rounded-[20px]"
-      />
-    </div>
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={src}
+      alt={alt}
+      width={breite / 2}
+      height={hoehe / 2}
+      decoding="async"
+      draggable={false}
+      style={{ aspectRatio: `${breite} / ${hoehe}` }}
+      className={`relative h-auto max-w-[400px] select-none drop-shadow-[0_18px_30px_rgba(0,0,0,0.35)] ${className}`}
+    />
   );
 }
