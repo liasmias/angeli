@@ -58,6 +58,41 @@ type SortKey =
  */
 const PREIS_GRENZEN = [4.5, 5, 5.5, 6, 6.5, 7, 8, 9, 10, 12];
 
+/**
+ * Auf dem Handy die Spalte, nach der gerade sortiert wird.
+ *
+ * Dort sind nur Name, GW und Gesamtpunkte sichtbar. Wer nach Toren sortierte,
+ * sah rechts weiterhin Punkte — die Tore selbst steckten irgendwo in der
+ * Kleingedruckt-Zeile, die Sortierung wirkte willkürlich. Jetzt ersetzt die
+ * sortierte Grösse auf dem Handy die GW-Spalte, wie es FPL macht.
+ */
+const OHNE_EIGENE_SPALTE: SortKey[] = ["totalPoints", "latestPoints", "name"];
+
+function sortWert(r: StatsRow, key: SortKey): string {
+  switch (key) {
+    case "price": return r.price.toFixed(1);
+    case "form": return r.form === null ? "—" : r.form.toFixed(1);
+    case "valuePerMillion": return r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1);
+    case "minutes": return String(r.minutes);
+    case "rating": return r.rating === null ? "—" : r.rating.toFixed(1);
+    case "goals": return String(r.goals);
+    case "assists": return String(r.assists);
+    case "cleanSheets": return r.cleanSheets === null ? "—" : String(r.cleanSheets);
+    case "bonus": return String(r.bonus);
+    case "owned": return `${r.owned}%`;
+    default: return "";
+  }
+}
+
+function sortLabel(key: SortKey, t: ReturnType<typeof getDictionary>["stats"]): string {
+  const labels: Partial<Record<SortKey, string>> = {
+    price: t.price, form: t.form, valuePerMillion: t.value, minutes: t.minutes,
+    rating: t.rating, goals: t.goals, assists: t.assists, cleanSheets: t.cleanSheets,
+    bonus: t.bonus, owned: t.owned,
+  };
+  return labels[key] ?? "";
+}
+
 /** Zeilen je Nachladeschritt. */
 const SCHRITT = 50;
 
@@ -70,11 +105,14 @@ const StatsZeile = memo(function StatsZeile({
   nummer,
   t,
   mitGw,
+  sortiertNach,
 }: {
   r: StatsRow;
   nummer: number;
   t: ReturnType<typeof getDictionary>["stats"];
   mitGw: boolean;
+  /** Sortierte Grösse mit eigener Handy-Spalte, sonst null. */
+  sortiertNach: SortKey | null;
 }) {
   return (
               <tr className="hover:bg-brand-deep/5">
@@ -94,17 +132,14 @@ const StatsZeile = memo(function StatsZeile({
                     <span className="min-w-0">
                       <span className="block truncate">{r.name}</span>
                       {/* Nur auf dem Handy: die ausgeblendeten Spalten kompakt. */}
-                      <span className="block text-[11px] font-medium text-brand-deep/65 sm:hidden">
+                      {/* Nur das Nötigste, eine Zeile. Vorher drei Zeilen mit
+                          Emoji-Kürzeln (⚽ 🅰 ⭐ 👥 🛡) — 84 px je Spieler, sieben pro
+                          Bildschirm. Jeder weitere Wert ist über die Sortierung
+                          erreichbar und erscheint dann als eigene Spalte. */}
+                      <span className="block truncate text-[11px] font-medium text-brand-deep/65 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
                         {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
                         {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
-                        {r.minutes > 0 && ` · ${r.minutes}′`}
-                        {r.rating !== null && ` · Ø★ ${r.rating.toFixed(1)}`}
-                        {r.goals > 0 && ` · ⚽ ${r.goals}`}
-                        {r.assists > 0 && ` · 🅰 ${r.assists}`}
-                        {(r.cleanSheets ?? 0) > 0 && ` · 🛡 ${r.cleanSheets}`}
-                        {r.bonus > 0 && ` · ⭐ ${r.bonus}`}
-                        {r.owned > 0 && ` · 👥 ${r.owned}%`}
                       </span>
                     </span>
                   </span>
@@ -151,8 +186,17 @@ const StatsZeile = memo(function StatsZeile({
                 <td className="hidden px-3 py-2 text-right tabular-nums text-brand-deep/70 sm:table-cell">
                   {r.owned} %
                 </td>
+                {sortiertNach && (
+                  <td className="px-2 py-2 text-right font-bold tabular-nums text-brand-deep sm:hidden">
+                    {sortWert(r, sortiertNach)}
+                  </td>
+                )}
                 {mitGw && (
-                  <td className="px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:px-3">
+                  <td
+                    className={`px-2 py-2 text-right tabular-nums text-brand-deep/80 sm:table-cell sm:px-3 ${
+                      sortiertNach ? "hidden" : ""
+                    }`}
+                  >
                     {r.latestPoints ?? "—"}
                   </td>
                 )}
@@ -222,6 +266,7 @@ export default function StatsTable({
     setAnzahl(SCHRITT);
   }
   const gerendert = visible.slice(0, anzahl);
+  const eigeneSpalte = !OHNE_EIGENE_SPALTE.includes(sortKey);
 
   const fuehler = useRef<HTMLTableRowElement | null>(null);
   useEffect(() => {
@@ -254,13 +299,14 @@ export default function StatsTable({
   return (
     <div className="overflow-hidden chamfer bg-white shadow-sm">
       <div className="flex flex-col gap-2 border-b border-brand-deep/10 p-3 sm:flex-row sm:items-center">
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           {(["ALL", ...POSITIONS] as const).map((pos) => (
             <button
               key={pos}
               type="button"
               onClick={() => setFilterPos(pos)}
-              className={`pressable-subtle rounded-full px-3 py-1 text-xs font-bold ${
+              // Auf dem Handy 36 px hoch — vorher 24, unter dem iOS-Minimum von 28.
+              className={`pressable-subtle h-9 rounded-full px-3.5 text-xs font-bold sm:h-auto sm:px-3 sm:py-1 ${
                 filterPos === pos
                   ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
@@ -270,19 +316,24 @@ export default function StatsTable({
             </button>
           ))}
         </div>
-        <div className="flex flex-1 gap-2">
+        {/* Auf dem Handy zwei Zeilen: Suche über die volle Breite, darunter die
+            drei Auswahlfelder gleich breit. Vorher stand alles in einer Zeile,
+            die 431 px brauchte bei 334 px Platz — das Suchfeld schrumpfte auf
+            26 px, und die Sortierung wurde rechts abgeschnitten. */}
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row">
           <input
             type="search"
             style={{ WebkitAppearance: "none" }}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.search}
-            className="min-w-0 flex-1 rounded-lg border border-brand-deep/15 px-3 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
+            className="w-full min-w-0 rounded-lg border border-brand-deep/15 px-3 py-2 text-base outline-none focus:border-brand-magenta sm:flex-1 sm:py-1.5 sm:text-sm"
           />
+          <div className="grid grid-cols-3 gap-2 sm:flex">
           <select
             value={filterClub}
             onChange={(e) => setFilterClub(e.target.value)}
-            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
+            className="w-full min-w-0 rounded-lg border border-brand-deep/15 px-2 py-2 text-base outline-none focus:border-brand-magenta sm:w-auto sm:py-1.5 sm:text-sm"
           >
             <option value="ALL">{t.club}</option>
             {clubs.map((c) => (
@@ -294,10 +345,12 @@ export default function StatsTable({
           <select
             value={maxPreis ?? "ALL"}
             onChange={(e) => setMaxPreis(e.target.value === "ALL" ? null : Number(e.target.value))}
-            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm"
+            className="w-full min-w-0 rounded-lg border border-brand-deep/15 px-2 py-2 text-base outline-none focus:border-brand-magenta sm:w-auto sm:py-1.5 sm:text-sm"
             aria-label={t.maxPrice}
           >
-            <option value="ALL">{t.maxPrice}</option>
+            {/* Kurzform als Platzhalter: "Höchstpreis" passte auf dem Handy nicht
+                in das Drittel der Zeile. Für Screenreader bleibt aria-label. */}
+            <option value="ALL">{t.maxPriceShort}</option>
             {PREIS_GRENZEN.map((g) => (
               <option key={g} value={g}>
                 ≤ {g.toFixed(1)}
@@ -314,7 +367,7 @@ export default function StatsTable({
               setSortKey(key);
               setSortDesc(key !== "name");
             }}
-            className="rounded-lg border border-brand-deep/15 px-2 py-1.5 text-base outline-none focus:border-brand-magenta sm:text-sm sm:hidden"
+            className="w-full min-w-0 rounded-lg border border-brand-deep/15 px-2 py-2 text-base outline-none focus:border-brand-magenta sm:hidden"
             aria-label={t.sortBy}
           >
             <option value="totalPoints">{t.sortPoints}</option>
@@ -331,6 +384,7 @@ export default function StatsTable({
             <option value="owned">{t.sortOwned}</option>
             <option value="name">{t.sortName}</option>
           </select>
+          </div>
         </div>
       </div>
 
@@ -402,8 +456,14 @@ export default function StatsTable({
                   {t.owned}{sortIndicator("owned")}
                 </button>
               </th>
+              {eigeneSpalte && (
+                <th className="px-2 py-2 text-right text-brand-deep sm:hidden">
+                  {sortLabel(sortKey, t)}
+                  {sortIndicator(sortKey)}
+                </th>
+              )}
               {latestGameweekNumber !== null && (
-                <th className="px-2 py-2 text-right sm:px-3">
+                <th className={`px-2 py-2 text-right sm:table-cell sm:px-3 ${eigeneSpalte ? "hidden" : ""}`}>
                   <button
                     type="button"
                     onClick={() => toggleSort("latestPoints")}
@@ -423,16 +483,23 @@ export default function StatsTable({
           </thead>
           <tbody className="divide-y divide-brand-deep/5">
             {gerendert.map((r, i) => (
-              <StatsZeile key={r.id} r={r} nummer={i + 1} t={t} mitGw={latestGameweekNumber !== null} />
+              <StatsZeile
+                key={r.id}
+                r={r}
+                nummer={i + 1}
+                t={t}
+                mitGw={latestGameweekNumber !== null}
+                sortiertNach={eigeneSpalte ? sortKey : null}
+              />
             ))}
             {gerendert.length < visible.length && (
               <tr ref={fuehler} aria-hidden>
-                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="h-10" />
+                <td colSpan={17} className="h-10" />
               </tr>
             )}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={latestGameweekNumber !== null ? 16 : 15} className="px-3 py-8 text-center text-brand-deep/65">
+                <td colSpan={17} className="px-3 py-8 text-center text-brand-deep/65">
                   {t.noneFound}
                 </td>
               </tr>

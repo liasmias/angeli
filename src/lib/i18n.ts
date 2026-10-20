@@ -320,6 +320,7 @@ const de = {
     minutes: "Min.",
     minutesTitle: "Einsatzminuten der Saison — zählt seit Neuem auch für die Preisanpassung",
     maxPrice: "Höchstpreis",
+    maxPriceShort: "Preis bis",
     priceDeltaTitle: (d: number) =>
       `${d > 0 ? "+" : ""}${d.toFixed(1)} Mio. seit Saisonstart`,
     goals: "Tore",
@@ -642,6 +643,7 @@ const en: typeof de = {
     minutes: "Mins",
     minutesTitle: "Minutes played this season — now also counts towards price changes",
     maxPrice: "Max price",
+    maxPriceShort: "Price up to",
     priceDeltaTitle: (d: number) =>
       `${d > 0 ? "+" : ""}${d.toFixed(1)}m since the start of the season`,
     goals: "Goals",
