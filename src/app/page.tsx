@@ -86,8 +86,8 @@ export default async function Home() {
             src="/startseite-stats.webp"
             alt={t.shotStats}
             breite={716}
-            hoehe={792}
-            className="z-0 w-[min(54cqw,calc(80cqh*0.904))] translate-y-[2%] -rotate-[5deg]"
+            hoehe={912}
+            className="z-0 w-[min(54cqw,calc(82cqh*0.785))] translate-y-[2%] -rotate-[5deg]"
           />
           <Bildschirm
             src="/startseite-team.webp"
