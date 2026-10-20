@@ -271,6 +271,7 @@ export default function PastGameweek({
         </div>
       )}
 
+      <div className="schatten-fase">
       <div className="pitch px-2 py-8 sm:px-6">
         <div className="relative z-10 flex flex-col gap-7">
           {POSITIONS.map((pos) => {
@@ -296,6 +297,7 @@ export default function PastGameweek({
             );
           })}
         </div>
+      </div>
       </div>
 
       <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4">

@@ -1037,7 +1037,7 @@ export default function TeamBuilder({
 
   return (
     // pb-28: Platz fuer die feste Aktionsleiste, damit sie nichts verdeckt.
-    <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:justify-center lg:pb-0">
+    <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:pb-0">
       {/* Toast */}
       {toast && (
         <p
@@ -1272,9 +1272,12 @@ export default function TeamBuilder({
       )}
 
       {/* ===== Spielfeld ===== */}
-      {/* Auf breiten Bildschirmen gedeckelt — sonst wachsen Spielfeld und
-          Bank ins Riesige und wirken neben dem fixen Markt unzentriert. */}
-      <section className="min-w-0 flex-1 lg:max-w-[44rem]">
+      {/* Füllt die Breite neben dem Markt. Vorher war der Abschnitt auf 44rem
+          gedeckelt und der ganze Block mittig gesetzt — Spielfeld und Markt
+          standen dadurch 12 px nach rechts versetzt, nicht bündig unter dem
+          Titel. Die Seite selbst ist auf 72rem begrenzt, das Spielfeld wird
+          also nie grösser als etwa 45rem. */}
+      <section className="min-w-0 flex-1">
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
@@ -1369,6 +1372,9 @@ export default function TeamBuilder({
         </div>
 
         {/* Rasen */}
+        {/* Schatten über eine Hülle: box-shadow würde vom clip-path der
+            gefasten Ecken mit abgeschnitten, drop-shadow folgt ihnen. */}
+        <div className="schatten-fase">
         <div className="pitch px-2 py-8 sm:px-6">
           <div className="relative z-10 flex flex-col gap-7">
             {POSITIONS.map((pos) => {
@@ -1473,6 +1479,7 @@ export default function TeamBuilder({
               );
             })}
           </div>
+        </div>
         </div>
 
         {/* Bank — Torhüter fix zuerst, danach die Einwechsel-Reihenfolge. */}

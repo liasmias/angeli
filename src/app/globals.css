@@ -304,6 +304,14 @@ button,
   animation: toast-in var(--dauer-schnell) ease-out;
 }
 
+/* Schatten für gefaste Flächen (Spielfeld): wie bei den Screenshots der
+   Startseite. drop-shadow statt box-shadow, weil Letzterer vom clip-path
+   der Fasen mit abgeschnitten würde. Nur um Elemente ohne position:fixed
+   im Inneren legen — ein Filter verschiebt deren Bezugsrahmen. */
+.schatten-fase {
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35));
+}
+
 /* Rasen mit Streifen + Mittellinie/-kreis + Strafräumen */
 .pitch {
   position: relative;
