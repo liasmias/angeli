@@ -48,6 +48,14 @@ h2 {
   background: linear-gradient(100deg, var(--brand-deep) 0%, #1f8b44 55%, #8ef2a8 130%);
 }
 
+/* Startseite: genau ein Bildschirm, nichts scrollt — auf dem Handy wie am
+   Rechner. Wirkt nur, solange die Startseite gerendert ist (:has). */
+html:has(main.startseite),
+body:has(main.startseite) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .brand-gradient-hero {
   background:
     radial-gradient(ellipse 80% 60% at 85% 10%, rgba(142, 242, 168, 0.34), transparent),

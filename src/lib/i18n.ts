@@ -37,24 +37,9 @@ const de = {
     cta: "Jetzt Team erstellen",
     login: "Einloggen",
     toTeam: "Zu meinem Team",
+    shotTeam: "Aufstellung auf dem Spielfeld mit Punkten je Spieler",
+    shotStats: "Statistikseite mit Punkten, Form und Wert aller Spieler",
     leaderboard: "Rangliste",
-    installTitle: "Als App aufs Handy",
-    installIos: "iPhone: In Safari auf Teilen tippen, dann «Zum Home-Bildschirm».",
-    installAndroid: "Android: In Chrome aufs Menü (⋮) tippen, dann «Zum Startbildschirm hinzufügen».",
-    cards: [
-      {
-        title: "100 Mio. Budget für 15 Spieler",
-        text: "2 Torhüter, 5 Verteidiger, 5 Mittelfeldspieler, 3 Stürmer.",
-      },
-      {
-        title: "Captain & Transfers",
-        text: "Dein Captain zählt doppelt. Pro Spieltag gibt es einen Gratis-Transfer, jeder weitere kostet Punkte.",
-      },
-      {
-        title: "Echte Statistiken",
-        text: "Tore, Assists, Zu-null-Spiele und Karten aus der Schweizer Liga fliessen automatisch in deine Punkte.",
-      },
-    ],
   },
   auth: {
     createAccount: "Konto erstellen",
@@ -375,24 +360,9 @@ const en: typeof de = {
     cta: "Create your team",
     login: "Log in",
     toTeam: "To my team",
+    shotTeam: "Lineup on the pitch with points per player",
+    shotStats: "Statistics page with points, form and value of every player",
     leaderboard: "Leaderboard",
-    installTitle: "Get it as an app",
-    installIos: "iPhone: in Safari tap Share, then “Add to Home Screen”.",
-    installAndroid: "Android: in Chrome tap the menu (⋮), then “Add to Home screen”.",
-    cards: [
-      {
-        title: "100m budget for 15 players",
-        text: "2 goalkeepers, 5 defenders, 5 midfielders, 3 forwards.",
-      },
-      {
-        title: "Captain & transfers",
-        text: "Your captain counts double. Each gameweek comes with one free transfer; every additional one costs points.",
-      },
-      {
-        title: "Real statistics",
-        text: "Goals, assists, clean sheets and cards from the Swiss league flow into your points automatically.",
-      },
-    ],
   },
   auth: {
     createAccount: "Create account",
