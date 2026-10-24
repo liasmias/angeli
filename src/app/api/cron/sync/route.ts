@@ -273,6 +273,8 @@ export async function GET(request: Request) {
   const nichtZugeordnet: string[] = [];
   // Eingefrorene Partien, für die Statusnotiz.
   const eingefroren: string[] = [];
+  // Spieler, die die Datenquelle in einer Partie unter derselben Kennung führt.
+  const doppelteKennung: string[] = [];
 
   // Partien, zu denen schon Statistik vorliegt. Die Frist greift nur für
   // diese: Käme eine Partie wegen einer Störung erst nach drei Tagen an,
@@ -349,7 +351,32 @@ export async function GET(request: Request) {
     }
 
     const playerStats = await getFixturePlayerStats(fixture.fixture.id);
+
+    // Dieselbe Kennung zweimal in einer Partie: API-Football führt dann zwei
+    // Spieler unter einer ID. Am 24.10. traf das beide Luzerner Freimanns
+    // (Nr. 13 und Nr. 46, beide 511608) — der zweite Eintrag überschrieb den
+    // ersten, und Bung Hua bekam die gelbe Karte und das Eigentor von Bung
+    // Meng. Welcher Eintrag zu wem gehört, lässt sich aus den Daten nicht
+    // sicher ableiten; deshalb werden solche Einträge nicht geschrieben,
+    // sondern gemeldet und von Hand erfasst. Eine bereits erfasste Zeile
+    // bleibt dadurch auch bei jedem weiteren Lauf stehen. ID 0 ist davon
+    // ausgenommen — sie steht für viele verschiedene Spieler und wird über
+    // den Namen zugeordnet.
+    const kennungenInPartie = new Map<number, number>();
+    for (const e of playerStats) {
+      if (e.apiFootballPlayerId) {
+        kennungenInPartie.set(e.apiFootballPlayerId, (kennungenInPartie.get(e.apiFootballPlayerId) ?? 0) + 1);
+      }
+    }
+
     for (const entry of playerStats) {
+      if ((kennungenInPartie.get(entry.apiFootballPlayerId) ?? 0) > 1) {
+        const heim = fixture.teams.home.name;
+        const gast = fixture.teams.away.name;
+        const meldung = `${entry.name} (API ${entry.apiFootballPlayerId}) in ${heim}–${gast}`;
+        if (!doppelteKennung.includes(meldung)) doppelteKennung.push(meldung);
+        continue;
+      }
       const playerId = spielerFinden(entry.apiFootballPlayerId, entry.name, entry.teamApiId);
       if (!playerId) {
         // Gespielt, aber nicht zuzuordnen — das ist der Fall, der sonst
@@ -780,7 +807,8 @@ export async function GET(request: Request) {
         (nichtZugeordnet.length
           ? ` — nicht zugeordnet: ${[...new Set(nichtZugeordnet)].join(", ")}`
           : "") +
-        (eingefroren.length ? ` — eingefroren: ${eingefroren.length}` : ""),
+        (eingefroren.length ? ` — eingefroren: ${eingefroren.length}` : "") +
+        (doppelteKennung.length ? ` — DOPPELTE KENNUNG, von Hand erfassen: ${doppelteKennung.join("; ")}` : ""),
     })
     .eq("id", 1)
     .then(({ error }) => {
@@ -799,6 +827,7 @@ export async function GET(request: Request) {
     ohneSpielerdaten: ohneDaten,
     nichtZugeordnet: [...new Set(nichtZugeordnet)],
     eingefroren,
+    doppelteKennung,
     captainSwaps,
     priceRises,
     priceReverts,
