@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SITZUNGS_COOKIE } from "@/lib/supabase/cookie";
 
 // `/passwort-neu` bleibt bewusst offen: Wer über den E-Mail-Link kommt, hat
 // zwar eine Sitzung, soll aber auch bei abgelaufenem Link die Seite mit dem
@@ -16,6 +17,7 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: SITZUNGS_COOKIE,
       cookies: {
         getAll() {
           return request.cookies.getAll();

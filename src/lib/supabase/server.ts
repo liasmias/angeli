@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
+import { SITZUNGS_COOKIE } from "./cookie";
 
 // Use inside Server Components, Server Actions and Route Handlers only.
 export async function createClient() {
@@ -10,6 +11,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: SITZUNGS_COOKIE,
       cookies: {
         getAll() {
           return cookieStore.getAll();
