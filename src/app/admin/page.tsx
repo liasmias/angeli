@@ -3,11 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { replyToReport, resolveReport, saveAnnouncement, toggleGameweekLock } from "./actions";
 import SyncStatus from "./SyncStatus";
+import { adminSeiteSichern } from "@/lib/admin-guard";
 
 export default async function AdminPage() {
+  await adminSeiteSichern();
   const supabase = await createClient();
   // reports ist per RLS für normale Clients gesperrt — Zugriff nur hier,
-  // hinter dem Admin-Guard des Layouts.
+  // hinter dem Admin-Guard oben.
   const admin = createAdminClient();
   const [{ data: gameweeks }, { data: settings }, { data: reports }] = await Promise.all([
     supabase

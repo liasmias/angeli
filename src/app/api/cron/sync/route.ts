@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFixturesByRound, getFixturesByIds, getFixturePlayerStats } from "@/lib/football-api/client";
@@ -29,8 +30,15 @@ const HAT_DATEN = new Set([...LIVE_STATUSES, ...FINISHED_STATUSES]);
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Ohne gesetztes Secret sperren statt öffnen: Sonst wäre "Bearer undefined"
+  // ein gültiger Schlüssel für einen Endpunkt mit Service-Role-Rechten.
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET fehlt" }, { status: 503 });
+  }
+  const erhalten = Buffer.from(request.headers.get("authorization") ?? "");
+  const erwartet = Buffer.from(`Bearer ${secret}`);
+  if (erhalten.length !== erwartet.length || !timingSafeEqual(erhalten, erwartet)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

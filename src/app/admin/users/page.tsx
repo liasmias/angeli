@@ -1,17 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import {
   addPointAdjustment,
   removePointAdjustment,
   setUserAdmin,
   setUserBlocked,
 } from "./actions";
+import { adminSeiteSichern } from "@/lib/admin-guard";
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient();
-  const {
-    data: { user: me },
-  } = await supabase.auth.getUser();
+  const me = await adminSeiteSichern();
 
   // Service-Role-Client: die profiles-Tabelle ist für normale Clients
   // absichtlich schreibgeschützt, und wir wollen alle Accounts sehen.
