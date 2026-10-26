@@ -197,9 +197,11 @@ export async function saveSquad(
   }
 
   // --- persist squad ---
-  await supabase.from("squad_players").delete().eq("squad_id", squadRow.id);
-  const squadPlayerRows = squad.map((s) => ({
-    squad_id: squadRow.id,
+  // Alles in einer Transaktion (Migration 0026): Scheitert ein Schritt, bleibt
+  // der alte Kader stehen. Hat ein zweiter Save (Doppelklick, zweiter Tab)
+  // den Kader inzwischen geändert, bricht die Funktion ab, statt Transfers
+  // und Gewinne doppelt zu buchen.
+  const spielerRows = squad.map((s) => ({
     player_id: s.playerId,
     is_starting: s.isStarting,
     is_captain: s.isCaptain,
@@ -207,53 +209,35 @@ export async function saveSquad(
     purchase_price: einkaufNeu.get(s.playerId) ?? 0,
     bench_order: benchOrderById.get(s.playerId) ?? 0,
   }));
-  const { error: insertError } = await supabase.from("squad_players").insert(squadPlayerRows);
-  if (insertError) return { error: "Speichern fehlgeschlagen: " + insertError.message };
+  const transferRows =
+    !isFirstSquad && transfersNow > 0
+      ? Array.from({ length: transfersNow }).map((_, i) => ({
+          player_out_id: removed[i] ?? null,
+          player_in_id: added[i] ?? null,
+          // Die ersten `freeLeft` Transfers dieses Spieltags sind gratis, der Rest kostet.
+          points_cost: costFree || i < freeLeft ? 0 : settings.extra_transfer_cost,
+        }))
+      : [];
 
-  if (Math.abs(realisiert) > 1e-9) {
-    await supabase
-      .from("squads")
-      .update({ realised_gains: Number(squadRow.realised_gains ?? 0) + realisiert })
-      .eq("id", squadRow.id);
+  const { error: saveError } = await supabase.rpc("kader_speichern", {
+    p_squad_id: squadRow.id,
+    p_gameweek_id: nextGameweek.id,
+    p_bisher: [...existingIds],
+    p_spieler: spielerRows,
+    p_realisiert: realisiert,
+    p_transfers: transferRows,
+    // Spiegelt nur noch den abgeleiteten Stand für die Anzeige.
+    // Bei aktiver Wildcard steht das Guthaben still — die Transfers dieser
+    // Runde kosten nichts und dürfen es deshalb nicht aufzehren.
+    p_gratis_rest: wildcard ? freeLeft : Math.max(0, freeLeft - (isFirstSquad ? 0 : transfersNow)),
+  });
+  if (saveError) {
+    if (saveError.message.includes("kader_veraltet")) {
+      return { error: "Dein Kader wurde inzwischen gespeichert. Bitte Seite neu laden und nochmals prüfen." };
+    }
+    console.error("kader_speichern", saveError);
+    return { error: "Speichern fehlgeschlagen. Dein bisheriger Kader ist unverändert." };
   }
-
-  if (!isFirstSquad && transfersNow > 0) {
-    const transferRows = Array.from({ length: transfersNow }).map((_, i) => ({
-      squad_id: squadRow.id,
-      gameweek_id: nextGameweek.id,
-      player_out_id: removed[i] ?? null,
-      player_in_id: added[i] ?? null,
-      // Die ersten `freeLeft` Transfers dieses Spieltags sind gratis, der Rest kostet.
-      points_cost: costFree || i < freeLeft ? 0 : settings.extra_transfer_cost,
-    }));
-    await supabase.from("transfers").insert(transferRows);
-  }
-
-  // Spiegelt nur noch den abgeleiteten Stand für die Anzeige.
-  // Bei aktiver Wildcard steht das Guthaben still — die Transfers dieser
-  // Runde kosten nichts und dürfen es deshalb nicht aufzehren.
-  await supabase
-    .from("squads")
-    .update({
-      free_transfers_remaining: wildcard
-        ? freeLeft
-        : Math.max(0, freeLeft - (isFirstSquad ? 0 : transfersNow)),
-    })
-    .eq("id", squadRow.id);
-
-  // --- snapshot this gameweek's lineup for scoring ---
-  await supabase.from("gameweek_squads").delete().eq("squad_id", squadRow.id).eq("gameweek_id", nextGameweek.id);
-  const snapshotRows = squad.map((s) => ({
-    squad_id: squadRow.id,
-    gameweek_id: nextGameweek.id,
-    player_id: s.playerId,
-    is_starting: s.isStarting,
-    is_captain: s.isCaptain,
-    is_vice_captain: s.isViceCaptain,
-    bench_order: benchOrderById.get(s.playerId) ?? 0,
-    points_earned: null,
-  }));
-  await supabase.from("gameweek_squads").insert(snapshotRows);
 
   revalidatePath("/team");
   return { savedForGameweek: nextGameweek.number };

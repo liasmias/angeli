@@ -419,6 +419,18 @@ export interface Database {
       };
     };
     Functions: {
+      kader_speichern: {
+        Args: {
+          p_squad_id: number;
+          p_gameweek_id: number;
+          p_bisher: number[];
+          p_spieler: unknown;
+          p_realisiert: number;
+          p_transfers: unknown;
+          p_gratis_rest: number;
+        };
+        Returns: undefined;
+      };
       update_username: {
         Args: { p_username: string };
         Returns: void;
