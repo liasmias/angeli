@@ -260,17 +260,63 @@ button,
 }
 
 /* Wer Bewegung abbestellt hat, bekommt die Endzustaende sofort. */
-/* Ladeplatzhalter: ruhiges Pulsieren statt Spinner. */
-@keyframes skelett-puls {
-  0%, 100% { opacity: 1 }
-  50% { opacity: 0.55 }
+/* Ladeplatzhalter: ein Lichtstreifen wandert über die Balken, statt dass sie
+   nur pulsieren — wirkt wie Arbeit, nicht wie Warten. background-attachment
+   fixed lässt alle Balken denselben Streifen zeigen, er zieht also als eine
+   Welle über die ganze Seite. */
+@keyframes skelett-schimmer {
+  from { background-position: -60vw 0 }
+  to { background-position: 160vw 0 }
 }
 .skelett {
-  animation: skelett-puls 1.4s ease-in-out infinite;
+  background-image: linear-gradient(
+    100deg,
+    transparent 0,
+    rgb(255 255 255 / 0.55) 12vw,
+    transparent 24vw
+  );
+  background-size: 24vw 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: skelett-schimmer 1.3s var(--kurve-aus) infinite;
+}
+
+/* Gleitende Markierung im Umschalter (SegmentUmschalter). */
+.segment-markierung {
+  transition: transform var(--dauer-gross) var(--kurve-aus);
+}
+
+/* Inhalt unter einem Umschalter fährt aus der Richtung herein, in die die
+   Markierung gleitet: links ist Gesamt, rechts Spieltag. */
+@keyframes rutsch-von-rechts {
+  from { opacity: 0; transform: translateX(28px) }
+  to { opacity: 1; transform: none }
+}
+@keyframes rutsch-von-links {
+  from { opacity: 0; transform: translateX(-28px) }
+  to { opacity: 1; transform: none }
+}
+.rutsch-von-rechts {
+  animation: rutsch-von-rechts var(--dauer-gross) var(--kurve-aus);
+}
+.rutsch-von-links {
+  animation: rutsch-von-links var(--dauer-gross) var(--kurve-aus);
+}
+
+/* Jede neue Seite steigt kurz auf (app/template.tsx). */
+@keyframes seite-rein {
+  from { opacity: 0; transform: translateY(8px) }
+  to { opacity: 1; transform: none }
+}
+.seite-rein {
+  animation: seite-rein var(--dauer-gross) var(--kurve-aus);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skelett,
+  .rutsch-von-rechts,
+  .rutsch-von-links,
+  .seite-rein,
   .sheet-up,
   .fade-in,
   .tile-in,
@@ -279,7 +325,8 @@ button,
     animation: none;
   }
   .pressable,
-  .pressable-subtle {
+  .pressable-subtle,
+  .segment-markierung {
     transition: none;
   }
 }

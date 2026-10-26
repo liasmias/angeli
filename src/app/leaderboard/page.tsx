@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SegmentUmschalter from "@/components/segment-umschalter";
 import { createClient } from "@/lib/supabase/server";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
@@ -110,6 +111,7 @@ export default async function LeaderboardPage({
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
         <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">{t.title}</h1>
         <AnsichtUmschalter t={t} spieltag />
+        <div key="spieltag" className="rutsch-von-rechts">
         <p className="mb-3 text-sm text-brand-deep/70">{t.gwIntro(runde)}</p>
         <nav aria-label={t.gwPick} className="-mx-6 mb-6 overflow-x-auto px-6">
           <div className="flex gap-1.5">
@@ -129,7 +131,10 @@ export default async function LeaderboardPage({
             ))}
           </div>
         </nav>
-        <LeaderboardTable rows={zeilen} lang={lang} />
+        <div key={runde} className="fade-in">
+          <LeaderboardTable rows={zeilen} lang={lang} />
+        </div>
+        </div>
       </main>
     );
   }
@@ -182,11 +187,13 @@ export default async function LeaderboardPage({
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
       <h1 className="mb-1 text-2xl font-bold tracking-tight text-brand-deep">{t.title}</h1>
       <AnsichtUmschalter t={t} spieltag={false} zeigen={auswaehlbar.length > 0} />
+      <div key="gesamt" className={auswaehlbar.length > 0 ? "rutsch-von-links" : undefined}>
       <p className="mb-1 text-sm text-brand-deep/70">{t.intro}</p>
       {vorletzte !== null && letzte !== null && (
         <p className="mb-6 text-sm text-brand-deep/65">{t.movementHint(letzte, vorletzte)}</p>
       )}
       <LeaderboardTable rows={rows} lang={lang} />
+      </div>
     </main>
   );
 }
@@ -202,22 +209,13 @@ function AnsichtUmschalter({
   zeigen?: boolean;
 }) {
   if (!zeigen) return null;
-  const klasse = (aktiv: boolean) =>
-    `pressable-subtle flex-1 fase-knopf px-4 py-1.5 text-center text-sm font-bold ${
-      aktiv ? "bg-brand-deep text-brand-accent" : "text-brand-deep/70 hover:text-brand-deep"
-    }`;
   return (
-    <div className="my-4 flex fase-knopf bg-brand-deep/5 p-1">
-      <Link href="/leaderboard" aria-current={!spieltag ? "page" : undefined} className={klasse(!spieltag)}>
-        {t.viewTotal}
-      </Link>
-      <Link
-        href="/leaderboard?ansicht=spieltag"
-        aria-current={spieltag ? "page" : undefined}
-        className={klasse(spieltag)}
-      >
-        {t.viewGameweek}
-      </Link>
-    </div>
+    <SegmentUmschalter
+      aktiv={spieltag ? 1 : 0}
+      optionen={[
+        { href: "/leaderboard", label: t.viewTotal },
+        { href: "/leaderboard?ansicht=spieltag", label: t.viewGameweek },
+      ]}
+    />
   );
 }
