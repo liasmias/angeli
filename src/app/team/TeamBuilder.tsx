@@ -1068,7 +1068,10 @@ export default function TeamBuilder({
             const r = anker.getBoundingClientRect();
             const links = Math.min(Math.max(r.left + r.width / 2, 160), window.innerWidth - 160);
             // Seite nach dem tatsaechlich freien Platz waehlen und die Hoehe
-            // darauf begrenzen. Mit der Spielerkarte ist das Menue deutlich
+            // darauf begrenzen. Zentriert wird mit `translate`, nicht mit
+            // `transform`: Das setzt schon die pop-in-Animation, und solange sie
+            // lief, sass das Menue eine halbe Breite zu weit rechts und sprang
+            // am Ende an seinen Platz. Mit der Spielerkarte ist das Menue deutlich
             // hoeher als frueher — eine feste Schwelle liess es oben aus dem
             // Bild laufen, und die Werte waren abgeschnitten.
             const platzOben = r.top - 16;
@@ -1078,13 +1081,13 @@ export default function TeamBuilder({
                 ? {
                     left: links,
                     bottom: window.innerHeight - r.top + 8,
-                    transform: "translateX(-50%)",
+                    translate: "-50% 0",
                     maxHeight: platzOben,
                   }
                 : {
                     left: links,
                     top: r.bottom + 8,
-                    transform: "translateX(-50%)",
+                    translate: "-50% 0",
                     maxHeight: platzUnten,
                   };
           }
