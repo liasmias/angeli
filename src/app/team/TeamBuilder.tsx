@@ -1109,7 +1109,7 @@ export default function TeamBuilder({
               style={popoverStyle}
               className={
                 popoverStyle
-                  ? "pop-in fixed z-50 w-80 overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-2xl outline-none"
+                  ? "menue-rein fixed z-50 w-80 overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-2xl outline-none"
                   : "sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none"
               }
             >

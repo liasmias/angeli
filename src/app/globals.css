@@ -281,6 +281,16 @@ button,
   animation: skelett-schimmer 1.3s var(--kurve-aus) infinite;
 }
 
+/* Spielermenü: ruhig einblenden statt aufploppen — kaum Grösse, kein
+   Überschwingen, nur ein Hauch Bewegung zur Karte hin. */
+@keyframes menue-rein {
+  from { opacity: 0; transform: scale(0.98) translateY(4px) }
+  to { opacity: 1; transform: none }
+}
+.menue-rein {
+  animation: menue-rein 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
 /* Gleitende Markierung im Umschalter (SegmentUmschalter). */
 .segment-markierung {
   transition: transform var(--dauer-gross) var(--kurve-aus);
@@ -314,6 +324,7 @@ button,
 
 @media (prefers-reduced-motion: reduce) {
   .skelett,
+  .menue-rein,
   .rutsch-von-rechts,
   .rutsch-von-links,
   .seite-rein,
