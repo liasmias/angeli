@@ -202,8 +202,8 @@ export default async function RegelnPage() {
                   with a shot or pass gets the assist.
                 </li>
                 <li>
-                  <b>Penalty and free kick:</b> if the goal is scored directly, the player who won
-                  the foul gets the assist — unless he takes it himself.
+                  <b>Free kick:</b> if the goal is scored directly, the player who won the foul
+                  gets the assist — unless he takes it himself. Penalties never give an assist.
                 </li>
               </ul>
               <p className="mt-1">
@@ -395,8 +395,9 @@ export default async function RegelnPage() {
                 den Assist.
               </li>
               <li>
-                <b>Elfmeter und Freistoss:</b> Fällt das Tor direkt, erhält der Spieler, der das
-                Foul herausgeholt hat, den Assist — ausser er tritt selbst an.
+                <b>Freistoss:</b> Fällt das Tor direkt, erhält der Spieler, der das Foul
+                herausgeholt hat, den Assist — ausser er tritt selbst an. Bei Elfmetern gibt es
+                keinen Assist.
               </li>
             </ul>
             <p className="mt-1">
