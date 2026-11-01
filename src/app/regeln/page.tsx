@@ -178,6 +178,39 @@ export default async function RegelnPage() {
               rating). Ties share the rank — two joint firsts both get 3, the next gets 1.
               Bonus appears once the match has finished.
             </p>
+            <div className="rounded-lg bg-brand-deep/5 p-3">
+              <p className="mb-1">
+                <b>When is it an assist?</b> The assist goes to the player of the scoring team who
+                makes the last pass or touch before the goal.
+              </p>
+              <ul className="ml-4 list-disc space-y-1">
+                <li>
+                  <b>Deflected pass:</b> still an assist if exactly one opponent touches the ball
+                  and the scorer receives it inside the box. Outside the box, the touch must not
+                  significantly change where the pass was going.
+                </li>
+                <li>
+                  <b>Lost possession:</b> if the scorer loses the ball and wins it back, there is
+                  no assist.
+                </li>
+                <li>
+                  <b>Rebound:</b> if a shot is blocked, saved or hits the woodwork and the rebound
+                  goes in, the shooter gets the assist.
+                </li>
+                <li>
+                  <b>Own goal:</b> whoever forces the opponent to put the ball into his own net
+                  with a shot or pass gets the assist.
+                </li>
+                <li>
+                  <b>Penalty and free kick:</b> if the goal is scored directly, the player who won
+                  the foul gets the assist — unless he takes it himself.
+                </li>
+              </ul>
+              <p className="mt-1">
+                Assists come from our data provider. If one is missing under these rules, we
+                correct it by hand.
+              </p>
+            </div>
           </Abschnitt>
 
           <Abschnitt titel="Automatic substitutions">
@@ -338,6 +371,39 @@ export default async function RegelnPage() {
             Spieler-Rating). Bei Gleichstand teilen sich Spieler den Rang — zwei geteilte Erste
             bekommen beide 3, der Nächste 1. Der Bonus erscheint, sobald die Partie beendet ist.
           </p>
+          <div className="rounded-lg bg-brand-deep/5 p-3">
+            <p className="mb-1">
+              <b>Wann gibt es einen Assist?</b> Den Assist erhält der Spieler des treffenden Teams,
+              der den letzten Pass oder die letzte Berührung vor dem Tor hat.
+            </p>
+            <ul className="ml-4 list-disc space-y-1">
+              <li>
+                <b>Abgefälschter Pass:</b> zählt trotzdem, wenn genau ein Gegenspieler den Ball
+                berührt und der Torschütze ihn im Strafraum erhält. Ausserhalb des Strafraums darf
+                die Berührung das Ziel des Passes nicht wesentlich verändern.
+              </li>
+              <li>
+                <b>Ballverlust:</b> Verliert der Torschütze den Ball und erobert ihn zurück, gibt
+                es keinen Assist.
+              </li>
+              <li>
+                <b>Abpraller:</b> Wird ein Schuss geblockt, gehalten oder trifft er Pfosten oder
+                Latte und fällt danach das Tor, erhält der Schütze den Assist.
+              </li>
+              <li>
+                <b>Eigentor:</b> Wer den Gegner mit Schuss oder Pass zum Eigentor zwingt, erhält
+                den Assist.
+              </li>
+              <li>
+                <b>Elfmeter und Freistoss:</b> Fällt das Tor direkt, erhält der Spieler, der das
+                Foul herausgeholt hat, den Assist — ausser er tritt selbst an.
+              </li>
+            </ul>
+            <p className="mt-1">
+              Assists stammen aus unserer Datenquelle. Fehlt einer nach diesen Regeln, korrigieren
+              wir ihn von Hand.
+            </p>
+          </div>
         </Abschnitt>
 
         <Abschnitt titel="Automatische Einwechslung">
