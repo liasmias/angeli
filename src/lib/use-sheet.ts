@@ -17,12 +17,24 @@ import { useEffect, useRef } from "react";
  *   3. Der Zurück-Knopf schliesst das Sheet, statt die Seite zu verlassen.
  *      Auf Android ist das die erwartete Geste, auf iOS das Wischen vom Rand.
  *
+ * Mit `wischen` schliesst auf dem Handy zusätzlich ein Wischen nach unten. Nur
+ * für Sheets, deren Inhalt selbst scrollt: Der Spielermarkt hat eine innere
+ * Liste, dort würde die Geste das Scrollen abfangen.
+ *
  * Gibt eine Referenz zurück, die auf den Sheet-Inhalt gesetzt wird — dorthin
  * wandert der Fokus beim Öffnen, und von dort zurück auf den auslösenden
  * Knopf beim Schliessen.
  */
-export function useSheet(offen: boolean, schliessen: () => void) {
+export function useSheet(offen: boolean, schliessen: () => void, { wischen = false } = {}) {
   const inhalt = useRef<HTMLDivElement | null>(null);
+  // Über eine Referenz: Der Aufrufer übergibt bei jedem Rendern eine neue
+  // Funktion. Als Abhängigkeit lief der Zurück-Effekt dann jedes Mal neu, und
+  // dessen history.back() schloss das Sheet bei jedem Neuzeichnen, etwa wenn
+  // ein Toast auslief.
+  const schliessenAktuell = useRef(schliessen);
+  useEffect(() => {
+    schliessenAktuell.current = schliessen;
+  });
   const vorherFokussiert = useRef<HTMLElement | null>(null);
   // Merkt, ob der Zurück-Knopf geschlossen hat — dann darf die Aufräumroutine
   // nicht noch einmal zurückspringen.
@@ -48,11 +60,11 @@ export function useSheet(offen: boolean, schliessen: () => void) {
     durchZurueck.current = false;
 
     const aufTaste = (e: KeyboardEvent) => {
-      if (e.key === "Escape") schliessen();
+      if (e.key === "Escape") schliessenAktuell.current();
     };
     const aufZurueck = () => {
       durchZurueck.current = true;
-      schliessen();
+      schliessenAktuell.current();
     };
 
     window.history.pushState({ angeliSheet: true }, "");
@@ -69,7 +81,72 @@ export function useSheet(offen: boolean, schliessen: () => void) {
         window.history.back();
       }
     };
-  }, [offen, schliessen]);
+  }, [offen]);
+
+  useEffect(() => {
+    const el = inhalt.current;
+    if (!offen || !wischen || !el) return;
+    const AB_DISTANZ = 100;
+    const AB_TEMPO = 0.5; // px pro ms
+    let startY = 0;
+    let startZeit = 0;
+    let weg = 0;
+    let verfolgt = false;
+    let zieht = false;
+    let timer: number | undefined;
+    const hintergrund = el.previousElementSibling as HTMLElement | null;
+
+    // `translate` statt `transform`: Das setzt schon die Einblend-Animation.
+    const setzen = (y: number) => {
+      el.style.translate = `0 ${y}px`;
+      if (hintergrund) hintergrund.style.opacity = String(Math.max(0, 1 - y / el.offsetHeight));
+    };
+    const start = (e: TouchEvent) => {
+      // Nur am oberen Rand des Inhalts, sonst scrollt der Daumen die Karte.
+      verfolgt = window.matchMedia("(max-width: 639px)").matches && el.scrollTop <= 0;
+      if (!verfolgt) return;
+      startY = e.touches[0].clientY;
+      startZeit = e.timeStamp;
+      weg = 0;
+      zieht = false;
+      el.style.transition = "none";
+    };
+    const bewegen = (e: TouchEvent) => {
+      if (!verfolgt) return;
+      weg = e.touches[0].clientY - startY;
+      if (!zieht) {
+        if (weg < 0) verfolgt = false; // Nach oben: normales Scrollen.
+        if (weg < 8) return;
+        zieht = true;
+      }
+      e.preventDefault();
+      setzen(Math.max(0, weg - 8));
+    };
+    const ende = (e: TouchEvent) => {
+      if (!zieht) return;
+      verfolgt = zieht = false;
+      el.style.transition = "translate 180ms ease-out";
+      if (hintergrund) hintergrund.style.transition = "opacity 180ms ease-out";
+      if (weg > AB_DISTANZ || weg / (e.timeStamp - startZeit) > AB_TEMPO) {
+        setzen(el.offsetHeight);
+        timer = window.setTimeout(() => schliessenAktuell.current(), 180);
+      } else {
+        setzen(0);
+      }
+    };
+    el.addEventListener("touchstart", start, { passive: true });
+    // Nicht passiv: preventDefault verhindert, dass die Seite mitzieht.
+    el.addEventListener("touchmove", bewegen, { passive: false });
+    el.addEventListener("touchend", ende);
+    el.addEventListener("touchcancel", ende);
+    return () => {
+      window.clearTimeout(timer);
+      el.removeEventListener("touchstart", start);
+      el.removeEventListener("touchmove", bewegen);
+      el.removeEventListener("touchend", ende);
+      el.removeEventListener("touchcancel", ende);
+    };
+  }, [offen, wischen]);
 
   useEffect(() => {
     if (!offen) return;

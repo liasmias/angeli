@@ -659,8 +659,8 @@ export default function TeamBuilder({
 
   // Scroll-Sperre, Escape, Zurueck-Knopf und Fokus fuer die drei Overlays.
   // Die Referenzen landen am jeweiligen Sheet-Inhalt.
-  const aktionsSheet = useSheet(sheetSpieler !== null, () => setSheetSpieler(null));
-  const marktKarteSheet = useSheet(marktSpieler !== null, () => setMarktSpieler(null));
+  const aktionsSheet = useSheet(sheetSpieler !== null, () => setSheetSpieler(null), { wischen: true });
+  const marktKarteSheet = useSheet(marktSpieler !== null, () => setMarktSpieler(null), { wischen: true });
   const marktSheet = useSheet(marktOffen, () => setMarktOffen(false));
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
@@ -1432,6 +1432,7 @@ export default function TeamBuilder({
               // Ort — als Popover an der Karte sprang das Menü von Spieler zu Spieler.
               className="spieler-panel fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] max-w-md flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-x-auto sm:inset-y-4 sm:right-4 sm:max-h-none sm:w-96 sm:rounded-2xl sm:pb-4"
             >
+              <div aria-hidden className="mx-auto -mt-1 mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-deep/20 sm:hidden" />
               <div className="mb-3">
                 <SpielerKarte player={player} t={t} />
               </div>
@@ -1538,6 +1539,7 @@ export default function TeamBuilder({
               tabIndex={-1}
               className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
             >
+              <div aria-hidden className="mx-auto -mt-1 mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-deep/20 sm:hidden" />
               <SpielerKarte player={player} t={t} />
               {player.manualStats && (
                 <div className="mt-3 rounded-xl bg-brand-deep/5 p-3">

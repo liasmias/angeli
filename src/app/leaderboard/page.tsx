@@ -1,3 +1,4 @@
+import { alleZeilen } from "@/lib/supabase/paginate";
 import Link from "next/link";
 import SegmentUmschalter from "@/components/segment-umschalter";
 import { createClient } from "@/lib/supabase/server";
@@ -150,12 +151,19 @@ export default async function LeaderboardPage({
       reihen.map((r) => [r.id, reihen.filter((x) => x.punkte > r.punkte).length + 1])
     );
     const ids = (gameweeks ?? []).filter((g) => g.number <= vorletzte).map((g) => g.id);
-    const { data: snaps } = await supabase
-      .from("gameweek_squads")
-      .select("squads(user_id)")
-      .in("gameweek_id", ids)
-      .limit(20000);
-    for (const s of snaps ?? []) {
+    // Seitenweise: PostgREST liefert höchstens 1000 Zeilen, auch mit grösserem
+    // limit. Später eingestiegene Teams verlören sonst ihren Pfeil.
+    const snaps = await alleZeilen<{ squads: { user_id: string } | { user_id: string }[] | null }>(
+      (von, bis) =>
+        supabase
+          .from("gameweek_squads")
+          .select("squads(user_id)")
+          .in("gameweek_id", ids)
+          .order("id")
+          // Die handgeschriebenen Typen kennen diese Relation nicht.
+          .range(von, bis) as never
+    );
+    for (const s of snaps) {
       const sq = Array.isArray(s.squads) ? s.squads[0] : s.squads;
       if (sq?.user_id) dabei.add(sq.user_id);
     }
