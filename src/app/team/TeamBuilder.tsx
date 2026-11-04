@@ -866,6 +866,30 @@ export default function TeamBuilder({
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(muster);
   }
 
+  /**
+   * Erster Kader komplett: Captain und Vize vorschlagen, die zwei teuersten
+   * Feldspieler der Startelf. Sonst stolpert man erst beim Speichern über zwei
+   * Rollen, die im Menü der Karte versteckt sind. Bestehende Teams bleiben
+   * unberührt — dort wäre es eine ungefragte Änderung.
+   */
+  function rollenVorschlagen(picks: SquadPick[]): SquadPick[] {
+    if (initialSquad.length > 0 || picks.length !== settings.squadSize) return picks;
+    if (picks.some((p) => p.isCaptain || p.isViceCaptain)) return picks;
+    const [captain, vize] = picks
+      .filter((p) => p.isStarting && playersById.get(p.playerId)?.position !== "GK")
+      .sort((a, b) => (playersById.get(b.playerId)?.price ?? 0) - (playersById.get(a.playerId)?.price ?? 0));
+    if (!captain || !vize) return picks;
+    setToast({
+      kind: "success",
+      text: t.rolesSuggested(playersById.get(captain.playerId)?.name ?? "?", playersById.get(vize.playerId)?.name ?? "?"),
+    });
+    return picks.map((p) => ({
+      ...p,
+      isCaptain: p.playerId === captain.playerId,
+      isViceCaptain: p.playerId === vize.playerId,
+    }));
+  }
+
   function togglePlayer(player: PlayerOption) {
     // Freie Geisterkarte derselben Position: Der Neue uebernimmt ihren Platz.
     const geist = transferModus
@@ -905,7 +929,7 @@ export default function TeamBuilder({
       const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
       tippImpuls();
       const neuerPick = { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false };
-      if (!geist) return [...prev, neuerPick];
+      if (!geist) return rollenVorschlagen([...prev, neuerPick]);
       // An die Stelle des Vorgaengers setzen, damit die Reihenfolge im
       // Kader-Array und damit die Bankreihenfolge stabil bleibt.
       setErsatz((st) =>
@@ -1194,6 +1218,11 @@ export default function TeamBuilder({
           : !hatVize
             ? t.stepVice
             : null;
+
+  // Noch nie gespeichert: Einstiegshilfe zeigen, Chips und Transfers ausblenden.
+  const ersterKader = initialSquad.length === 0;
+  const aktuellerSchritt =
+    squad.length < settings.squadSize ? 0 : formationError ? 1 : !hasCaptain || !hatVize ? 2 : 3;
 
   function handleSave() {
     // Vorprüfung im Client — der Server validiert dieselben Regeln nochmals.
@@ -1530,6 +1559,44 @@ export default function TeamBuilder({
           Titel. Die Seite selbst ist auf 72rem begrenzt, das Spielfeld wird
           also nie grösser als etwa 45rem. */}
       <section className="min-w-0 flex-1">
+        {/* Einstieg: bleibt bis zum ersten Speichern stehen und ändert seine Höhe
+            nicht — nur die Markierung des aktuellen Schritts wandert. */}
+        {ersterKader && (
+          <div className="chamfer mb-3 bg-white px-3 py-3 shadow-sm">
+            <h2 className="text-sm font-bold text-brand-deep">{t.guideTitle}</h2>
+            <ol className="mt-2 flex flex-col gap-1.5">
+              {[
+                t.startSquad(settings.squadSize, settings.budgetCap.toFixed(1), MAX_PER_CLUB),
+                t.startLineup(settings.startingSize),
+                t.startRoles,
+                t.startSave,
+              ].map((text, i) => (
+                <li
+                  key={i}
+                  aria-current={i === aktuellerSchritt ? "step" : undefined}
+                  className={`flex items-start gap-2 text-xs leading-5 ${
+                    i === aktuellerSchritt ? "font-bold text-brand-deep" : "text-brand-deep/65"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                      i === aktuellerSchritt
+                        ? "bg-brand-deep text-brand-accent"
+                        : i < aktuellerSchritt
+                          ? "bg-brand-accent/25 text-brand-deep"
+                          : "bg-brand-deep/5 text-brand-deep/65"
+                    }`}
+                  >
+                    {i < aktuellerSchritt ? "✓" : i + 1}
+                  </span>
+                  {text}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
@@ -1578,7 +1645,7 @@ export default function TeamBuilder({
             </span>
             <span className="whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
-              {unlimitedTransfers ? (
+              {unlimitedTransfers || ersterKader ? (
                 <span className="font-bold text-brand-magenta">{t.unlimited}</span>
               ) : wildcardActive ? (
                 <span className="font-bold text-brand-magenta">Wildcard</span>
@@ -1618,8 +1685,8 @@ export default function TeamBuilder({
                   .join(" · ")}
               </span>
             )}
-            <span className={`flex shrink-0 items-center gap-1.5 ${ungespeichert ? "" : "invisible"}`}>
-              <span className="font-semibold text-brand-deep/65">{t.unsaved}</span>
+            <span className={`flex shrink-0 items-center gap-1.5 ${ungespeichert ? "" : "hidden"}`}>
+              <span className="hidden font-semibold text-brand-deep/65 sm:inline">{t.unsaved}</span>
               <button
                 type="button"
                 onClick={entwurfVerwerfen}
@@ -1895,7 +1962,7 @@ export default function TeamBuilder({
         </div>
 
         {/* Chips */}
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className={`mt-3 grid gap-2 sm:grid-cols-2 ${ersterKader ? "hidden" : ""}`}>
           {chips.map((c) => {
             const info = CHIP_META[c.chip];
             const desc = c.chip === "wildcard" ? t.wildcardDesc : t.benchBoostDesc;
