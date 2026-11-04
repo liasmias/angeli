@@ -61,6 +61,11 @@ export interface PlayerOption {
   appearances: number;
   yellowCards: number;
   redCards: number;
+  /** Punkte der letzten Runden; null = keine Wertung in dieser Runde. */
+  form: { gw: number; points: number | null }[];
+  /** Rang nach Saisonpunkten innerhalb der eigenen Position. */
+  positionRank: number;
+  positionCount: number;
 }
 
 export interface SquadPick {
@@ -258,6 +263,40 @@ function FlagMarke({ flag, note, label }: { flag: PlayerFlag; note: string | nul
   );
 }
 
+/** Punkte der letzten Runden als Mini-Balken, Minuspunkte hängen unter der Linie. */
+function FormLeiste({ form }: { form: PlayerOption["form"] }) {
+  const groesster = Math.max(1, ...form.map((f) => Math.abs(f.points ?? 0)));
+  const hatMinus = form.some((f) => (f.points ?? 0) < 0);
+  return (
+    <div className="mt-1.5 flex gap-1.5">
+      {form.map((f) => {
+        const hoehe = f.points ? Math.max(4, (Math.abs(f.points) / groesster) * 40) : 0;
+        return (
+          <div key={f.gw} className="flex-1 rounded-lg bg-brand-deep/5 px-1 py-1.5 text-center">
+            <p className="text-xs font-bold tabular-nums text-brand-deep">{f.points ?? "—"}</p>
+            <div className="mx-auto mt-1 flex h-10 w-3 items-end">
+              {(f.points ?? 0) > 0 && (
+                <div className="w-full rounded-t bg-brand-deep" style={{ height: hoehe }} />
+              )}
+            </div>
+            <div className="h-px bg-brand-deep/25" />
+            {hatMinus && (
+              <div className="mx-auto h-10 w-3">
+                {(f.points ?? 0) < 0 && (
+                  <div className="w-full rounded-b bg-brand-danger" style={{ height: hoehe }} />
+                )}
+              </div>
+            )}
+            <p className="mt-1 text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
+              GW {f.gw}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
   const werte: [string, string][] = [
     [t.cardPoints, String(player.points)],
@@ -270,6 +309,12 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
     [t.cardMinutes, String(player.minutes)],
     [t.cardOwned, `${player.owned}%`],
     [t.cardCards, `${player.yellowCards}\u2009/\u2009${player.redCards}`],
+  ];
+  const kennzahlen: [string, string][] = [
+    [t.cardRank, `${player.positionRank}\u2009/\u2009${player.positionCount}`],
+    [t.cardPerGame, player.appearances > 0 ? (player.points / player.appearances).toFixed(1) : "—"],
+    [t.cardPerMillion, player.price > 0 ? (player.points / player.price).toFixed(1) : "—"],
+    [t.cardMinPerGame, player.appearances > 0 ? String(Math.round(player.minutes / player.appearances)) : "—"],
   ];
   return (
     <div>
@@ -342,6 +387,15 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         </>
       )}
 
+      {player.form.length > 0 && (
+        <>
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+            {t.cardForm}
+          </p>
+          <FormLeiste form={player.form} />
+        </>
+      )}
+
       {player.flagNote && (
         <p className="mt-2 text-[11px] leading-snug text-brand-deep/70">{player.flagNote}</p>
       )}
@@ -350,6 +404,14 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         {t.cardSeason}
       </p>
       <dl className="mt-1.5 grid grid-cols-4 gap-1.5">
+        {kennzahlen.map(([label, wert]) => (
+          <div key={label} className="rounded-lg bg-brand-deep/10 px-1.5 py-1.5 text-center">
+            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
+              {label}
+            </dt>
+            <dd className="text-sm font-bold tabular-nums text-brand-deep">{wert}</dd>
+          </div>
+        ))}
         {werte.map(([label, wert], i) => (
           <div
             key={label}
@@ -1474,7 +1536,7 @@ export default function TeamBuilder({
               aria-modal="true"
               aria-label={player.name}
               tabIndex={-1}
-              className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
+              className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
             >
               <SpielerKarte player={player} t={t} />
               {player.manualStats && (

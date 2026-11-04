@@ -222,8 +222,8 @@ export default async function TeamPage({
         .order("price", { ascending: false }),
       // Beide Tabellen wachsen ueber das Zeilenlimit von PostgREST hinaus —
       // deshalb seitenweise, sonst fielen Saisonwerte stumm auf null.
-      alleZeilen<{ player_id: number; points: number }>((von, bis) =>
-        supabase.from("fantasy_points").select("player_id, points").range(von, bis)
+      alleZeilen<{ player_id: number; gameweek_id: number; points: number }>((von, bis) =>
+        supabase.from("fantasy_points").select("player_id, gameweek_id, points").range(von, bis)
       ).then((data) => ({ data })),
       alleZeilen<{
         player_id: number; goals: number | null; assists: number | null;
@@ -258,6 +258,27 @@ export default async function TeamPage({
   for (const row of pointRows ?? []) {
     totalPointsByPlayer.set(row.player_id, (totalPointsByPlayer.get(row.player_id) ?? 0) + row.points);
   }
+
+  // Form: Punkte der letzten fünf abgeschlossenen Runden je Spieler.
+  const FORM_RUNDEN = 5;
+  const formRunden = gameweeks.filter((g) => g.number < angezeigt.number).slice(-FORM_RUNDEN);
+  const formRundeIds = new Set(formRunden.map((g) => g.id));
+  const formByPlayer = new Map<number, Map<number, number>>();
+  for (const row of pointRows ?? []) {
+    if (!formRundeIds.has(row.gameweek_id)) continue;
+    const runden = formByPlayer.get(row.player_id) ?? new Map<number, number>();
+    runden.set(row.gameweek_id, (runden.get(row.gameweek_id) ?? 0) + row.points);
+    formByPlayer.set(row.player_id, runden);
+  }
+
+  // Rang innerhalb der Position, nach Saisonpunkten.
+  const punkteJePosition = new Map<string, number[]>();
+  for (const p of players ?? []) {
+    const liste = punkteJePosition.get(p.position) ?? [];
+    liste.push(totalPointsByPlayer.get(p.id) ?? 0);
+    punkteJePosition.set(p.position, liste);
+  }
+  for (const liste of punkteJePosition.values()) liste.sort((a, b) => b - a);
 
   // Saisonsummen für die Sortierung im Spielermarkt.
   const toreByPlayer = new Map<number, number>();
@@ -386,6 +407,13 @@ export default async function TeamPage({
       appearances: einsaetzeByPlayer.get(p.id) ?? 0,
       yellowCards: gelbByPlayer.get(p.id) ?? 0,
       redCards: rotByPlayer.get(p.id) ?? 0,
+      form: formRunden.map((g) => ({
+        gw: g.number,
+        points: formByPlayer.get(p.id)?.get(g.id) ?? null,
+      })),
+      positionRank:
+        (punkteJePosition.get(p.position) ?? []).indexOf(totalPointsByPlayer.get(p.id) ?? 0) + 1,
+      positionCount: punkteJePosition.get(p.position)?.length ?? 0,
     };
   });
 
