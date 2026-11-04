@@ -615,6 +615,8 @@ export default function TeamBuilder({
   const [ersatz, setErsatz] = useState<{ rausId: number; reinId: number }[]>([]);
   const [filterPos, setFilterPos] = useState<Position | "ALL">("ALL");
   const [filterClub, setFilterClub] = useState<string>("ALL");
+  // "ALL", "LEISTBAR" (was das Restbudget hergibt) oder eine Preisgrenze.
+  const [filterPreis, setFilterPreis] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
   const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "cleanSheets" | "owned">("points");
@@ -637,6 +639,7 @@ export default function TeamBuilder({
   function ersatzSuchen(position: Position) {
     setFilterPos(position);
     setFilterClub("ALL");
+    setFilterPreis("ALL");
     setSearch("");
     jumpToMarket();
   }
@@ -1224,6 +1227,10 @@ export default function TeamBuilder({
   const aktuellerSchritt =
     squad.length < settings.squadSize ? 0 : formationError ? 1 : !hasCaptain || !hatVize ? 2 : 3;
 
+  // Fertiges Team ohne Änderung: Es gibt nichts zu speichern. Direkt nach dem
+  // Speichern bleibt der Knopf aktiv, damit der Haken gut lesbar erscheint.
+  const keineAenderung = !ungespeichert && !naechsterSchritt && !gespeichert;
+
   function handleSave() {
     // Vorprüfung im Client — der Server validiert dieselben Regeln nochmals.
     if (squad.length !== settings.squadSize) {
@@ -1270,6 +1277,11 @@ export default function TeamBuilder({
   // Die Suche läuft nachgelagert: Das Tippen bleibt flüssig, auch wenn die
   // Liste kurz nachzieht.
   const sucheVerzoegert = useDeferredValue(search);
+  const kaderIds = useMemo(() => new Set(squad.map((s) => s.playerId)), [squad]);
+  const preisStufen = useMemo(
+    () => [...new Set(players.map((p) => Math.ceil(p.price)))].sort((a, b) => b - a),
+    [players]
+  );
   const filtered = useMemo(() => {
     const suche = sucheVerzoegert.toLowerCase();
     return players
@@ -1277,7 +1289,11 @@ export default function TeamBuilder({
         (p) =>
           (filterPos === "ALL" || p.position === filterPos) &&
           (filterClub === "ALL" || p.club === filterClub) &&
-          (suche === "" || p.name.toLowerCase().includes(suche))
+          (suche === "" || p.name.toLowerCase().includes(suche)) &&
+          (filterPreis === "ALL" ||
+            // Gewählte bleiben stehen, sonst verschwände die Zeile unter dem Daumen.
+            kaderIds.has(p.id) ||
+            p.price <= (filterPreis === "LEISTBAR" ? budgetLeft + 1e-9 : Number(filterPreis)))
       )
       .sort(
         (a, b) =>
@@ -1285,7 +1301,7 @@ export default function TeamBuilder({
           b.points - a.points ||
           b.price - a.price
       );
-  }, [players, filterPos, filterClub, sucheVerzoegert, sortiere]);
+  }, [players, filterPos, filterClub, filterPreis, budgetLeft, kaderIds, sucheVerzoegert, sortiere]);
 
   // Gleichbleibende Handler, damit die memoisierten Marktzeilen nicht neu rendern.
   const toggleAktuell = useRef(togglePlayer);
@@ -1336,40 +1352,6 @@ export default function TeamBuilder({
         const player = playersById.get(sheetSpieler);
         if (!pick || !player) return null;
         const zu = () => setSheetSpieler(null);
-        // Desktop: Popover an der Karte ausrichten (fixed, damit die
-        // clip-path-Kanten von Spielfeld und Bank nichts abschneiden).
-        // Mobil bleibt es das Bottom Sheet.
-        let popoverStyle: React.CSSProperties | undefined;
-        if (typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches) {
-          const anker = document.getElementById(`spieler-karte-${sheetSpieler}`);
-          if (anker) {
-            const r = anker.getBoundingClientRect();
-            const links = Math.min(Math.max(r.left + r.width / 2, 160), window.innerWidth - 160);
-            // Seite nach dem tatsaechlich freien Platz waehlen und die Hoehe
-            // darauf begrenzen. Zentriert wird mit `translate`, nicht mit
-            // `transform`: Das setzt schon die pop-in-Animation, und solange sie
-            // lief, sass das Menue eine halbe Breite zu weit rechts und sprang
-            // am Ende an seinen Platz. Mit der Spielerkarte ist das Menue deutlich
-            // hoeher als frueher — eine feste Schwelle liess es oben aus dem
-            // Bild laufen, und die Werte waren abgeschnitten.
-            const platzOben = r.top - 16;
-            const platzUnten = window.innerHeight - r.bottom - 16;
-            popoverStyle =
-              platzOben > platzUnten
-                ? {
-                    left: links,
-                    bottom: window.innerHeight - r.top + 8,
-                    translate: "-50% 0",
-                    maxHeight: platzOben,
-                  }
-                : {
-                    left: links,
-                    top: r.bottom + 8,
-                    translate: "-50% 0",
-                    maxHeight: platzUnten,
-                  };
-          }
-        }
         return (
           <>
             <button
@@ -1384,12 +1366,9 @@ export default function TeamBuilder({
               aria-modal="true"
               aria-label={t.playerActions(player.name)}
               tabIndex={-1}
-              style={popoverStyle}
-              className={
-                popoverStyle
-                  ? "menue-rein fixed z-50 w-80 overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-2xl outline-none"
-                  : "sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none"
-              }
+              // Handy: Bottom Sheet. Ab sm: festes Panel rechts, immer am selben
+              // Ort — als Popover an der Karte sprang das Menü von Spieler zu Spieler.
+              className="spieler-panel fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] max-w-md flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-x-auto sm:inset-y-4 sm:right-4 sm:max-h-none sm:w-96 sm:rounded-2xl sm:pb-4"
             >
               <div className="mb-3">
                 <SpielerKarte player={player} t={t} />
@@ -1402,7 +1381,7 @@ export default function TeamBuilder({
                   <p className="mt-1 text-[11px] leading-snug text-brand-deep/70">{t.manualText}</p>
                 </div>
               )}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 sm:mt-auto">
                 {pick.isStarting ? (
                   <>
                     <button
@@ -1844,7 +1823,7 @@ export default function TeamBuilder({
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
                     <span className="rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70">
-                      {t.positions.GK}
+                      GK
                     </span>
                     <PlayerCard
                       t={t}
@@ -1873,7 +1852,7 @@ export default function TeamBuilder({
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
                     <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[9px] font-bold text-brand-accent">
-                      {i + 1}.
+                      {i + 1}. {player.position}
                     </span>
                     <PlayerCard
                       t={t}
@@ -2033,7 +2012,7 @@ export default function TeamBuilder({
         <div className="sticky bottom-4 z-20 mt-4 hidden justify-center lg:flex">
           <button
             type="button"
-            disabled={isPending || !gameweekOpen}
+            disabled={isPending || !gameweekOpen || keineAenderung}
             onClick={handleSave}
             className="pressable w-full max-w-xs fase-knopf bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
           >
@@ -2082,7 +2061,7 @@ export default function TeamBuilder({
               </button>
               <button
                 type="button"
-                disabled={isPending || !gameweekOpen}
+                disabled={isPending || !gameweekOpen || keineAenderung}
                 onClick={handleSave}
                 className="pressable flex-[1.3] fase-knopf bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
               >
@@ -2168,7 +2147,20 @@ export default function TeamBuilder({
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t.search}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
+              <Auswahl
+                value={filterPreis}
+                onChange={(e) => setFilterPreis(e.target.value)}
+                aria-label={t.priceFilter}
+              >
+                <option value="ALL">{t.priceFilter}</option>
+                <option value="LEISTBAR">{t.priceAffordable(Math.max(0, budgetLeft).toFixed(1))}</option>
+                {preisStufen.map((p) => (
+                  <option key={p} value={p}>
+                    {t.priceMax(p)}
+                  </option>
+                ))}
+              </Auswahl>
               <Auswahl
                 value={filterClub}
                 onChange={(e) => setFilterClub(e.target.value)}

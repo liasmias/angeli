@@ -124,6 +124,9 @@ const de = {
     inDays: (n: number) => `in ${n} Tagen`,
     inHours: (n: number) => `in ${n} Std.`,
     captainMissing: "Captain fehlt",
+    priceFilter: "Preis",
+    priceAffordable: (b: string) => `Bezahlbar (${b})`,
+    priceMax: (n: number) => `bis ${n}.0`,
     guideTitle: "So baust du dein Team",
     startSquad: (n: number, budget: string, club: number) =>
       `${n} Spieler · Budget ${budget} · max. ${club} pro Club`,
@@ -463,6 +466,9 @@ const en: typeof de = {
     inDays: (n: number) => `in ${n} days`,
     inHours: (n: number) => `in ${n} hrs`,
     captainMissing: "Captain missing",
+    priceFilter: "Price",
+    priceAffordable: (b: string) => `Affordable (${b})`,
+    priceMax: (n: number) => `up to ${n}.0`,
     guideTitle: "How to build your team",
     startSquad: (n: number, budget: string, club: number) =>
       `${n} players · budget ${budget} · max. ${club} per club`,

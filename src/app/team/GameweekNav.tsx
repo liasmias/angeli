@@ -118,7 +118,7 @@ export default function GameweekNav(props: GameweekNavProps) {
       )}
 
       {!isPast && deadlineDatum && (
-        <p className="border-b border-brand-deep/5 px-4 py-1.5 text-center text-xs text-brand-deep/70">
+        <p className="border-b border-brand-deep/5 px-4 py-2 text-center text-sm text-brand-deep/70">
           {t.deadline}{" "}
           <span className="font-semibold text-brand-deep">
             {deadlineDatum.toLocaleString(lang === "en" ? "en-GB" : "de-CH", {
