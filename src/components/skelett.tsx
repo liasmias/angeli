@@ -98,20 +98,35 @@ export function SkelettKarten({ karten = 2, partien = 6 }: { karten?: number; pa
 /** Team: Spielfeld mit vier Reihen. */
 export function SkelettSpielfeld() {
   const reihen = [1, 4, 4, 2];
+  // Gleiches Raster wie die Aufstellung (Breite, Markt rechts ab lg) — sonst
+  // springt beim Eintreffen der Daten die ganze Seite.
   return (
-    <Rahmen>
-      <div className="flex flex-col justify-around gap-6 chamfer bg-brand-grass/25 px-4 py-8">
-        {reihen.map((n, r) => (
-          <div key={r} className="flex justify-center gap-4">
-            {Array.from({ length: n }, (_, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <div className="skelett h-12 w-12 rounded-xl bg-white/50" />
-                <div className="skelett h-4 w-14 rounded bg-white/50" />
+    <main
+      role="status"
+      aria-busy="true"
+      aria-label="Lädt"
+      className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6"
+    >
+      <Balken className="mb-4 h-8 w-40" />
+      <Balken className="mb-4 h-14 w-full" />
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="min-w-0 flex-1">
+          <Balken className="mb-3 h-16 w-full" />
+          <div className="flex flex-col justify-around gap-7 chamfer bg-brand-grass/25 px-4 py-8">
+            {reihen.map((n, r) => (
+              <div key={r} className="flex justify-center gap-4">
+                {Array.from({ length: n }, (_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1.5">
+                    <div className="skelett h-12 w-12 rounded-xl bg-white/50" />
+                    <div className="skelett h-4 w-14 rounded bg-white/50" />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        ))}
+        </div>
+        <Balken className="hidden h-[40rem] w-[22rem] shrink-0 lg:block" />
       </div>
-    </Rahmen>
+    </main>
   );
 }

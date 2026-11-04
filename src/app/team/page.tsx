@@ -423,6 +423,7 @@ export default async function TeamPage({
         unlimitedTransfers={budget.unlimited}
         extraTransferCost={settings.extra_transfer_cost}
         chips={chipState}
+        entwurfSchluessel={`angeli-kader-entwurf-${squad.id}-${angezeigt.id}`}
       />
     </main>
   );

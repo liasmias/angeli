@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
 import type { PlayerFlag, Position } from "@/lib/database.types";
 import {
@@ -85,6 +85,23 @@ interface Settings {
 
 const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
 
+// Feste Platzbreite: fünf Karten passen immer in eine Reihe. Teilten sich die
+// Karten die Breite, änderte jeder neue Spieler Breite und Höhe der ganzen
+// Reihe, und alles darunter sprang mit.
+const FELD_PLATZ =
+  "flex min-w-0 max-w-[7.4rem] shrink-0 w-[calc((100%-1.5rem)/5)] sm:w-[calc((100%-5rem)/5)]";
+const BANK_PLATZ =
+  "flex min-w-0 max-w-[7.4rem] shrink-0 flex-col items-center gap-1.5 w-[calc((100%-2.1rem)/4)] sm:w-[calc((100%-6.1rem)/4)]";
+
+// So viele leere Plätze zeigt das Feld beim Aufbau pro Position (4-4-2). Die
+// Reihen stehen damit von Anfang an, neue Spieler füllen sie nur noch auf.
+const GRUNDFORMATION: Record<Position, number> = { GK: 1, DEF: 4, MID: 4, FWD: 2 };
+
+/** Vergleichswert eines Kaders; die Reihenfolge zählt wegen der Bank. */
+function kaderSignatur(picks: SquadPick[]) {
+  return JSON.stringify(picks.map((p) => [p.playerId, p.isStarting, p.isCaptain, p.isViceCaptain]));
+}
+
 
 
 
@@ -128,7 +145,7 @@ function PlayerCard({
   return (
     <div
       id={`spieler-karte-${player.id}`}
-      className={`${onUndo ? "" : "pop-in "}group relative flex min-w-0 flex-col items-center transition-opacity duration-150 ${
+      className={`group relative flex min-w-0 flex-col items-center transition-opacity duration-150 ${
         imStapel ? "w-full" : "max-w-[7.4rem] flex-1"
       } ${dimmed ? "opacity-35" : ""}`}
     >
@@ -402,25 +419,123 @@ function EmptySlot({
   t: BuilderDict;
 }) {
   return (
-    // Kompakter, runder Platzhalter: nimmt nur so viel Fläche wie nötig,
-    // damit die belegten Karten die Aufstellung dominieren.
+    // Unsichtbare Karte als Abstandhalter: Der Platz ist genau so hoch wie eine
+    // echte Karte, damit die Reihe beim ersten Spieler nicht wächst.
     <button
       type="button"
       onClick={onClick}
       title={t.addSlot(label, missing)}
       aria-label={t.addSlot(label, missing)}
-      className="pressable flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center justify-start gap-1 self-start pt-1"
+      className="pressable relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center"
     >
-      <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-xl font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
-        +
+      <span aria-hidden className="invisible flex w-full flex-col items-center">
+        <span className="aspect-square w-[clamp(2.25rem,11vw,4rem)]" />
+        <span className="block px-1 py-0.5 text-[10px] leading-4 sm:text-sm sm:leading-5">&nbsp;</span>
+        <span className="block px-1 py-0.5 text-[10px] leading-4 sm:text-xs">&nbsp;</span>
       </span>
-      <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-white/85 sm:text-[11px]">
-        {label}
+      <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-lg font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
+          +
+        </span>
+        <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-white/85 sm:text-[11px]">
+          {label}
+        </span>
       </span>
-      <span className="text-[10px] font-medium text-white/55">{t.slotMissing(missing)}</span>
     </button>
   );
 }
+
+/**
+ * Eine Marktzeile. Eigene, memoisierte Komponente: Sonst rendert jeder Tipp alle
+ * rund 460 Zeilen neu, was sich auf dem Handy als Verzögerung bemerkbar macht.
+ */
+const MarktZeile = memo(function MarktZeile({
+  p,
+  picked,
+  spalte,
+  t,
+  onOpen,
+  onToggle,
+}: {
+  p: PlayerOption;
+  picked: boolean;
+  spalte: "points" | "goals" | "assists" | "cleanSheets";
+  t: BuilderDict;
+  onOpen: (id: number) => void;
+  onToggle: (p: PlayerOption) => void;
+}) {
+  return (
+    // Zwei Ziele in einer Zeile: die Flaeche oeffnet die
+    // Spielerkarte, das +/- bleibt der schnelle Weg in den Kader.
+    // Ein einziger Knopf wuerde das eine gegen das andere
+    // eintauschen — vor der Deadline braucht es beides.
+    <div
+      className={`markt-zeile flex w-full items-center border-b border-brand-deep/5 pr-3 text-sm ${
+        picked ? "bg-brand-accent/15" : "hover:bg-brand-deep/5"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={() => onOpen(p.id)}
+        aria-label={t.cardOpen(p.name)}
+        className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-2 text-left"
+      >
+        <Jersey club={p.club} size={28} />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
+            {p.flag && (
+              <FlagMarke
+                flag={p.flag}
+                note={p.flagNote}
+                label={p.flag === "red" ? t.flagRed : t.flagYellow}
+              />
+            )}
+            {p.manualStats && (
+              <span
+                title={t.manualShort}
+                aria-label={t.manualShort}
+                className="shrink-0 text-[11px] leading-none"
+              >
+                ℹ️
+              </span>
+            )}
+            <span className="truncate">{p.name}</span>
+          </span>
+          <span className="block truncate text-xs text-brand-deep/65">
+            {p.club} · {p.position}
+            {p.owned > 0 && ` · 👥 ${p.owned}%`}
+            {p.nextOpponent && (
+              <span className="text-brand-deep/65"> · {p.nextOpponent}</span>
+            )}
+          </span>
+        </span>
+        {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
+        <span className="w-11 text-right">
+          <span className="block text-[10px] font-semibold uppercase text-brand-deep/65">
+            {t.statShort[spalte]}
+          </span>
+          <span className="block font-bold tabular-nums text-brand-deep">
+            {spalte === "cleanSheets" ? (p.cleanSheets ?? "—") : p[spalte]}
+          </span>
+        </span>
+        <span className="w-9 text-right font-bold tabular-nums text-brand-deep">
+          {p.price.toFixed(1)}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onToggle(p)}
+        title={picked ? t.cardRemove : t.cardAdd}
+        aria-label={`${picked ? t.cardRemove : t.cardAdd}: ${p.name}`}
+        className={`pressable relative ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold before:absolute before:-inset-1.5 before:content-[''] ${
+          picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
+        }`}
+      >
+        {picked ? "−" : "+"}
+      </button>
+    </div>
+  );
+});
 
 export default function TeamBuilder({
   lang,
@@ -436,6 +551,7 @@ export default function TeamBuilder({
   unlimitedTransfers,
   extraTransferCost,
   chips,
+  entwurfSchluessel,
 }: {
   lang: Lang;
   players: PlayerOption[];
@@ -452,10 +568,18 @@ export default function TeamBuilder({
   unlimitedTransfers: boolean;
   extraTransferCost: number;
   chips: ChipState[];
+  /** localStorage-Schlüssel für den ungespeicherten Entwurf. */
+  entwurfSchluessel: string;
 }) {
   const t = getDictionary(lang).builder;
   const [squad, setSquad] = useState<SquadPick[]>(initialSquad);
   const [isPending, startTransition] = useTransition();
+  // Stand, gegen den "ungespeichert" gemessen wird. Eigener Zustand, weil
+  // `initialSquad` erst nach dem Neuladen der Seitendaten nachzieht.
+  const [basis, setBasis] = useState(() => kaderSignatur(initialSquad));
+  const basisAmStart = useRef(basis);
+  const entwurfGeprueft = useRef(false);
+  const ungespeichert = kaderSignatur(squad) !== basis;
   // Kurzer Haken nach dem Speichern — sonst ist die einzige Rueckmeldung
   // der Toast, und der ist schon wieder weg, wenn man hinschaut.
   const [gespeichert, setGespeichert] = useState(false);
@@ -530,6 +654,67 @@ export default function TeamBuilder({
   }, [toast]);
 
   const playersById = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
+
+  // Entwurf wiederherstellen: Wer 14 Spieler gewählt hat und neu lädt, soll
+  // nicht von vorn beginnen. Gilt nur, wenn der gespeicherte Kader seit dem
+  // Entwurf gleich blieb — sonst wäre er auf einem anderen Gerät überholt.
+  useEffect(() => {
+    if (!gameweekOpen) {
+      entwurfGeprueft.current = true;
+      return;
+    }
+    try {
+      const roh = localStorage.getItem(entwurfSchluessel);
+      if (roh) {
+        const entwurf = JSON.parse(roh) as { basis: string; squad: SquadPick[] };
+        if (
+          entwurf.basis === basisAmStart.current &&
+          entwurf.squad.every((p) => playersById.has(p.playerId))
+        ) {
+          // localStorage gibt es erst im Browser, also erst nach dem Hydrieren.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setSquad(entwurf.squad);
+          setToast({ kind: "success", text: t.draftRestored });
+        } else {
+          localStorage.removeItem(entwurfSchluessel);
+        }
+      }
+    } catch {
+      // Speicher gesperrt oder Inhalt defekt: Dann gibt es eben keinen Entwurf.
+    }
+    entwurfGeprueft.current = true;
+    // Nur einmal beim Öffnen der Seite.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!entwurfGeprueft.current) return;
+    try {
+      if (ungespeichert) {
+        localStorage.setItem(entwurfSchluessel, JSON.stringify({ basis, squad }));
+      } else {
+        localStorage.removeItem(entwurfSchluessel);
+      }
+    } catch {
+      // Ohne Speicher bleibt nur die Warnung beim Verlassen.
+    }
+  }, [squad, basis, ungespeichert, entwurfSchluessel]);
+
+  useEffect(() => {
+    if (!ungespeichert) return;
+    const warnen = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warnen);
+    return () => window.removeEventListener("beforeunload", warnen);
+  }, [ungespeichert]);
+
+  function entwurfVerwerfen() {
+    setSquad(initialSquad);
+    setBasis(kaderSignatur(initialSquad));
+    setEntfernt([]);
+    setErsatz([]);
+    setTransferModus(false);
+    setTauschAus(null);
+  }
   const clubs = useMemo(() => [...new Set(players.map((p) => p.club))].sort(), [players]);
 
   const slotsByPosition: Record<Position, number> = {
@@ -585,7 +770,8 @@ export default function TeamBuilder({
   const wildcardActive = chips.some((c) => c.chip === "wildcard" && c.activeNow);
   const pendingTransfers = squad.filter((s) => !savedIds.has(s.playerId)).length;
   const pendingCost =
-    wildcardActive || unlimitedTransfers
+    // Der erste Kader ist gratis, wie auf dem Server.
+    wildcardActive || unlimitedTransfers || initialSquad.length === 0
       ? 0
       : Math.max(0, pendingTransfers - freeTransfers) * extraTransferCost;
 
@@ -599,6 +785,38 @@ export default function TeamBuilder({
 
   const starters = (pos: Position) =>
     squad.filter((s) => s.isStarting && playersById.get(s.playerId)?.position === pos);
+  const geisterVon = (pos: Position, aufFeld: boolean) =>
+    transferModus
+      ? entfernt.filter(
+          (e) =>
+            e.pick.isStarting === aufFeld &&
+            playersById.get(e.pick.playerId)?.position === pos &&
+            !squad.some((s) => s.playerId === e.pick.playerId)
+        ).length
+      : 0;
+  // Leere Plätze: elf auf dem Feld, der Rest auf der Bank. Zusammen immer genau
+  // so viele, wie noch fehlen — neue Spieler füllen sie, nichts verschiebt sich.
+  const fehlend = (pos: Position) =>
+    Math.max(0, slotsByPosition[pos] - countByPosition[pos] - geisterVon(pos, true) - geisterVon(pos, false));
+  const leereFeldplaetze = (pos: Position) =>
+    Math.min(
+      fehlend(pos),
+      Math.max(0, GRUNDFORMATION[pos] - starters(pos).length - geisterVon(pos, true))
+    );
+  const leereBankplaetze = (pos: Position) => fehlend(pos) - leereFeldplaetze(pos);
+  const bankPlatz = (pos: Position, i: number) => (
+    <div key={`bank-leer-${pos}-${i}`} className={BANK_PLATZ}>
+      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+        —
+      </span>
+      <EmptySlot t={t} label={t.positions[pos]} missing={fehlend(pos)} onClick={() => ersatzSuchen(pos)} />
+      <span aria-hidden className="h-5 sm:h-6" />
+    </div>
+  );
+  const leereBankGk = Array.from({ length: leereBankplaetze("GK") }, (_, i) => bankPlatz("GK", i));
+  const leereBankFeld = (["DEF", "MID", "FWD"] as Position[]).flatMap((pos) =>
+    Array.from({ length: leereBankplaetze(pos) }, (_, i) => bankPlatz(pos, i))
+  );
   // Bank: Torhüter fix auf Platz 1, danach die Feldspieler in der Reihenfolge,
   // in der sie bei einer automatischen Einwechslung nachrücken.
   const bench = squad.filter((s) => !s.isStarting);
@@ -911,17 +1129,19 @@ export default function TeamBuilder({
           text: raus.isCaptain ? t.captainMoved(player?.name ?? "?") : t.viceMoved(player?.name ?? "?"),
         });
       }
+      // Die beiden tauschen auch die Plätze in der Liste: Der Neue steht genau
+      // dort, wo der andere stand, statt in seiner Reihe zu springen.
       return prev.map((s) => {
         if (s.playerId === startelfId) {
-          return { ...s, isStarting: false, isCaptain: false, isViceCaptain: false };
-        }
-        if (s.playerId === bankId) {
           return {
-            ...s,
+            ...rein,
             isStarting: true,
             isCaptain: raus.isCaptain,
             isViceCaptain: raus.isViceCaptain,
           };
+        }
+        if (s.playerId === bankId) {
+          return { ...raus, isStarting: false, isCaptain: false, isViceCaptain: false };
         }
         return s;
       });
@@ -961,11 +1181,25 @@ export default function TeamBuilder({
     return tauschGueltig(startelfId, bankId);
   }
 
+  // Was als Nächstes fehlt. Der Knopf nennt es direkt, statt erst nach dem Tipp
+  // einen einzelnen Fehler zu zeigen — so läuft niemand viermal hinein.
+  const hatVize = squad.some((s) => s.isViceCaptain);
+  const naechsterSchritt: string | null =
+    squad.length < settings.squadSize
+      ? t.stepPlayers(settings.squadSize - squad.length)
+      : formationError
+        ? t.stepFormation
+        : !hasCaptain
+          ? t.stepCaptain
+          : !hatVize
+            ? t.stepVice
+            : null;
+
   function handleSave() {
-    // Vorprüfung im Client, damit der Fehler sofort kommt — der Server
-    // validiert dieselben Regeln nochmals verbindlich.
+    // Vorprüfung im Client — der Server validiert dieselben Regeln nochmals.
     if (squad.length !== settings.squadSize) {
-      setToast({ kind: "error", text: t.errSquadSize(settings.squadSize) });
+      const fehlend = POSITIONS.find((p) => countByPosition[p] < slotsByPosition[p]);
+      if (fehlend) ersatzSuchen(fehlend);
       return;
     }
     if (formationError) {
@@ -973,11 +1207,11 @@ export default function TeamBuilder({
       return;
     }
     if (!hasCaptain) {
-      setToast({ kind: "error", text: t.errNoCaptain });
+      setToast({ kind: "error", text: t.hintRole });
       return;
     }
-    if (!squad.some((s) => s.isViceCaptain)) {
-      setToast({ kind: "error", text: t.errNoVice });
+    if (!hatVize) {
+      setToast({ kind: "error", text: t.hintRole });
       return;
     }
     startTransition(async () => {
@@ -989,6 +1223,7 @@ export default function TeamBuilder({
       } else {
         tippImpuls(24);
         setGespeichert(true);
+        setBasis(kaderSignatur(squad));
         window.setTimeout(() => setGespeichert(false), 1600);
         // Gespeichert heisst: Der Tausch ist vollzogen. Geisterkarten und
         // ihre Zuordnungen sind damit erledigt, sonst blieben sie als
@@ -1003,19 +1238,33 @@ export default function TeamBuilder({
     });
   }
 
-  const filtered = players
-    .filter(
-      (p) =>
-        (filterPos === "ALL" || p.position === filterPos) &&
-        (filterClub === "ALL" || p.club === filterClub) &&
-        (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
-    )
-    .sort(
-      (a, b) =>
-        ((b[sortiere] ?? -1) as number) - ((a[sortiere] ?? -1) as number) ||
-        b.points - a.points ||
-        b.price - a.price
-    );
+  // Die Suche läuft nachgelagert: Das Tippen bleibt flüssig, auch wenn die
+  // Liste kurz nachzieht.
+  const sucheVerzoegert = useDeferredValue(search);
+  const filtered = useMemo(() => {
+    const suche = sucheVerzoegert.toLowerCase();
+    return players
+      .filter(
+        (p) =>
+          (filterPos === "ALL" || p.position === filterPos) &&
+          (filterClub === "ALL" || p.club === filterClub) &&
+          (suche === "" || p.name.toLowerCase().includes(suche))
+      )
+      .sort(
+        (a, b) =>
+          ((b[sortiere] ?? -1) as number) - ((a[sortiere] ?? -1) as number) ||
+          b.points - a.points ||
+          b.price - a.price
+      );
+  }, [players, filterPos, filterClub, sucheVerzoegert, sortiere]);
+
+  // Gleichbleibende Handler, damit die memoisierten Marktzeilen nicht neu rendern.
+  const toggleAktuell = useRef(togglePlayer);
+  useEffect(() => {
+    toggleAktuell.current = togglePlayer;
+  });
+  const marktToggle = useCallback((p: PlayerOption) => toggleAktuell.current(p), []);
+  const marktOeffnen = useCallback((id: number) => setMarktSpieler(id), []);
 
   // Erst nach dem Mounten berechnet: `Date.now()` im Render würde beim
   // Hydrieren vom Server-Wert abweichen können (React-Hydration-Mismatch).
@@ -1284,7 +1533,9 @@ export default function TeamBuilder({
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+          {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
+              mit der Länge des Budgets, und das Spielfeld sprang mit. */}
+          <div className="grid grid-cols-2 items-baseline gap-x-4 gap-y-1 text-sm sm:flex sm:flex-wrap">
             <span className="whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.budget} </span>
               <span
@@ -1314,11 +1565,16 @@ export default function TeamBuilder({
               <span className="font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
-              {startingCount === settings.startingSize && !formationError && (
-                <span className="ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep">
-                  {formationLabel(startingCounts)}
-                </span>
-              )}
+              {/* Platz bleibt reserviert, sonst bricht die Zeile bei 11 Spielern um. */}
+              <span
+                className={`ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep ${
+                  startingCount === settings.startingSize && !formationError ? "" : "invisible"
+                }`}
+              >
+                {startingCount === settings.startingSize && !formationError
+                  ? formationLabel(startingCounts)
+                  : "4-4-2"}
+              </span>
             </span>
             <span className="whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
@@ -1340,38 +1596,40 @@ export default function TeamBuilder({
                 {t.doubleGameweek}
               </span>
             )}
-            {countdown && (
-              <span className="whitespace-nowrap text-[11px] font-bold text-brand-magenta">
-                {t.deadlineIn(countdown)}
+            {/* Der Countdown entsteht erst nach dem Mounten; der Platz steht schon. */}
+            <span className={`whitespace-nowrap text-[11px] font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
+              {t.deadlineIn(countdown ?? t.inHours(0))}
+            </span>
+          </div>
+          {/* Detail- und Warnzeile: immer genau eine Zeile hoch. Tauchte sie erst
+              bei Bedarf auf, rutschte das ganze Spielfeld darunter nach unten. */}
+          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-[11px] leading-4">
+            {squad.length < settings.squadSize ? (
+              <span className="truncate font-medium text-brand-deep/65">
+                {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
+              </span>
+            ) : (
+              <span className="truncate font-bold text-brand-danger">
+                {[
+                  pendingCost > 0 ? t.pointsOnSave(pendingCost) : null,
+                  formationError,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
             )}
+            <span className={`flex shrink-0 items-center gap-1.5 ${ungespeichert ? "" : "invisible"}`}>
+              <span className="font-semibold text-brand-deep/65">{t.unsaved}</span>
+              <button
+                type="button"
+                onClick={entwurfVerwerfen}
+                tabIndex={ungespeichert ? 0 : -1}
+                className="relative font-bold text-brand-magenta underline before:absolute before:-inset-2 before:content-['']"
+              >
+                {t.discard}
+              </button>
+            </span>
           </div>
-          {/* Detail- und Warnzeile: nur zeigen, wenn etwas fehlt oder kostet. */}
-          {squad.length < settings.squadSize && (
-            <div className="mt-0.5 text-[11px] font-medium text-brand-deep/65">
-              {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
-            </div>
-          )}
-          {(formationError || (!hasCaptain && squad.length > 0) || pendingCost > 0) && (
-            <div className="mt-0.5 text-[11px] font-bold text-brand-danger">
-              {[
-                squad.length > 0 && formationError
-                  ? startingCount < settings.startingSize
-                    ? // Konkret sagen, was noch fehlt, statt nur "unvollständig".
-                      t.startersLabel + " " +
-                      ((["GK", "DEF", "MID", "FWD"] as Position[])
-                        .filter((p) => startingCounts[p] < MIN_STARTERS[p])
-                        .map((p) => `${MIN_STARTERS[p] - startingCounts[p]}× ${p}`)
-                        .join(", ") || t.stillNeeded(settings.startingSize - startingCount))
-                    : formationError
-                  : null,
-                !hasCaptain && squad.length > 0 ? t.captainMissing : null,
-                pendingCost > 0 ? t.pointsOnSave(pendingCost) : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </div>
-          )}
         </div>
 
         {/* Rasen */}
@@ -1411,12 +1669,14 @@ export default function TeamBuilder({
                   })),
                 ...geister.map((e) => ({ pick: e.pick, geist: true, idx: e.idx })),
               ].sort((a, b) => a.idx - b.idx);
-              const missing = slotsByPosition[pos] - countByPosition[pos] - geister.length;
+              const missing = fehlend(pos);
               return (
                 // Nie umbrechen: pro Position genau eine Linie, egal ob drei
                 // oder fünf Spieler. Die Karten teilen sich die Breite.
                 <div key={pos} className="flex items-start justify-center gap-1.5 sm:gap-5">
-                  {eintraege.map(({ pick, geist }) => {
+                  {eintraege.map(({ pick, geist }) => (
+                  <div key={pick.playerId} className={FELD_PLATZ}>
+                  {(() => {
                     const player = playersById.get(pick.playerId);
                     if (!player) return null;
                     if (geist) {
@@ -1469,15 +1729,23 @@ export default function TeamBuilder({
                         }
                       />
                     );
-                  })}
-                  {missing > 0 && (
-                    <EmptySlot
-                      t={t}
-                      label={t.positions[pos]}
-                      missing={missing}
-                      onClick={() => ersatzSuchen(pos)}
-                    />
-                  )}
+                  })()}
+                  </div>
+                  ))}
+                  {missing > 0 &&
+                    Array.from(
+                      { length: leereFeldplaetze(pos) },
+                      (_, i) => (
+                        <div key={`leer-${i}`} className={FELD_PLATZ}>
+                          <EmptySlot
+                            t={t}
+                            label={t.positions[pos]}
+                            missing={missing}
+                            onClick={() => ersatzSuchen(pos)}
+                          />
+                        </div>
+                      )
+                    )}
                 </div>
               );
             })}
@@ -1499,15 +1767,15 @@ export default function TeamBuilder({
             </summary>
             <p className="mt-1.5 text-[11px] leading-snug text-white/45">{t.benchOrderHint}</p>
           </details>
-          {bench.length === 0 ? (
-            <p className="text-sm text-white/50">{t.emptyBench}</p>
+          {bench.length === 0 && leereBankGk.length === 0 && leereBankFeld.length === 0 ? (
+            <p className="flex min-h-28 items-center justify-center text-center text-sm text-white/50 sm:min-h-44">{t.emptyBench}</p>
           ) : (
             <div className="flex items-start justify-center gap-2 sm:gap-6">
               {benchGk.map((pick) => {
                 const player = playersById.get(pick.playerId);
                 if (!player) return null;
                 return (
-                  <div key={pick.playerId} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                  <div key={pick.playerId} className={BANK_PLATZ}>
                     <span className="rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70">
                       {t.positions.GK}
                     </span>
@@ -1528,14 +1796,15 @@ export default function TeamBuilder({
                   </div>
                 );
               })}
-              {benchGk.length > 0 && benchFeld.length > 0 && (
+              {leereBankGk}
+              {benchGk.length + leereBankGk.length > 0 && benchFeld.length + leereBankFeld.length > 0 && (
                 <span className="mt-6 h-16 w-px shrink-0 bg-white/15" aria-hidden />
               )}
               {benchFeld.map((pick, i) => {
                 const player = playersById.get(pick.playerId);
                 if (!player) return null;
                 return (
-                  <div key={pick.playerId} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                  <div key={pick.playerId} className={BANK_PLATZ}>
                     <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[9px] font-bold text-brand-accent">
                       {i + 1}.
                     </span>
@@ -1578,6 +1847,7 @@ export default function TeamBuilder({
                   </div>
                 );
               })}
+              {leereBankFeld}
               {transferModus &&
                 entfernt
                   .filter((e) => !e.pick.isStarting && !squad.some((s) => s.playerId === e.pick.playerId))
@@ -1592,7 +1862,7 @@ export default function TeamBuilder({
                       : undefined;
                     const nachfolger = nachfolgerPick ? playersById.get(nachfolgerPick.playerId) : undefined;
                     return (
-                      <div key={`ghost-${e.playerId}`} className="flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center gap-1.5">
+                      <div key={`ghost-${e.playerId}`} className={BANK_PLATZ}>
                         <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
                           —
                         </span>
@@ -1707,10 +1977,10 @@ export default function TeamBuilder({
                 </span>
               ) : gespeichert ? (
                 <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
-              ) : gameweekOpen ? (
-                t.save
-              ) : (
+              ) : !gameweekOpen ? (
                 t.locked
+              ) : (
+                (naechsterSchritt ?? t.save)
               )}
           </button>
         </div>
@@ -1756,10 +2026,10 @@ export default function TeamBuilder({
                 </span>
               ) : gespeichert ? (
                 <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
-              ) : gameweekOpen ? (
-                t.save
-              ) : (
+              ) : !gameweekOpen ? (
                 t.locked
+              ) : (
+                (naechsterSchritt ?? t.save)
               )}
               </button>
             </div>
@@ -1859,81 +2129,17 @@ export default function TeamBuilder({
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-[34rem] lg:flex-none">
-            {filtered.map((p) => {
-              const picked = squad.some((s) => s.playerId === p.id);
-              return (
-                // Zwei Ziele in einer Zeile: die Flaeche oeffnet die
-                // Spielerkarte, das +/- bleibt der schnelle Weg in den Kader.
-                // Ein einziger Knopf wuerde das eine gegen das andere
-                // eintauschen — vor der Deadline braucht es beides.
-                <div
-                  key={p.id}
-                  className={`flex w-full items-center border-b border-brand-deep/5 pr-3 text-sm ${
-                    picked ? "bg-brand-accent/15" : "hover:bg-brand-deep/5"
-                  }`}
-                >
-                <button
-                  type="button"
-                  onClick={() => setMarktSpieler(p.id)}
-                  aria-label={t.cardOpen(p.name)}
-                  className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-2 text-left"
-                >
-                  <Jersey club={p.club} size={28} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
-                      {p.flag && (
-                        <FlagMarke
-                          flag={p.flag}
-                          note={p.flagNote}
-                          label={p.flag === "red" ? t.flagRed : t.flagYellow}
-                        />
-                      )}
-                      {p.manualStats && (
-                        <span
-                          title={t.manualShort}
-                          aria-label={t.manualShort}
-                          className="shrink-0 text-[11px] leading-none"
-                        >
-                          ℹ️
-                        </span>
-                      )}
-                      <span className="truncate">{p.name}</span>
-                    </span>
-                    <span className="block truncate text-xs text-brand-deep/65">
-                      {p.club} · {p.position}
-                      {p.owned > 0 && ` · 👥 ${p.owned}%`}
-                      {p.nextOpponent && (
-                        <span className="text-brand-deep/65"> · {p.nextOpponent}</span>
-                      )}
-                    </span>
-                  </span>
-                  {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
-                  <span className="w-11 text-right">
-                    <span className="block text-[10px] font-semibold uppercase text-brand-deep/65">
-                      {t.statShort[marktSpalte]}
-                    </span>
-                    <span className="block font-bold tabular-nums text-brand-deep">
-                      {marktSpalte === "cleanSheets" ? (p.cleanSheets ?? "—") : p[marktSpalte]}
-                    </span>
-                  </span>
-                  <span className="w-9 text-right font-bold tabular-nums text-brand-deep">
-                    {p.price.toFixed(1)}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => togglePlayer(p)}
-                  title={picked ? t.cardRemove : t.cardAdd}
-                  aria-label={`${picked ? t.cardRemove : t.cardAdd}: ${p.name}`}
-                  className={`pressable relative ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold before:absolute before:-inset-1.5 before:content-[''] ${
-                    picked ? "bg-brand-danger text-white" : "bg-brand-accent text-brand-deep"
-                  }`}
-                >
-                  {picked ? "−" : "+"}
-                </button>
-                </div>
-              );
-            })}
+            {filtered.map((p) => (
+              <MarktZeile
+                key={p.id}
+                p={p}
+                picked={imKader.has(p.id)}
+                spalte={marktSpalte}
+                t={t}
+                onOpen={marktOeffnen}
+                onToggle={marktToggle}
+              />
+            ))}
             {filtered.length === 0 && (
               <p className="px-4 py-6 text-center text-sm text-brand-deep/65">
                 {t.noneFound}

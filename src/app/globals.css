@@ -458,3 +458,10 @@ button,
     animation-duration: 2s;
   }
 }
+
+/* Marktzeilen ausserhalb des Sichtbereichs nicht zeichnen: Die Liste hat rund
+   460 Einträge und soll auf dem Handy trotzdem sofort reagieren. */
+.markt-zeile {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 53px;
+}
