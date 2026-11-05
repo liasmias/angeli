@@ -356,10 +356,23 @@ button,
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 1.5rem;
+  /* Über der festen Aktionsleiste (Handy) bzw. dem Speichern-Knopf (Desktop). */
+  bottom: 7rem;
   transform: translateX(-50%);
   z-index: 50;
   animation: toast-in var(--dauer-schnell) ease-out;
+}
+.toast-hoch {
+  /* Zusätzlich über dem Transfer- oder Tausch-Hinweis. */
+  bottom: 10rem;
+}
+@media (min-width: 64rem) {
+  .toast {
+    bottom: 5rem;
+  }
+  .toast-hoch {
+    bottom: 8rem;
+  }
 }
 
 /* Schatten für gefaste Flächen (Spielfeld): wie bei den Screenshots der

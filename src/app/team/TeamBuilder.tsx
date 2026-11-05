@@ -1398,7 +1398,9 @@ export default function TeamBuilder({
       {toast && (
         <p
           role="status"
-          className={`toast rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
+          className={`toast ${
+            transferModus || tauschAus !== null ? "toast-hoch " : ""
+          }rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
             toast.kind === "error"
               ? "bg-brand-danger text-white"
               : "bg-brand-accent text-brand-deep"
@@ -1567,7 +1569,7 @@ export default function TeamBuilder({
 
       {/* Transfer-Modus-Hinweis mit Fertig-Knopf. */}
       {transferModus && tauschAus === null && (
-        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-4">
+        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-20">
           <span className="truncate">{t.transferHint}</span>
           <button
             type="button"
@@ -1581,7 +1583,7 @@ export default function TeamBuilder({
 
       {/* Tauschmodus-Hinweis mit Abbrechen — schwebt unten, bis getauscht wird. */}
       {tauschAus !== null && (
-        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-4">
+        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-20">
           <span className="truncate">
             {t.swapHint(playersById.get(tauschAus)?.name ?? "?")}
           </span>
@@ -2074,11 +2076,12 @@ export default function TeamBuilder({
             unteren Rand. Vorher klebte dieser Knopf nur innerhalb der
             linken Spalte und war aus dem Markt heraus nicht erreichbar. */}
         <div className="sticky bottom-4 z-20 mt-4 hidden justify-center lg:flex">
+          {/* Deckend auch im deaktivierten Zustand: Der Knopf klebt über dem Spielfeld. */}
           <button
             type="button"
             disabled={isPending || !gameweekOpen || keineAenderung}
             onClick={handleSave}
-            className="pressable w-full max-w-xs fase-knopf bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:opacity-40"
+            className="pressable w-full max-w-xs fase-knopf bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:bg-[#f6d3f9] disabled:text-brand-deep/50"
           >
             {isPending ? (
                 <span className="flex items-center justify-center gap-2">
