@@ -40,6 +40,8 @@ const de = {
     shotTeam: "Aufstellung auf dem Spielfeld mit Punkten je Spieler",
     shotStats: "Statistikseite mit Punkten, Form und Wert aller Spieler",
     leaderboard: "Rangliste",
+    howToPlay: "How to play",
+    howToPlayVideo: "Video: Team zusammenstellen, Captain wählen, Transfers und Rangliste",
   },
   auth: {
     createAccount: "Konto erstellen",
@@ -387,6 +389,8 @@ const en: typeof de = {
     shotTeam: "Lineup on the pitch with points per player",
     shotStats: "Statistics page with points, form and value of every player",
     leaderboard: "Leaderboard",
+    howToPlay: "How to play",
+    howToPlayVideo: "Video: building a team, picking a captain, transfers and the leaderboard",
   },
   auth: {
     createAccount: "Create account",

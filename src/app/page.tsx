@@ -7,12 +7,12 @@ import { getDictionary } from "@/lib/i18n";
 const TRIKOTS = ["BAS", "GC", "LS", "LUG", "LUZ", "SFC", "SG", "SIO", "THU", "VAD", "YB", "ZUR"];
 
 /**
- * Startseite als ein einziger Bildschirm — auf dem Handy wie am Rechner.
- *
- * Nichts scrollt: Die Klasse `startseite` fixiert über globals.css Body und
- * HTML auf die Fensterhöhe, und der Bereich mit den Screenshots nimmt, was
- * nach Text und Trikotband übrig bleibt. Auf kleinen Handys werden die
- * Screenshots kleiner, statt dass die Seite länger wird.
+ * Startseite: Der erste Bildschirm füllt das Fenster genau — auf dem Handy wie
+ * am Rechner. Die Klasse `startseite` fixiert über globals.css Body und HTML
+ * auf die Fensterhöhe, und der Bereich mit den Screenshots nimmt, was nach Text
+ * und Trikotband übrig bleibt. Auf kleinen Handys werden die Screenshots
+ * kleiner, statt dass der Bildschirm länger wird. Darunter scrollt <main> weiter
+ * zum Video, die Navigation bleibt stehen.
  */
 export default async function Home() {
   const supabase = await createClient();
@@ -23,7 +23,8 @@ export default async function Home() {
   const t = getDictionary(lang).home;
 
   return (
-    <main className="startseite brand-gradient-hero relative flex min-h-0 flex-1 flex-col overflow-hidden text-white">
+    <main className="startseite brand-gradient-hero relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden scroll-smooth text-white">
+      <div className="flex min-h-0 shrink-0 basis-full flex-col overflow-hidden">
       <div className="mx-auto grid min-h-0 w-full max-w-6xl flex-1 grid-rows-[auto_minmax(0,1fr)] gap-8 px-6 pb-8 pt-9 sm:grid-cols-[1.1fr_1fr] sm:grid-rows-1 sm:items-center sm:gap-10 sm:py-10">
         <div className="flex flex-col items-start gap-4 sm:gap-6">
           <span className="rounded-full bg-brand-accent px-4 py-1 text-xs font-bold uppercase tracking-wide text-brand-deep sm:text-sm">
@@ -75,6 +76,12 @@ export default async function Home() {
               </>
             )}
           </div>
+          <a
+            href="#how-to-play"
+            className="text-sm font-semibold text-white/80 underline-offset-4 hover:text-brand-accent hover:underline"
+          >
+            {t.howToPlay} ↓
+          </a>
         </div>
 
         {/* Zwei Screenshots, leicht gegeneinander versetzt. Die Grösse richtet
@@ -119,6 +126,23 @@ export default async function Home() {
             />
           ))}
         </div>
+      </section>
+      </div>
+
+      {/* preload="none": Das Video lädt erst beim Abspielen, die Startseite bleibt leicht. */}
+      <section id="how-to-play" className="mx-auto w-full max-w-5xl shrink-0 scroll-mt-4 px-6 py-10 sm:py-14">
+        <h2 className="mb-5 text-2xl font-bold tracking-tight sm:mb-6 sm:text-4xl">{t.howToPlay}</h2>
+        <video
+          src="/how-to-play.mp4"
+          poster="/how-to-play.jpg"
+          width={1920}
+          height={1080}
+          controls
+          playsInline
+          preload="none"
+          aria-label={t.howToPlayVideo}
+          className="aspect-video h-auto w-full rounded-xl bg-brand-deep shadow-2xl shadow-black/40"
+        />
       </section>
     </main>
   );

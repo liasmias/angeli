@@ -48,12 +48,16 @@ h2 {
   background: linear-gradient(100deg, var(--brand-deep) 0%, #1f8b44 55%, #8ef2a8 130%);
 }
 
-/* Startseite: genau ein Bildschirm, nichts scrollt — auf dem Handy wie am
-   Rechner. Wirkt nur, solange die Startseite gerendert ist (:has). */
+/* Startseite: Das Fenster selbst scrollt nicht, nur <main> darin — auf dem
+   Handy wie am Rechner. Wirkt nur, solange die Startseite gerendert ist (:has). */
 html:has(main.startseite),
 body:has(main.startseite) {
   height: 100dvh;
   overflow: hidden;
+}
+/* Sonst wüchse der Seiten-Wrapper mit dem Inhalt, und <main> scrollte nie. */
+body:has(main.startseite) .seite-rein {
+  min-height: 0;
 }
 
 /* Screenshots der Startseite: helle Kontur und Schatten.
