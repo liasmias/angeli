@@ -42,6 +42,28 @@ const de = {
     leaderboard: "Rangliste",
     howToPlay: "How to play",
     howToPlayVideo: "Video: Team zusammenstellen, Captain wählen, Transfers und Rangliste",
+    mobileTitle: "So spielst du auf dem Handy",
+    mobileIntro: "Angeli läuft im Browser, du brauchst keinen App Store.",
+    mobileSteps: [
+      {
+        title: "Als App speichern",
+        text: "iPhone: in Safari auf Teilen tippen, dann «Zum Home-Bildschirm». Android: in Chrome aufs Menü (⋮) tippen, dann «Zum Startbildschirm hinzufügen».",
+      },
+      {
+        title: "Team zusammenstellen",
+        text: "Über «Spieler wählen» in der Leiste unten öffnest du den Spielermarkt.",
+      },
+      {
+        title: "Spieler antippen",
+        text: "Ein Tipp auf dem Spielfeld öffnet die Spielerkarte mit Statistik, Captain-Wahl und Transfer. Nach unten wischen schliesst sie.",
+      },
+      {
+        title: "Speichern",
+        text: "Mit «Team speichern» in der Leiste unten sicherst du deine Aufstellung vor der Deadline.",
+      },
+    ],
+    mobileShotTeam: "Handy-Ansicht: Aufstellung auf dem Spielfeld, unten die Leiste mit «Spieler wählen» und «Team speichern»",
+    mobileShotPlayer: "Handy-Ansicht: geöffnete Spielerkarte mit Statistik und «Zum Captain machen»",
   },
   auth: {
     createAccount: "Konto erstellen",
@@ -391,6 +413,28 @@ const en: typeof de = {
     leaderboard: "Leaderboard",
     howToPlay: "How to play",
     howToPlayVideo: "Video: building a team, picking a captain, transfers and the leaderboard",
+    mobileTitle: "Playing on your phone",
+    mobileIntro: "Angeli runs in the browser, no app store needed.",
+    mobileSteps: [
+      {
+        title: "Save it as an app",
+        text: "iPhone: tap Share in Safari, then “Add to Home Screen”. Android: tap the menu (⋮) in Chrome, then “Add to Home screen”.",
+      },
+      {
+        title: "Build your team",
+        text: "“Pick players” in the bar at the bottom opens the player market.",
+      },
+      {
+        title: "Tap a player",
+        text: "A tap on the pitch opens the player card with stats, captain choice and transfer. Swipe down to close it.",
+      },
+      {
+        title: "Save",
+        text: "“Save team” in the bar at the bottom locks in your lineup before the deadline.",
+      },
+    ],
+    mobileShotTeam: "Phone view: lineup on the pitch, with the bar for picking players and saving the team at the bottom",
+    mobileShotPlayer: "Phone view: open player card with stats and the captain button",
   },
   auth: {
     createAccount: "Create account",

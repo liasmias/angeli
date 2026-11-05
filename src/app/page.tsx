@@ -143,8 +143,49 @@ export default async function Home() {
           aria-label={t.howToPlayVideo}
           className="aspect-video h-auto w-full rounded-xl bg-brand-deep shadow-2xl shadow-black/40"
         />
+
+        <div className="mt-10 grid items-center gap-8 sm:mt-14 sm:grid-cols-[1fr_auto] sm:gap-12">
+          <div>
+            <h3 className="text-xl font-bold tracking-tight sm:text-3xl">{t.mobileTitle}</h3>
+            <p className="mt-2 text-[15px] text-white/80 sm:text-lg">{t.mobileIntro}</p>
+            <ol className="mt-5 space-y-4">
+              {t.mobileSteps.map((schritt, i) => (
+                <li key={schritt.title} className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-accent text-sm font-bold text-brand-deep">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <p className="font-bold">{schritt.title}</p>
+                    <p className="text-sm leading-snug text-white/80 sm:text-[15px]">{schritt.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="flex justify-center gap-3 sm:gap-4">
+            <HandyBild src="/handy-aufstellung.jpg" alt={t.mobileShotTeam} />
+            <HandyBild src="/handy-spieler.jpg" alt={t.mobileShotPlayer} />
+          </div>
+        </div>
       </section>
     </main>
+  );
+}
+
+/** Screenshot der Handy-Ansicht in einem schlichten Gerätrahmen. */
+function HandyBild({ src, alt }: { src: string; alt: string }) {
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={src}
+      alt={alt}
+      width={390}
+      height={780}
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+      className="h-auto w-[calc(50%-0.375rem)] max-w-[12.5rem] select-none rounded-[1.5rem] border-4 border-brand-deep shadow-2xl shadow-black/40 sm:w-48"
+    />
   );
 }
 
