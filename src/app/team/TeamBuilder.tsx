@@ -1527,11 +1527,14 @@ export default function TeamBuilder({
         const zu = () => setMarktSpieler(null);
         return (
           <>
+            {/* z-50 wie die Karte: Der offene Spielermarkt (z-40) steht weiter
+                unten im DOM und läge sonst über diesem Hintergrund — ein Tipp
+                neben die Karte traf dann den Markt statt sie zu schliessen. */}
             <button
               type="button"
               aria-label={t.sheetClose}
               onClick={zu}
-              className="fade-in fixed inset-0 z-40 cursor-default bg-black/40"
+              className="fade-in fixed inset-0 z-50 cursor-default bg-black/40"
             />
             <div
               ref={marktKarteSheet}

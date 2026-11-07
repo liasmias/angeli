@@ -21,10 +21,21 @@ import { useEffect, useRef } from "react";
  * für Sheets, deren Inhalt selbst scrollt: Der Spielermarkt hat eine innere
  * Liste, dort würde die Geste das Scrollen abfangen.
  *
+ * Sheets dürfen übereinanderliegen (Spielerkarte über dem Spielermarkt). Jedes
+ * merkt sich darum seine Tiefe im History-Eintrag, und Zurück oder Escape
+ * schliessen nur das oberste. Vorher schloss das Zurückspringen beim Schliessen
+ * der Karte auch den Markt darunter.
+ *
  * Gibt eine Referenz zurück, die auf den Sheet-Inhalt gesetzt wird — dorthin
  * wandert der Fokus beim Öffnen, und von dort zurück auf den auslösenden
  * Knopf beim Schliessen.
  */
+/** Wie viele Sheets gerade offen sind, laut aktuellem History-Eintrag. */
+function aktuelleTiefe(): number {
+  const tiefe = window.history.state?.angeliTiefe;
+  return typeof tiefe === "number" ? tiefe : 0;
+}
+
 export function useSheet(offen: boolean, schliessen: () => void, { wischen = false } = {}) {
   const inhalt = useRef<HTMLDivElement | null>(null);
   // Über eine Referenz: Der Aufrufer übergibt bei jedem Rendern eine neue
@@ -42,6 +53,9 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
 
   useEffect(() => {
     if (!offen) return;
+    // Liegt schon ein Sheet darunter, ist der Body bereits fixiert. Ein zweites
+    // Fixieren läse scrollY als 0 und verschöbe die Seite dahinter.
+    if (document.body.style.position === "fixed") return;
     const scrollY = window.scrollY;
     const { position, top, width } = document.body.style;
     document.body.style.position = "fixed";
@@ -58,16 +72,20 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
   useEffect(() => {
     if (!offen) return;
     durchZurueck.current = false;
+    const tiefe = aktuelleTiefe() + 1;
 
     const aufTaste = (e: KeyboardEvent) => {
-      if (e.key === "Escape") schliessenAktuell.current();
+      if (e.key === "Escape" && aktuelleTiefe() === tiefe) schliessenAktuell.current();
     };
     const aufZurueck = () => {
+      // Nur schliessen, wenn der eigene Eintrag weg ist — nicht, wenn bloss
+      // ein Sheet darüber zurückgesprungen ist.
+      if (aktuelleTiefe() >= tiefe) return;
       durchZurueck.current = true;
       schliessenAktuell.current();
     };
 
-    window.history.pushState({ angeliSheet: true }, "");
+    window.history.pushState({ angeliSheet: true, angeliTiefe: tiefe }, "");
     document.addEventListener("keydown", aufTaste);
     window.addEventListener("popstate", aufZurueck);
 
@@ -77,7 +95,7 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
       // Wurde anders geschlossen (✕, Auswahl, Hintergrund), liegt der eigene
       // History-Eintrag noch obenauf und muss weg — sonst bräuchte es zwei
       // Mal Zurück, um die Seite zu verlassen.
-      if (!durchZurueck.current && window.history.state?.angeliSheet) {
+      if (!durchZurueck.current && aktuelleTiefe() === tiefe) {
         window.history.back();
       }
     };
