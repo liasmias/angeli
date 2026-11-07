@@ -90,6 +90,20 @@ export async function deactivateChip(chip: ChipName): Promise<ChipResult> {
     return { error: `${CHIP_LABEL[chip]} lief an einem bereits abgeschlossenen Spieltag.` };
   }
 
+  // Unter der Wildcard gespeicherte Transfers stehen mit 0 Punkten Abzug in
+  // der Datenbank. Liesse sich die Wildcard danach zurücknehmen, blieben sie
+  // gratis und der Chip wäre wieder frei — jede Runde aufs Neue.
+  if (chip === "wildcard") {
+    const { count } = await supabase
+      .from("transfers")
+      .select("id", { count: "exact", head: true })
+      .eq("squad_id", squadId)
+      .eq("gameweek_id", gameweek.id);
+    if (count) {
+      return { error: "Die Wildcard ist verbraucht: Mit ihr wurden schon Transfers gespeichert." };
+    }
+  }
+
   await supabase.from("chip_usages").delete().eq("id", row.id);
   revalidatePath("/team");
   return { message: `${CHIP_LABEL[chip]} wieder freigegeben.` };
