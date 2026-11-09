@@ -9,6 +9,8 @@ import PastGameweek, { type PastPlayer } from "./PastGameweek";
 import TeamBuilder, { type PlayerOption, type SquadPick } from "./TeamBuilder";
 import { getLang } from "@/lib/lang";
 import { getDictionary } from "@/lib/i18n";
+import Umfrage from "./Umfrage";
+import { hatAbgestimmt } from "@/lib/umfrage";
 import { loadPlayerDetails } from "@/lib/player-detail";
 import { getOwnershipPercent } from "@/lib/ownership";
 
@@ -125,6 +127,10 @@ export default async function TeamPage({
   const rang = zeigtAktuellen
     ? rangInfo
     : await getRankAt(supabase, user.id, angezeigt.number);
+
+  // Umfrage nur, solange noch nicht abgestimmt. Fehlt die Tabelle
+  // (Migration 0029 noch nicht eingespielt), bleibt sie unsichtbar.
+  const umfrage = (await hatAbgestimmt(user.id)) === false ? <Umfrage lang={lang} /> : null;
 
   const nav = (punkte: number | null) => (
     <GameweekNav
@@ -428,6 +434,7 @@ export default async function TeamPage({
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
+      {umfrage}
       {nav(punkte)}
       <TeamBuilder
         lang={lang}

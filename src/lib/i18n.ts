@@ -65,6 +65,11 @@ const de = {
     mobileShotTeam: "Handy-Ansicht: Aufstellung auf dem Spielfeld, unten die Leiste mit «Spieler wählen» und «Team speichern»",
     mobileShotPlayer: "Handy-Ansicht: geöffnete Spielerkarte mit Statistik und «Zum Captain machen»",
   },
+  umfrage: {
+    frage: "Wo spielst du Angeli?",
+    antworten: { phone: "Handy", web: "Web", both: "Beides" },
+    danke: "Danke für deine Stimme!",
+  },
   auth: {
     createAccount: "Konto erstellen",
     accountName: "Accountname",
@@ -439,6 +444,11 @@ const en: typeof de = {
     ],
     mobileShotTeam: "Phone view: lineup on the pitch, with the bar for picking players and saving the team at the bottom",
     mobileShotPlayer: "Phone view: open player card with stats and the captain button",
+  },
+  umfrage: {
+    frage: "Where do you play Angeli?",
+    antworten: { phone: "Phone", web: "Web", both: "Both" },
+    danke: "Thanks for voting!",
   },
   auth: {
     createAccount: "Create account",

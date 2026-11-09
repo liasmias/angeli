@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { replyToReport, resolveReport, saveAnnouncement, toggleGameweekLock } from "./actions";
 import SyncStatus from "./SyncStatus";
+import { umfrageErgebnis } from "@/lib/umfrage";
 import { adminSeiteSichern } from "@/lib/admin-guard";
 
 export default async function AdminPage() {
@@ -24,6 +25,8 @@ export default async function AdminPage() {
       .limit(50),
   ]);
 
+  const umfrage = await umfrageErgebnis();
+  const umfrageSumme = umfrage ? umfrage.phone + umfrage.web + umfrage.both : 0;
   const offeneMeldungen = (reports ?? []).filter((r) => !r.resolved_at);
   const erledigteMeldungen = (reports ?? []).filter((r) => r.resolved_at);
 
@@ -35,6 +38,30 @@ export default async function AdminPage() {
         lastSyncAt={settings?.last_sync_at ?? null}
         lastSyncNote={settings?.last_sync_note ?? null}
       />
+
+      {umfrage && (
+        <section className="mb-6 chamfer border border-brand-deep/15 bg-white p-4">
+          <h2 className="mb-2 text-sm font-bold text-brand-deep">
+            Umfrage: Wo spielst du Angeli? ({umfrageSumme} Stimmen)
+          </h2>
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {(["phone", "web", "both"] as const).map((a) => {
+              const anteil = umfrageSumme ? Math.round((umfrage[a] / umfrageSumme) * 100) : 0;
+              return (
+                <li key={a} className="flex items-center gap-3">
+                  <span className="w-16 shrink-0 font-semibold">{{ phone: "Handy", web: "Web", both: "Beides" }[a]}</span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-brand-deep/10">
+                    <span className="block h-full rounded-full bg-brand-grass" style={{ width: `${anteil}%` }} />
+                  </span>
+                  <span className="w-20 shrink-0 text-right tabular-nums">
+                    {umfrage[a]} · {anteil}%
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {/* Posteingang: Meldungen aus dem Profil-Formular der Mitglieder. */}
       <section className="mb-6 chamfer border border-brand-deep/15 bg-white p-4">

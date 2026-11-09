@@ -402,6 +402,12 @@ export interface Database {
         Update: Partial<ChipUsagesRow>;
         Relationships: [];
       };
+      umfrage_geraet: {
+        Row: { user_id: string; antwort: "phone" | "web" | "both"; created_at: string };
+        Insert: { user_id: string; antwort: "phone" | "web" | "both"; created_at?: string };
+        Update: Partial<{ user_id: string; antwort: "phone" | "web" | "both"; created_at: string }>;
+        Relationships: [];
+      };
       price_changes: {
         Row: PriceChangesRow;
         Insert: Omit<PriceChangesRow, "id" | "created_at"> & {
