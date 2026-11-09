@@ -36,13 +36,13 @@ export default async function GameweekDetailPage({ params }: { params: Promise<{
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Spieltag {gameweek.number} — Daten korrigieren</h1>
         <form action={recomputeGameweek.bind(null, gameweekId)}>
-          <button type="submit" className="rounded border border-zinc-300 px-3 py-1 text-sm">
+          <button type="submit" className="fase-knopf border border-brand-deep/15 px-3 py-1 text-sm">
             Alle Punkte neu berechnen
           </button>
         </form>
       </div>
 
-      <p className="mb-4 text-sm text-zinc-500">
+      <p className="mb-4 text-sm text-brand-deep/65">
         Ein ausgefülltes Feld überschreibt den synchronisierten API-Wert dauerhaft. Leer lassen, um
         beim automatischen Wert zu bleiben. Eigentore kommen nie aus der API-Synchronisation — hier eintragen.
       </p>
@@ -50,7 +50,7 @@ export default async function GameweekDetailPage({ params }: { params: Promise<{
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-xs">
           <thead>
-            <tr className="border-b border-zinc-200 text-left text-zinc-500">
+            <tr className="border-b border-brand-deep/15 text-left text-brand-deep/65">
               <th className="py-2 pr-2">Spieler</th>
               <th className="py-2 pr-2">Punkte</th>
               {FIELDS.map((f) => (
@@ -66,10 +66,10 @@ export default async function GameweekDetailPage({ params }: { params: Promise<{
               const player = Array.isArray(row.players) ? row.players[0] : row.players;
               const override = overrideByPlayer.get(row.player_id);
               return (
-                <tr key={row.player_id} className="border-b border-zinc-100">
+                <tr key={row.player_id} className="border-b border-brand-deep/10">
                   <td className="py-2 pr-2 font-medium">
                     {player?.first_name} {player?.last_name}
-                    <div className="font-normal text-zinc-400">{player?.position}</div>
+                    <div className="font-normal text-brand-deep/65">{player?.position}</div>
                   </td>
                   <td className="py-2 pr-2 font-medium tabular-nums">
                     {pointsByPlayer.get(row.player_id) ?? "—"}
@@ -85,7 +85,7 @@ export default async function GameweekDetailPage({ params }: { params: Promise<{
             })}
             {(!stats || stats.length === 0) && (
               <tr>
-                <td colSpan={FIELDS.length + 3} className="py-6 text-center text-zinc-500">
+                <td colSpan={FIELDS.length + 3} className="py-6 text-center text-brand-deep/65">
                   Noch keine synchronisierten Daten für diesen Spieltag. Läuft der Cron-Sync
                   (<code>/api/cron/sync</code>) schon?
                 </td>
@@ -120,7 +120,7 @@ function FormCells({
             type="number"
             defaultValue={(override?.[f.key] as number | null | undefined) ?? undefined}
             placeholder={String(synced[f.key] ?? 0)}
-            className="w-16 rounded border border-zinc-300 px-1 py-0.5"
+            className="w-16 rounded-lg border border-brand-deep/15 px-1 py-0.5"
           />
         </td>
       ))}
@@ -128,7 +128,7 @@ function FormCells({
         <form id={`override-${playerId}`} action={saveStatOverride} className="flex items-center gap-2">
           <input type="hidden" name="playerId" value={playerId} />
           <input type="hidden" name="gameweekId" value={gameweekId} />
-          <button type="submit" className="rounded bg-black px-2 py-1 text-white">
+          <button type="submit" className="fase-knopf bg-black px-2 py-1 text-white">
             Speichern
           </button>
         </form>

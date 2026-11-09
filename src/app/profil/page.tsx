@@ -63,8 +63,8 @@ export default async function ProfilPage() {
                     <span
                       className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${
                         m.resolved_at
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-900"
+                          ? "bg-status-ok-flaeche text-status-ok"
+                          : "bg-status-warnung-flaeche text-status-warnung"
                       }`}
                     >
                       {m.resolved_at ? t.reportDone : t.reportOpen}
@@ -72,7 +72,7 @@ export default async function ProfilPage() {
                   </p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-brand-deep/80">{m.message}</p>
                   {m.reply ? (
-                    <div className="mt-2 rounded-xl bg-brand-deep/5 px-3 py-2">
+                    <div className="mt-2 rounded-lg bg-brand-deep/5 px-3 py-2">
                       <p className="text-xs font-bold uppercase tracking-wide text-brand-deep/65">
                         {t.reportAnswer}
                       </p>

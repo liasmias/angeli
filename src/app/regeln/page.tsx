@@ -263,10 +263,10 @@ export default async function RegelnPage() {
             </p>
             <ul className="ml-4 list-disc space-y-1">
               <li>
-                <b>🃏 Wildcard</b> — unlimited transfers this gameweek, without point deductions.
+                <b>Wildcard</b> — unlimited transfers this gameweek, without point deductions.
               </li>
               <li>
-                <b>🚀 Bench Boost</b> — this gameweek the points of your bench players count too.
+                <b>Bench Boost</b> — this gameweek the points of your bench players count too.
               </li>
             </ul>
           </Abschnitt>
@@ -454,10 +454,10 @@ export default async function RegelnPage() {
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <b>🃏 Wildcard</b> — beliebig viele Transfers an diesem Spieltag, ohne Punktabzug.
+              <b>Wildcard</b> — beliebig viele Transfers an diesem Spieltag, ohne Punktabzug.
             </li>
             <li>
-              <b>🚀 Bench Boost</b> — an diesem Spieltag zählen auch die Punkte deiner
+              <b>Bench Boost</b> — an diesem Spieltag zählen auch die Punkte deiner
               Bankspieler.
             </li>
           </ul>

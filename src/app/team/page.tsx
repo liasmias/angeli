@@ -90,7 +90,7 @@ export default async function TeamPage({
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <h1 className="mb-4 text-2xl font-bold tracking-tight text-brand-deep">{t.team.title}</h1>
-        <p className="rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">
+        <p className="rounded-lg bg-status-warnung-flaeche px-4 py-2 text-sm font-semibold text-status-warnung">
           Noch keine Spieltage angelegt — ein Admin muss sie zuerst erfassen.
         </p>
       </main>

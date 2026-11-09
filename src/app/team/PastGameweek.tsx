@@ -88,7 +88,7 @@ export function Popup({
               {posLabel[p.position]} / {p.club}
             </p>
             {d?.opponent && (
-              <p className="mt-1 inline-block rounded bg-black/25 px-2 py-0.5 text-xs font-bold">
+              <p className="mt-1 inline-block rounded-full bg-black/25 px-2 py-0.5 text-xs font-bold">
                 v {d.opponent}
               </p>
             )}
@@ -145,7 +145,7 @@ export function Popup({
                     <td className="py-1.5 text-right tabular-nums text-brand-deep/70">{z.menge}</td>
                     <td
                       className={`py-1.5 text-right font-bold tabular-nums ${
-                        z.punkte < 0 ? "text-brand-danger" : z.punkte > 0 ? "text-emerald-600" : "text-brand-deep/65"
+                        z.punkte < 0 ? "text-brand-danger" : z.punkte > 0 ? "text-status-ok" : "text-brand-deep/65"
                       }`}
                     >
                       {z.punkte > 0 ? `+${z.punkte}` : z.punkte}
@@ -158,7 +158,7 @@ export function Popup({
                   <td className="py-2 font-bold text-brand-deep" colSpan={2}>
                     {t.detailTotal}
                     {p.isCaptain && (
-                      <span className="ml-2 rounded bg-black px-1.5 py-0.5 text-xs font-bold text-brand-accent">
+                      <span className="ml-2 rounded-full bg-black px-1.5 py-0.5 text-xs font-bold text-brand-accent">
                         C ×2
                       </span>
                     )}
@@ -217,8 +217,8 @@ function Karte({
       )}
       {marke && (
         <span
-          className={`absolute left-0.5 top-0 z-10 rounded px-1 py-0.5 text-xs font-bold uppercase leading-none ring-1 ring-white/40 sm:text-xs ${
-            p.isStarting ? "bg-emerald-500 text-white" : "bg-brand-danger text-white"
+          className={`absolute left-0.5 top-0 z-10 rounded-full px-1 py-0.5 text-xs font-bold uppercase leading-none ring-1 ring-white/40 sm:text-xs ${
+            p.isStarting ? "bg-status-ok-kraeftig text-white" : "bg-brand-danger text-white"
           }`}
         >
           {p.isStarting ? "↑" : "↓"}

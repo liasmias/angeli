@@ -1,5 +1,7 @@
 "use client";
 
+import { SymbolBenchBoost, SymbolBesitzer, SymbolWildcard } from "@/components/symbole";
+import type { ReactNode } from "react";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
 import type { PlayerFlag, Position } from "@/lib/database.types";
@@ -25,9 +27,9 @@ export interface ChipState {
   usedInGameweek: number | null;
 }
 
-const CHIP_META: Record<ChipName, { name: string; icon: string }> = {
-  wildcard: { name: "Wildcard", icon: "🃏" },
-  bench_boost: { name: "Bench Boost", icon: "🚀" },
+const CHIP_META: Record<ChipName, { name: string; icon: ReactNode }> = {
+  wildcard: { name: "Wildcard", icon: <SymbolWildcard /> },
+  bench_boost: { name: "Bench Boost", icon: <SymbolBenchBoost /> },
 };
 
 export interface PlayerOption {
@@ -169,7 +171,7 @@ function PlayerCard({
           title={player.flagNote ?? undefined}
           aria-label={`${player.name}: ${player.flagNote ?? (player.flag === "red" ? t.flagRed : t.flagYellow)}`}
           className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold leading-none ring-2 ring-white sm:h-6 sm:w-6 ${
-            player.flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
+            player.flag === "red" ? "bg-brand-danger text-white" : "bg-status-warnung-kraeftig text-status-warnung"
           }`}
         >
           {/* Zeichen statt nur Farbe: "!" fällt aus, "?" fraglich — sonst
@@ -255,7 +257,7 @@ function FlagMarke({ flag, note, label }: { flag: PlayerFlag; note: string | nul
       role="img"
       aria-label={note ?? label}
       className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none ${
-        flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
+        flag === "red" ? "bg-brand-danger text-white" : "bg-status-warnung-kraeftig text-status-warnung"
       }`}
     >
       {flag === "red" ? "!" : "?"}
@@ -337,7 +339,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         </div>
       </div>
 
-      <div className="mt-3 rounded-xl bg-brand-deep/5 px-3 py-2">
+      <div className="mt-3 rounded-lg bg-brand-deep/5 px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-bold uppercase tracking-wide text-brand-deep/65">
             {player.nextFixtures.length > 1 ? t.cardTwoGames : t.cardNextGame}
@@ -496,9 +498,18 @@ function EmptySlot({
         <span className="block px-1 py-0.5 text-xs leading-4 sm:text-xs">&nbsp;</span>
       </span>
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-lg font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
-          +
-        </span>
+        {/* Ausgeblichenes, neutrales Trikot mit „+“: Der Platz ist noch frei.
+            Gleich gross wie die echten Trikots, damit die Reihe ruhig bleibt. */}
+        <svg viewBox="0 0 64 64" aria-hidden className="aspect-square w-[clamp(2.25rem,11vw,4rem)]">
+          <path
+            d="M22 7 L8 15 L14 28 L19 24 L19 57 L45 57 L45 24 L50 28 L56 15 L42 7 C40 12 24 12 22 7 Z"
+            fill="rgb(255 255 255 / 0.22)"
+            stroke="rgb(255 255 255 / 0.55)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path d="M32 27v18M23 36h18" stroke="rgb(255 255 255 / 0.95)" strokeWidth="3.5" strokeLinecap="round" />
+        </svg>
         <span className="w-full truncate text-center text-xs font-bold leading-tight text-white/85 sm:text-xs">
           {label}
         </span>
@@ -565,7 +576,12 @@ const MarktZeile = memo(function MarktZeile({
           </span>
           <span className="block truncate text-xs text-brand-deep/65">
             {p.club} · {p.position}
-            {p.owned > 0 && ` · 👥 ${p.owned}%`}
+            {p.owned > 0 && (
+              <>
+                {" · "}
+                <SymbolBesitzer /> {p.owned}%
+              </>
+            )}
             {p.nextOpponent && (
               <span className="text-brand-deep/65"> · {p.nextOpponent}</span>
             )}
@@ -874,7 +890,7 @@ export default function TeamBuilder({
   const leereBankplaetze = (pos: Position) => fehlend(pos) - leereFeldplaetze(pos);
   const bankPlatz = (pos: Position, i: number) => (
     <div key={`bank-leer-${pos}-${i}`} className={BANK_PLATZ}>
-      <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
+      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
         —
       </span>
       <EmptySlot t={t} label={t.positions[pos]} missing={fehlend(pos)} onClick={() => ersatzSuchen(pos)} />
@@ -1508,7 +1524,7 @@ export default function TeamBuilder({
                 <SpielerKarte player={player} t={t} />
               </div>
               {player.manualStats && (
-                <div className="mb-3 rounded-xl bg-brand-deep/5 p-3">
+                <div className="mb-3 rounded-lg bg-brand-deep/5 p-3">
                   <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
                     <span aria-hidden>ℹ️</span> {t.manualTitle}
                   </p>
@@ -1522,7 +1538,7 @@ export default function TeamBuilder({
                       type="button"
                       disabled={pick.isCaptain}
                       onClick={() => { setCaptain(pick.playerId); zu(); }}
-                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
+                      className="pressable-subtle flex items-center gap-3 fase-knopf bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
                     >
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-xs font-bold text-brand-accent">C</span>
                       {t.captainTitle}
@@ -1531,7 +1547,7 @@ export default function TeamBuilder({
                       type="button"
                       disabled={pick.isViceCaptain}
                       onClick={() => { setVice(pick.playerId); zu(); }}
-                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
+                      className="pressable-subtle flex items-center gap-3 fase-knopf bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep disabled:opacity-40"
                     >
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-deep text-xs font-bold text-brand-accent">V</span>
                       {t.viceTitle}
@@ -1539,7 +1555,7 @@ export default function TeamBuilder({
                     <button
                       type="button"
                       onClick={() => { setTauschAus(pick.playerId); zu(); }}
-                      className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
+                      className="pressable-subtle flex items-center gap-3 fase-knopf bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
                     >
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-lime text-xs font-bold text-brand-deep">⇄</span>
                       {t.swapOut}
@@ -1549,7 +1565,7 @@ export default function TeamBuilder({
                   <button
                     type="button"
                     onClick={() => { setTauschAus(pick.playerId); zu(); }}
-                    className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
+                    className="pressable-subtle flex items-center gap-3 fase-knopf bg-brand-deep/5 px-4 py-3 text-left text-sm font-semibold text-brand-deep"
                   >
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-lime text-xs font-bold text-brand-deep">⇄</span>
                     {t.swapIn}
@@ -1560,14 +1576,14 @@ export default function TeamBuilder({
                     <button
                       type="button"
                       onClick={() => { moveBench(pick.playerId, -1); zu(); }}
-                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
+                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 fase-knopf bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
                     >
                       ▲ {t.benchUp}
                     </button>
                     <button
                       type="button"
                       onClick={() => { moveBench(pick.playerId, 1); zu(); }}
-                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
+                      className="pressable-subtle flex flex-1 items-center justify-center gap-2 fase-knopf bg-brand-deep/5 px-3 py-3 text-sm font-semibold text-brand-deep"
                     >
                       ▼ {t.benchDown}
                     </button>
@@ -1576,7 +1592,7 @@ export default function TeamBuilder({
                 <button
                   type="button"
                   onClick={() => { removePlayer(pick.playerId); setTransferModus(true); zu(); }}
-                  className="pressable-subtle flex items-center gap-3 rounded-xl bg-brand-danger/10 px-4 py-3 text-left text-sm font-semibold text-brand-danger"
+                  className="pressable-subtle flex items-center gap-3 fase-knopf bg-brand-danger/10 px-4 py-3 text-left text-sm font-semibold text-brand-danger"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-danger text-xs font-bold text-white">✕</span>
                   {t.transferOut}
@@ -1616,7 +1632,7 @@ export default function TeamBuilder({
               <div aria-hidden className="mx-auto -mt-1 mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-deep/20 sm:hidden" />
               <SpielerKarte player={player} t={t} />
               {player.manualStats && (
-                <div className="mt-3 rounded-xl bg-brand-deep/5 p-3">
+                <div className="mt-3 rounded-lg bg-brand-deep/5 p-3">
                   <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
                     <span aria-hidden>&#8505;&#65039;</span> {t.manualTitle}
                   </p>
@@ -1626,7 +1642,7 @@ export default function TeamBuilder({
               <button
                 type="button"
                 onClick={() => { togglePlayer(player); zu(); }}
-                className={`pressable mt-3 w-full rounded-xl px-4 py-3 text-sm font-bold ${
+                className={`pressable mt-3 w-full fase-knopf px-4 py-3 text-sm font-bold ${
                   imKader
                     ? "bg-brand-danger/10 text-brand-danger"
                     : "bg-brand-deep text-brand-accent"
@@ -1723,7 +1739,7 @@ export default function TeamBuilder({
               </span>
               {/* Platz bleibt reserviert, sonst bricht die Zeile bei 11 Spielern um. */}
               <span
-                className={`ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold tabular-nums text-brand-deep ${
+                className={`ml-1.5 rounded-full bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold tabular-nums text-brand-deep ${
                   startingCount === settings.startingSize && !formationError ? "" : "invisible"
                 }`}
               >
@@ -1965,7 +1981,7 @@ export default function TeamBuilder({
                 if (!player) return null;
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
-                    <span className="rounded bg-white/15 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/70">
+                    <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/70">
                       GK
                     </span>
                     <PlayerCard
@@ -1994,7 +2010,7 @@ export default function TeamBuilder({
                 if (!player) return null;
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
-                    <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold text-brand-accent">
+                    <span className="rounded-full bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold text-brand-accent">
                       {i + 1}. {player.position}
                     </span>
                     <PlayerCard
@@ -2018,7 +2034,7 @@ export default function TeamBuilder({
                         disabled={i === 0}
                         aria-label={t.benchEarlier(player.name)}
                         title={t.benchEarlier(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded-full bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ‹
                       </button>
@@ -2028,7 +2044,7 @@ export default function TeamBuilder({
                         disabled={i === benchFeld.length - 1}
                         aria-label={t.benchLater(player.name)}
                         title={t.benchLater(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded-full bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ›
                       </button>
@@ -2052,7 +2068,7 @@ export default function TeamBuilder({
                     const nachfolger = nachfolgerPick ? playersById.get(nachfolgerPick.playerId) : undefined;
                     return (
                       <div key={`ghost-${e.playerId}`} className={BANK_PLATZ}>
-                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
+                        <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
                           —
                         </span>
                         {nachfolger && nachfolgerPick ? (
@@ -2111,7 +2127,7 @@ export default function TeamBuilder({
                           Chip gilt als belegt — bis zur Deadline aber
                           umkehrbar, dann steht wieder 1/1. */}
                       <span
-                        className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${
+                        className={`rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${
                           verbraucht || c.activeNow
                             ? "bg-brand-deep/10 text-brand-deep/65"
                             : "bg-brand-accent/25 text-brand-deep"
@@ -2266,7 +2282,7 @@ export default function TeamBuilder({
                           filterPos === pos
                             ? "text-brand-accent/70"
                             : full
-                              ? "text-emerald-600"
+                              ? "text-status-ok"
                               : "text-brand-deep/65"
                         }`}
                       >

@@ -121,7 +121,7 @@ export default function PlayerAdminTable({
                     name="firstName"
                     defaultValue={r.firstName}
                     placeholder="—"
-                    className="w-24 rounded border border-brand-deep/15 px-2 py-1 outline-none focus:border-brand-magenta sm:w-28"
+                    className="w-24 rounded-lg border border-brand-deep/15 px-2 py-1 outline-none focus:border-brand-magenta sm:w-28"
                   />
                 </td>
                 <td className="px-3 py-1.5">
@@ -130,7 +130,7 @@ export default function PlayerAdminTable({
                     name="lastName"
                     defaultValue={r.lastName}
                     required
-                    className="w-28 rounded border border-brand-deep/15 px-2 py-1 font-semibold outline-none focus:border-brand-magenta sm:w-40"
+                    className="w-28 rounded-lg border border-brand-deep/15 px-2 py-1 font-semibold outline-none focus:border-brand-magenta sm:w-40"
                   />
                 </td>
                 <td className="px-2 py-1.5 sm:px-3">
@@ -138,7 +138,7 @@ export default function PlayerAdminTable({
                     form={`player-${r.id}`}
                     name="clubId"
                     defaultValue={r.clubId ?? ""}
-                    className="rounded border border-brand-deep/15 px-1.5 py-1 text-xs outline-none focus:border-brand-magenta"
+                    className="rounded-lg border border-brand-deep/15 px-1.5 py-1 text-xs outline-none focus:border-brand-magenta"
                   >
                     {clubOptions.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -155,7 +155,7 @@ export default function PlayerAdminTable({
                       name="flag"
                       defaultValue={r.flag ?? ""}
                       title="Verfügbarkeit"
-                      className="rounded border border-brand-deep/15 px-1.5 py-1 text-xs outline-none focus:border-brand-magenta"
+                      className="rounded-lg border border-brand-deep/15 px-1.5 py-1 text-xs outline-none focus:border-brand-magenta"
                     >
                       <option value="">— fit</option>
                       <option value="yellow">🟡 fraglich</option>
@@ -166,7 +166,7 @@ export default function PlayerAdminTable({
                       name="flagNote"
                       defaultValue={r.flagNote ?? ""}
                       placeholder="Grund"
-                      className="w-24 rounded border border-brand-deep/15 px-2 py-1 text-xs outline-none focus:border-brand-magenta"
+                      className="w-24 rounded-lg border border-brand-deep/15 px-2 py-1 text-xs outline-none focus:border-brand-magenta"
                     />
                   </span>
                 </td>
@@ -178,7 +178,7 @@ export default function PlayerAdminTable({
                     step="0.1"
                     min="0"
                     defaultValue={r.price.toFixed(1)}
-                    className="w-16 rounded border border-brand-deep/15 px-2 py-1 tabular-nums outline-none focus:border-brand-magenta sm:w-20"
+                    className="w-16 rounded-lg border border-brand-deep/15 px-2 py-1 tabular-nums outline-none focus:border-brand-magenta sm:w-20"
                   />
                 </td>
                 <td className="px-3 py-1.5">
@@ -194,7 +194,7 @@ export default function PlayerAdminTable({
                     <input type="hidden" name="playerId" value={r.id} />
                     <button
                       type="submit"
-                      className="pressable rounded bg-brand-deep px-2.5 py-1 text-xs font-bold text-brand-accent"
+                      className="pressable fase-knopf bg-brand-deep px-2.5 py-1 text-xs font-bold text-brand-accent"
                     >
                       Speichern
                     </button>

@@ -26,7 +26,7 @@ export default function SyncStatus({
   return (
     <section
       className={`mb-6 chamfer border-2 p-4 ${
-        gesund ? "border-emerald-200 bg-emerald-50" : "border-brand-danger/30 bg-brand-danger/5"
+        gesund ? "border-status-ok-rand bg-status-ok-flaeche" : "border-brand-danger/30 bg-brand-danger/5"
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -34,7 +34,7 @@ export default function SyncStatus({
           <div className="flex items-center gap-2 text-sm font-bold text-brand-deep">
             <span
               className={`inline-block h-2.5 w-2.5 rounded-full ${
-                gesund ? "bg-emerald-500" : "animate-pulse bg-brand-danger"
+                gesund ? "bg-status-ok-kraeftig" : "animate-pulse bg-brand-danger"
               }`}
               aria-hidden
             />
@@ -65,7 +65,7 @@ export default function SyncStatus({
       {meldung && (
         <p
           className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${
-            meldung.ok ? "bg-emerald-100 text-emerald-800" : "bg-brand-danger/10 text-brand-danger"
+            meldung.ok ? "bg-status-ok-flaeche text-status-ok" : "bg-brand-danger/10 text-brand-danger"
           }`}
         >
           {meldung.message}

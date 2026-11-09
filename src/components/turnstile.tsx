@@ -50,7 +50,8 @@ export default function Turnstile({ resetSignal }: { resetSignal?: unknown }) {
       />
       <div
         ref={container}
-        className="cf-turnstile"
+        // Feste Höhe: Das Widget erscheint verzögert und liess das Formular springen.
+        className="cf-turnstile min-h-[65px]"
         data-sitekey={siteKey}
         data-theme="light"
         data-refresh-expired="auto"

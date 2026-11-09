@@ -33,7 +33,7 @@ export default function PasswortVergessenPage() {
             </p>
           )}
           {state?.message && (
-            <p className="rounded-lg bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-800">
+            <p className="rounded-lg bg-status-ok-flaeche px-3 py-2 text-sm font-semibold text-status-ok">
               {state.message}
             </p>
           )}

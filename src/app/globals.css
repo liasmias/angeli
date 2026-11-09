@@ -15,7 +15,25 @@
   --brand-accent: #ff7dff;
   --brand-magenta: #c21fc2;
   --brand-danger: #d81e2c;
+  /* Status statt Tailwind-Standardfarben (emerald/amber): Erfolg im
+     Markengrün, Warnung in einem warmen Gold. Text ≥ 4,5 : 1 auf Fläche. */
+  --status-ok: #146c35;
+  --status-ok-flaeche: #e3f7e8;
+  --status-ok-rand: #b9e8c6;
+  --status-ok-kraeftig: var(--brand-grass);
+  --status-warnung: #8a4b08;
+  --status-warnung-flaeche: #fdf1d8;
+  --status-warnung-rand: #f3d79a;
+  --status-warnung-kraeftig: #f2b234;
 }
+
+/* Eckenregel — die abgeschrägte Ecke ist die Marke:
+   - Aktionen (Knöpfe, Chips) und Karten/Flächen: `fase-knopf` bzw. `chamfer`
+   - Eingabefelder und Kacheln (Info-Flächen in Karten): `rounded-lg`
+   - runde Icon-Knöpfe, Badges und kleine Etiketten: `rounded-full`
+   Ausnahmen mit Grund: Bottom-Sheets auf dem Handy (`rounded-t-2xl`, iOS-
+   Muster), das Namensschild unter dem Trikot (`rounded-t`/`rounded-b`, gehört
+   zur Spielerkarte) und der Handyrahmen der Startseite (`rounded-[1.5rem]`). */
 
 @theme inline {
   --color-background: var(--background);
@@ -27,6 +45,14 @@
   --color-brand-accent: var(--brand-accent);
   --color-brand-lime: var(--brand-lime);
   --color-brand-danger: var(--brand-danger);
+  --color-status-ok: var(--status-ok);
+  --color-status-ok-flaeche: var(--status-ok-flaeche);
+  --color-status-ok-rand: var(--status-ok-rand);
+  --color-status-ok-kraeftig: var(--status-ok-kraeftig);
+  --color-status-warnung: var(--status-warnung);
+  --color-status-warnung-flaeche: var(--status-warnung-flaeche);
+  --color-status-warnung-rand: var(--status-warnung-rand);
+  --color-status-warnung-kraeftig: var(--status-warnung-kraeftig);
   --font-sans: var(--font-space-grotesk);
 }
 

@@ -128,7 +128,7 @@ export default async function FaqPage() {
 
           <Gruppe titel="Squad and market">
             <Frage frage="Why does a player have a coloured mark?">
-              A <b className="text-amber-500">yellow</b> mark means doubtful — injured, suspended
+              A <b className="text-status-warnung-kraeftig">yellow</b> mark means doubtful — injured, suspended
               or carrying a knock. A <b className="text-brand-magenta">red</b> mark means the
               player is out, for instance after a transfer or a long-term injury. Marked players
               can still be picked and still score; the mark is a warning, not a block.
@@ -258,7 +258,7 @@ export default async function FaqPage() {
 
         <Gruppe titel="Kader und Markt">
           <Frage frage="Warum hat ein Spieler eine farbige Markierung?">
-            <b className="text-amber-500">Gelb</b> heisst fraglich — verletzt, gesperrt oder
+            <b className="text-status-warnung-kraeftig">Gelb</b> heisst fraglich — verletzt, gesperrt oder
             angeschlagen. <b className="text-brand-magenta">Rot</b> heisst, der Spieler fällt aus,
             etwa nach einem Vereinswechsel oder bei einer Langzeitverletzung. Markierte Spieler
             bleiben aufstellbar und punkten normal; die Markierung ist eine Warnung, keine Sperre.

@@ -179,7 +179,7 @@ export default async function AdminUsersPage() {
                           className="flex items-center gap-2 text-xs text-brand-deep/70"
                         >
                           <span
-                            className={`rounded px-1.5 py-0.5 font-bold tabular-nums ${
+                            className={`rounded-full px-1.5 py-0.5 font-bold tabular-nums ${
                               a.points >= 0
                                 ? "bg-brand-accent/20 text-brand-deep"
                                 : "bg-brand-danger/15 text-brand-danger"
@@ -198,7 +198,7 @@ export default async function AdminUsersPage() {
                             <button
                               type="submit"
                               title="Korrektur zurücknehmen"
-                              className="pressable rounded px-1.5 py-0.5 font-bold text-brand-danger hover:bg-brand-danger hover:text-white"
+                              className="pressable fase-knopf px-1.5 py-0.5 font-bold text-brand-danger hover:bg-brand-danger hover:text-white"
                             >
                               ✕
                             </button>

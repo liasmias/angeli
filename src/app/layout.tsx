@@ -81,7 +81,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <Nav />
         {announcement && (
-          <div className="bg-amber-100 px-4 py-2.5 text-center text-sm font-semibold text-amber-900">
+          <div className="bg-status-warnung-flaeche px-4 py-2.5 text-center text-sm font-semibold text-status-warnung">
             📣 {announcement}
           </div>
         )}

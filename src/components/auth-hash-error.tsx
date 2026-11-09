@@ -35,12 +35,12 @@ export default function AuthHashError() {
   if (!fehler) return null;
 
   return (
-    <div className="border-b border-amber-200 bg-amber-50 px-6 py-3">
+    <div className="border-b border-status-warnung-rand bg-status-warnung-flaeche px-6 py-3">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 text-sm">
-        <span className="font-semibold text-amber-900">{fehler}</span>
+        <span className="font-semibold text-status-warnung">{fehler}</span>
         <Link
           href="/passwort-vergessen"
-          className="pressable shrink-0 fase-knopf bg-amber-900 px-4 py-1.5 text-xs font-bold text-white"
+          className="pressable shrink-0 fase-knopf bg-status-warnung px-4 py-1.5 text-xs font-bold text-white"
         >
           Neuen Link anfordern
         </Link>

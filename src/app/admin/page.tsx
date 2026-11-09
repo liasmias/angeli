@@ -37,7 +37,7 @@ export default async function AdminPage() {
       />
 
       {/* Posteingang: Meldungen aus dem Profil-Formular der Mitglieder. */}
-      <section className="mb-6 chamfer border border-zinc-200 bg-white p-4">
+      <section className="mb-6 chamfer border border-brand-deep/15 bg-white p-4">
         <h2 className="mb-3 text-sm font-bold text-brand-deep">
           Meldungen{" "}
           {offeneMeldungen.length > 0 && (
@@ -77,7 +77,7 @@ export default async function AdminPage() {
                   <form action={resolveReport.bind(null, r.id, true)}>
                     <button
                       type="submit"
-                      className="pressable shrink-0 fase-knopf bg-brand-deep/5 px-3 py-1 text-xs font-bold text-brand-deep hover:bg-emerald-50 hover:text-emerald-700"
+                      className="pressable shrink-0 fase-knopf bg-brand-deep/5 px-3 py-1 text-xs font-bold text-brand-deep hover:bg-status-ok-flaeche hover:text-status-ok"
                     >
                       Erledigt ✓
                     </button>
@@ -87,7 +87,7 @@ export default async function AdminPage() {
                       schliesst den Vorgang gleich mit — ohne ihn bleibt die
                       Meldung offen, etwa bei einer Rueckfrage. */}
                   {r.reply && (
-                    <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                    <p className="mt-2 rounded-lg bg-status-ok-flaeche px-3 py-2 text-xs text-status-ok">
                       <span className="font-bold">Bereits geantwortet:</span> {r.reply}
                     </p>
                   )}
@@ -102,7 +102,7 @@ export default async function AdminPage() {
                     />
                     <div className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-1.5 text-xs text-brand-deep/70">
-                        <input type="checkbox" name="resolve" defaultChecked className="accent-emerald-600" />
+                        <input type="checkbox" name="resolve" defaultChecked className="accent-status-ok" />
                         gleich als erledigt markieren
                       </label>
                       <button
@@ -134,7 +134,7 @@ export default async function AdminPage() {
                         {r.message}
                       </p>
                       {r.reply && (
-                        <p className="mt-1 whitespace-pre-wrap text-xs text-emerald-800">
+                        <p className="mt-1 whitespace-pre-wrap text-xs text-status-ok">
                           ↳ {r.reply}
                         </p>
                       )}
@@ -157,7 +157,7 @@ export default async function AdminPage() {
 
       {/* Ankündigung: erscheint bei allen Mitgliedern als Banner unter der
           Navigation. Leer speichern blendet sie wieder aus. */}
-      <section className="mb-6 chamfer border border-zinc-200 bg-white p-4">
+      <section className="mb-6 chamfer border border-brand-deep/15 bg-white p-4">
         <h2 className="mb-1 text-sm font-bold text-brand-deep">Ankündigung an alle</h2>
         <p className="mb-3 text-xs text-brand-deep/70">
           Erscheint als Banner auf jeder Seite — z.&nbsp;B. „Punkte von Spieltag 3 werden heute
@@ -195,7 +195,7 @@ export default async function AdminPage() {
       </div>
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-zinc-200 text-left text-zinc-500">
+          <tr className="border-b border-brand-deep/15 text-left text-brand-deep/65">
             <th className="py-2">Spieltag</th>
             <th className="py-2">Deadline</th>
             <th className="py-2">Status</th>
@@ -204,7 +204,7 @@ export default async function AdminPage() {
         </thead>
         <tbody>
           {(gameweeks ?? []).map((gw) => (
-            <tr key={gw.id} className="border-b border-zinc-100">
+            <tr key={gw.id} className="border-b border-brand-deep/10">
               <td className="py-2">
                 <Link href={`/admin/gameweeks/${gw.id}`} className="underline">
                   Spieltag {gw.number}
@@ -214,7 +214,7 @@ export default async function AdminPage() {
               <td className="py-2">{gw.is_locked ? "gesperrt" : "offen"}</td>
               <td className="py-2 text-right">
                 <form action={toggleGameweekLock.bind(null, gw.id, !gw.is_locked)}>
-                  <button type="submit" className="rounded border border-zinc-300 px-2 py-1">
+                  <button type="submit" className="fase-knopf border border-brand-deep/15 px-2 py-1">
                     {gw.is_locked ? "Entsperren" : "Sperren"}
                   </button>
                 </form>
@@ -223,7 +223,7 @@ export default async function AdminPage() {
           ))}
           {(!gameweeks || gameweeks.length === 0) && (
             <tr>
-              <td colSpan={4} className="py-6 text-center text-zinc-500">
+              <td colSpan={4} className="py-6 text-center text-brand-deep/65">
                 Noch keine Spieltage angelegt. Trage sie über die Supabase-Tabelle{" "}
                 <code>gameweeks</code> ein (Nummer, Season, Deadline).
               </td>

@@ -82,7 +82,7 @@ const Zeile = memo(function Zeile({
         aria-label={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
         title={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
         className={`pressable ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg ${
-          istFavorit ? "text-amber-400" : "text-brand-deep/55 hover:text-amber-400"
+          istFavorit ? "text-status-warnung-kraeftig" : "text-brand-deep/55 hover:text-status-warnung-kraeftig"
         }`}
       >
         {istFavorit ? "★" : "☆"}
@@ -155,7 +155,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
       {favoriteRows.length > 0 && (
         <div className="overflow-hidden chamfer bg-white shadow-sm">
           <div className="flex items-center gap-2 bg-brand-deep px-5 py-3 text-sm font-bold text-white">
-            <span className="text-amber-400">★</span> {t.favorites}
+            <span className="text-status-warnung-kraeftig">★</span> {t.favorites}
           </div>
           <ol className="divide-y divide-brand-deep/5">
             {favoriteRows.map((row) => (

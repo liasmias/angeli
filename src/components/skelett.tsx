@@ -12,7 +12,7 @@
  */
 
 function Balken({ className = "" }: { className?: string }) {
-  return <div className={`skelett rounded-md bg-brand-deep/10 ${className}`} />;
+  return <div className={`skelett rounded-lg bg-brand-deep/10 ${className}`} />;
 }
 
 function Rahmen({ children, breit = false }: { children: React.ReactNode; breit?: boolean }) {
@@ -117,8 +117,8 @@ export function SkelettSpielfeld() {
               <div key={r} className="flex justify-center gap-4">
                 {Array.from({ length: n }, (_, i) => (
                   <div key={i} className="flex flex-col items-center gap-1.5">
-                    <div className="skelett h-12 w-12 rounded-xl bg-white/50" />
-                    <div className="skelett h-4 w-14 rounded bg-white/50" />
+                    <div className="skelett h-12 w-12 rounded-lg bg-white/50" />
+                    <div className="skelett h-4 w-14 rounded-full bg-white/50" />
                   </div>
                 ))}
               </div>

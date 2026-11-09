@@ -34,7 +34,7 @@ export default async function Home() {
             <span className="block text-[2.75rem] font-bold leading-none tracking-tight sm:text-8xl">
               Angeli
             </span>
-            <span className="mt-1.5 block bg-gradient-to-r from-brand-accent to-brand-lime bg-clip-text text-lg font-bold tracking-tight text-transparent sm:mt-3 sm:text-4xl">
+            <span className="mt-1.5 block text-lg font-bold tracking-tight text-brand-lime sm:mt-3 sm:text-4xl">
               Swiss League Fantasy
             </span>
           </h1>
@@ -141,7 +141,7 @@ export default async function Home() {
           playsInline
           preload="none"
           aria-label={t.howToPlayVideo}
-          className="aspect-video h-auto w-full rounded-xl bg-brand-deep shadow-2xl shadow-black/40"
+          className="aspect-video h-auto w-full rounded-lg bg-brand-deep shadow-2xl shadow-black/40"
         />
 
         <div className="mt-10 grid items-center gap-8 sm:mt-14 sm:grid-cols-[1fr_auto] sm:gap-12">
