@@ -12,7 +12,7 @@ export const metadata = {
 function Frage({ frage, children }: { frage: string; children: React.ReactNode }) {
   return (
     <details className="group border-b border-brand-deep/5 pb-3 last:border-0 last:pb-0">
-      <summary className="cursor-pointer list-none font-semibold text-brand-deep marker:content-none">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center font-semibold text-brand-deep marker:content-none">
         <span className="text-brand-magenta group-open:hidden">▸ </span>
         <span className="hidden text-brand-magenta group-open:inline">▾ </span>
         {frage}

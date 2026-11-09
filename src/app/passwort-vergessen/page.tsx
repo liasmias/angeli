@@ -25,7 +25,7 @@ export default function PasswortVergessenPage() {
             placeholder="E-Mail"
             required
             autoComplete="email"
-            className="rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
+            className="min-h-11 rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
           />
           {state?.error && (
             <p className="rounded-lg bg-brand-danger/10 px-3 py-2 text-sm font-semibold text-brand-danger">
@@ -47,7 +47,7 @@ export default function PasswortVergessenPage() {
           </button>
         </form>
         <p className="mt-5 text-sm text-brand-deep/70">
-          <Link href="/login" className="font-semibold text-brand-magenta underline">
+          <Link href="/login" className="tap-ziel inline-block font-semibold text-brand-magenta underline">
             Zurück zum Login
           </Link>
         </p>

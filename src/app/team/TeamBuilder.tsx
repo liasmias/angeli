@@ -661,6 +661,7 @@ export default function TeamBuilder({
   // Kurzer Haken nach dem Speichern — sonst ist die einzige Rueckmeldung
   // der Toast, und der ist schon wieder weg, wenn man hinschaut.
   const [gespeichert, setGespeichert] = useState(false);
+  const [gespeichertFuer, setGespeichertFuer] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   // FPL-Muster: Tipp auf eine Karte öffnet das Aktionsmenü; "Auswechseln"
   // startet den Tauschmodus, in dem nur gültige Partner tippbar bleiben.
@@ -1348,9 +1349,10 @@ export default function TeamBuilder({
         setEntfernt([]);
         setErsatz([]);
         setTransferModus(false);
-        // Spieltag mitnennen: nach einer verstrichenen Deadline gilt die
-        // Aufstellung automatisch für den nächsten Spieltag.
-        setToast({ kind: "success", text: t.saved(result?.savedForGameweek) });
+        // Die Bestätigung steht im Knopf selbst (grün mit Häkchen), keine
+        // eigene Einblendung mehr. Der Spieltag steht im Titel des Knopfs:
+        // nach einer verstrichenen Deadline gilt die Aufstellung für den nächsten.
+        setGespeichertFuer(t.saved(result?.savedForGameweek));
       }
     });
   }
@@ -1469,7 +1471,13 @@ export default function TeamBuilder({
       {t.saving}
     </span>
   ) : gespeichert ? (
-    <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
+    <span className="flex items-center justify-center gap-1.5" title={gespeichertFuer ?? undefined}>
+      <svg viewBox="0 0 16 16" aria-hidden className="haken h-4 w-4">
+        <path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {t.savedShort}
+      {gespeichertFuer && <span className="sr-only">{gespeichertFuer}</span>}
+    </span>
   ) : !gameweekOpen ? (
     t.locked
   ) : (
@@ -1481,11 +1489,13 @@ export default function TeamBuilder({
     // pb-28: Platz fuer die feste Aktionsleiste, damit sie nichts verdeckt.
     <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:pb-0">
       {/* Toast */}
-      {toast && overlayOffen && (
+      {toast && (
         <p
           role="status"
           onClick={() => setToast(null)}
-          className={`toast cursor-pointer rounded-full px-5 py-2.5 text-sm font-bold shadow-lg lg:hidden ${
+          className={`toast cursor-pointer rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
+            overlayOffen ? "lg:hidden" : "hidden lg:block"
+          } ${
             toast.kind === "error"
               ? "bg-brand-danger text-white"
               : "bg-brand-accent text-brand-deep"
@@ -1655,6 +1665,21 @@ export default function TeamBuilder({
         );
       })()}
 
+      {/* Desktop: Transfer- bzw. Tausch-Hinweis schwebt über dem Speichern-Knopf
+          (auf dem Handy steht er in der Aktionsleiste). */}
+      {hinweis && (
+        <div className="fixed inset-x-0 bottom-20 z-40 mx-auto hidden w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:flex">
+          <span className="truncate">{hinweis.text}</span>
+          <button
+            type="button"
+            onClick={hinweis.aktion}
+            className="pressable shrink-0 fase-knopf bg-brand-accent px-3 py-1 font-bold text-brand-deep"
+          >
+            {hinweis.knopf}
+          </button>
+        </div>
+      )}
+
       {/* ===== Spielfeld ===== */}
       {/* Füllt die Breite neben dem Markt. Vorher war der Abschnitt auf 44rem
           gedeckelt und der ganze Block mittig gesetzt — Spielfeld und Markt
@@ -1702,9 +1727,7 @@ export default function TeamBuilder({
 
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        {/* Ab lg klebt die Leiste oben und trägt den Speichern-Knopf samt
-            Meldungen — vorher klebte der Knopf unten mitten über dem Feld. */}
-        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm lg:sticky lg:top-3 lg:z-20">
+        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           <div className="grid grid-cols-2 items-baseline gap-x-4 gap-y-1 text-sm sm:flex sm:flex-wrap">
@@ -1801,39 +1824,6 @@ export default function TeamBuilder({
                 {t.discard}
               </button>
             </span>
-          </div>
-          <div className="mt-2 hidden h-11 items-center gap-3 border-t border-brand-deep/10 pt-2 lg:flex">
-            <div className="min-w-0 flex-1 text-sm">
-              {toast ? (
-                <p
-                  role="status"
-                  className={`truncate font-bold ${
-                    toast.kind === "error" ? "text-brand-danger" : "text-brand-magenta"
-                  }`}
-                >
-                  {toast.text}
-                </p>
-              ) : hinweis ? (
-                <p className="flex min-w-0 items-center gap-3">
-                  <span className="truncate font-semibold text-brand-deep/80">{hinweis.text}</span>
-                  <button
-                    type="button"
-                    onClick={hinweis.aktion}
-                    className="pressable shrink-0 fase-knopf bg-brand-deep px-3 py-1.5 text-xs font-bold text-brand-accent"
-                  >
-                    {hinweis.knopf}
-                  </button>
-                </p>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              disabled={speichernGesperrt}
-              onClick={handleSave}
-              className="speichern-knopf pressable shrink-0 fase-knopf px-6 py-2.5 text-sm font-bold"
-            >
-              {speichernInhalt}
-            </button>
           </div>
         </div>
 
@@ -2165,6 +2155,19 @@ export default function TeamBuilder({
           })}
         </div>
 
+        {/* Speichern ab lg: klebt unten an der Spalte. Deckend auch inaktiv,
+            weil er über dem Spielfeld liegt. */}
+        <div className="sticky bottom-4 z-20 mt-4 hidden justify-center lg:flex">
+          <button
+            type="button"
+            disabled={speichernGesperrt}
+            onClick={handleSave}
+            data-ok={gespeichert || undefined}
+            className="speichern-knopf pressable w-full max-w-xs fase-knopf px-6 py-3 font-bold shadow-lg shadow-brand-deep/20"
+          >
+            {speichernInhalt}
+          </button>
+        </div>
       </section>
 
       {/* ===== Spielermarkt ===== */}
@@ -2227,6 +2230,7 @@ export default function TeamBuilder({
                 type="button"
                 disabled={speichernGesperrt}
                 onClick={handleSave}
+                data-ok={gespeichert || undefined}
                 className="speichern-knopf pressable flex-[1.3] fase-knopf px-3 py-3 text-sm font-bold"
               >
                 {speichernInhalt}

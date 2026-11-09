@@ -22,7 +22,7 @@ export default function PasswortNeuPage() {
             required
             minLength={8}
             autoComplete="new-password"
-            className="rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
+            className="min-h-11 rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
           />
           <input
             name="password2"
@@ -31,7 +31,7 @@ export default function PasswortNeuPage() {
             required
             minLength={8}
             autoComplete="new-password"
-            className="rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
+            className="min-h-11 rounded-lg border border-brand-deep/15 px-3 py-2 outline-none focus:border-brand-magenta"
           />
           {state?.error && (
             <p className="rounded-lg bg-brand-danger/10 px-3 py-2 text-sm font-semibold text-brand-danger">
@@ -48,7 +48,7 @@ export default function PasswortNeuPage() {
         </form>
         <p className="mt-5 text-sm text-brand-deep/70">
           Link abgelaufen?{" "}
-          <Link href="/passwort-vergessen" className="font-semibold text-brand-magenta underline">
+          <Link href="/passwort-vergessen" className="tap-ziel inline-block font-semibold text-brand-magenta underline">
             Neuen anfordern
           </Link>
         </p>

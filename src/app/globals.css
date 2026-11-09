@@ -56,6 +56,13 @@
   --font-sans: var(--font-space-grotesk);
 }
 
+/* Fliesstext: kein einzelnes Wort allein in der letzten Zeile. */
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -89,7 +96,7 @@ h2 {
 }
 
 .brand-gradient {
-  background: linear-gradient(100deg, var(--brand-deep) 0%, #18733c 60%, #24884a 130%);
+  background: linear-gradient(100deg, var(--brand-deep) 0%, #17703a 60%, #1f7c41 130%);
 }
 
 /* Startseite: Das Fenster selbst scrollt nicht, nur <main> darin — auf dem
@@ -427,16 +434,42 @@ body:has([data-gw-wechsel]) main {
   pointer-events: none;
 }
 
+@media (min-width: 64rem) {
+  /* Desktop: über Hinweis und Speichern-Knopf. */
+  .toast { bottom: 8.5rem; }
+}
+
 /* Speichern-Knopf: kräftig, wenn es etwas zu speichern gibt; neutral und
    klar als inaktiv erkennbar, wenn nicht. Hellrosa las sich noch als aktiv. */
 .speichern-knopf {
   background: var(--brand-accent);
   color: var(--brand-deep);
 }
+.speichern-knopf {
+  transition: background-color 400ms ease, color 400ms ease, transform var(--dauer-schnell) ease;
+}
+/* Deckend: Auf dem Desktop liegt der Knopf über dem Spielfeld. */
 .speichern-knopf:disabled {
-  background: rgb(10 46 25 / 0.06);
+  background: #e9eeea;
   color: rgb(10 46 25 / 0.5);
   cursor: default;
+}
+/* Gerade gespeichert: kurz grün mit Häkchen, danach graut er aus. */
+.speichern-knopf[data-ok],
+.speichern-knopf[data-ok]:disabled {
+  background: var(--brand-grass);
+  color: #fff;
+}
+.haken path {
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  animation: haken-zeichnen 320ms var(--kurve-aus) 60ms forwards;
+}
+@keyframes haken-zeichnen {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .haken path { animation: none; stroke-dashoffset: 0; }
 }
 .bg-brand-deep .speichern-knopf:disabled {
   background: rgb(255 255 255 / 0.08);
