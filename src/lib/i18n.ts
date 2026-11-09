@@ -150,6 +150,10 @@ const de = {
     captainMissing: "Captain fehlt",
     priceFilter: "Preis",
     priceAffordable: (b: string) => `Bezahlbar (${b})`,
+    affordable: "Bezahlbar",
+    filters: "Filter",
+    filtersActive: (n: number) => `Filter (${n})`,
+    resetFilters: "Filter zurücksetzen",
     priceMax: (n: number) => `bis ${n}.0`,
     guideTitle: "So baust du dein Team",
     startSquad: (n: number, budget: string, club: number) =>
@@ -521,6 +525,10 @@ const en: typeof de = {
     captainMissing: "Captain missing",
     priceFilter: "Price",
     priceAffordable: (b: string) => `Affordable (${b})`,
+    affordable: "Affordable",
+    filters: "Filters",
+    filtersActive: (n: number) => `Filters (${n})`,
+    resetFilters: "Reset filters",
     priceMax: (n: number) => `up to ${n}.0`,
     guideTitle: "How to build your team",
     startSquad: (n: number, budget: string, club: number) =>

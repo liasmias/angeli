@@ -680,6 +680,9 @@ export default function TeamBuilder({
   // "ALL", "LEISTBAR" (was das Restbudget hergibt) oder eine Preisgrenze.
   const [filterPreis, setFilterPreis] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  // Club, Preisstufe und Sortierung liegen hinter „Filter“ — sichtbar bleiben
+  // nur Position, Suche und „Bezahlbar“. Vorher standen fünf Gruppen offen.
+  const [filterOffen, setFilterOffen] = useState(false);
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
   const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "cleanSheets" | "owned">("points");
   const marketRef = useRef<HTMLElement | null>(null);
@@ -1364,6 +1367,42 @@ export default function TeamBuilder({
           b.price - a.price
       );
   }, [players, filterPos, filterClub, filterPreis, budgetLeft, kaderIds, sucheVerzoegert, sortiere]);
+
+  // Nicht alle ~380 Zeilen auf einmal: erst 50, weitere beim Scrollen.
+  // Auf älteren Handys kostete das Öffnen und Filtern sonst spürbar Zeit.
+  const [sichtbar, setSichtbar] = useState(50);
+  const [vorigeListe, setVorigeListe] = useState(filtered);
+  if (vorigeListe !== filtered) {
+    setVorigeListe(filtered);
+    setSichtbar(50);
+  }
+  const listeRef = useRef<HTMLDivElement | null>(null);
+  const endeRef = useRef<HTMLDivElement | null>(null);
+  const mehrNoetig = sichtbar < filtered.length;
+  useEffect(() => {
+    const ende = endeRef.current;
+    if (!ende || !mehrNoetig) return;
+    const beobachter = new IntersectionObserver(
+      (eintraege) => {
+        if (eintraege.some((e) => e.isIntersecting)) setSichtbar((n) => n + 50);
+      },
+      { root: listeRef.current, rootMargin: "400px 0px" }
+    );
+    beobachter.observe(ende);
+    return () => beobachter.disconnect();
+  }, [mehrNoetig, sichtbar]);
+
+  const aktiveFilter =
+    (filterPreis !== "ALL" && filterPreis !== "LEISTBAR" ? 1 : 0) +
+    (filterClub !== "ALL" ? 1 : 0) +
+    (sortiere !== "points" ? 1 : 0);
+  const filterZuruecksetzen = () => {
+    setFilterPos("ALL");
+    setFilterClub("ALL");
+    setFilterPreis("ALL");
+    setSortiere("points");
+    setSearch("");
+  };
 
   // Gleichbleibende Handler, damit die memoisierten Marktzeilen nicht neu rendern.
   const toggleAktuell = useRef(togglePlayer);
@@ -2245,6 +2284,33 @@ export default function TeamBuilder({
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t.search}
             />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-pressed={filterPreis === "LEISTBAR"}
+                onClick={() => setFilterPreis(filterPreis === "LEISTBAR" ? "ALL" : "LEISTBAR")}
+                className={`pressable-subtle min-h-11 flex-1 fase-knopf px-3 text-sm font-bold sm:min-h-9 ${
+                  filterPreis === "LEISTBAR"
+                    ? "bg-brand-deep text-brand-accent"
+                    : "bg-brand-deep/5 text-brand-deep/80 hover:bg-brand-deep/10"
+                }`}
+              >
+                {t.affordable} {Math.max(0, budgetLeft).toFixed(1)}
+              </button>
+              <button
+                type="button"
+                aria-expanded={filterOffen}
+                onClick={() => setFilterOffen((o) => !o)}
+                className={`pressable-subtle min-h-11 flex-1 fase-knopf px-3 text-sm font-bold sm:min-h-9 ${
+                  aktiveFilter > 0 || filterOffen
+                    ? "bg-brand-deep text-brand-accent"
+                    : "bg-brand-deep/5 text-brand-deep/80 hover:bg-brand-deep/10"
+                }`}
+              >
+                {aktiveFilter > 0 ? t.filtersActive(aktiveFilter) : t.filters} {filterOffen ? "▴" : "▾"}
+              </button>
+            </div>
+            {filterOffen && (
             <div className="grid grid-cols-3 gap-2">
               <Auswahl
                 value={filterPreis}
@@ -2284,9 +2350,10 @@ export default function TeamBuilder({
                 <option value="owned">{t.sortOwned}</option>
               </Auswahl>
             </div>
+            )}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-[34rem] lg:flex-none">
-            {filtered.map((p) => (
+          <div ref={listeRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-[34rem] lg:flex-none">
+            {filtered.slice(0, sichtbar).map((p) => (
               <MarktZeile
                 key={p.id}
                 p={p}
@@ -2297,10 +2364,18 @@ export default function TeamBuilder({
                 onToggle={marktToggle}
               />
             ))}
+            {mehrNoetig && <div ref={endeRef} className="h-px" aria-hidden />}
             {filtered.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-brand-deep/65">
-                {t.noneFound}
-              </p>
+              <div className="flex flex-col items-center gap-3 px-4 py-6 text-center text-sm text-brand-deep/70">
+                <p>{t.noneFound}</p>
+                <button
+                  type="button"
+                  onClick={filterZuruecksetzen}
+                  className="pressable min-h-11 fase-knopf bg-brand-deep px-4 text-sm font-bold text-brand-accent"
+                >
+                  {t.resetFilters}
+                </button>
+              </div>
             )}
           </div>
         </div>
