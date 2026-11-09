@@ -378,23 +378,29 @@ button,
 .toast {
   position: fixed;
   left: 50%;
-  /* Über der festen Aktionsleiste (Handy) bzw. dem Speichern-Knopf (Desktop). */
-  bottom: 7rem;
+  /* Nur noch über offenen Overlays auf dem Handy (Spielermarkt, Sheets) —
+     sonst steht die Meldung in der Aktions- bzw. Statusleiste. */
+  bottom: 1.5rem;
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: 60;
+  max-width: calc(100vw - 2rem);
   animation: toast-in var(--dauer-schnell) ease-out;
 }
-.toast-hoch {
-  /* Zusätzlich über dem Transfer- oder Tausch-Hinweis. */
-  bottom: 10rem;
+
+/* Speichern-Knopf: kräftig, wenn es etwas zu speichern gibt; neutral und
+   klar als inaktiv erkennbar, wenn nicht. Hellrosa las sich noch als aktiv. */
+.speichern-knopf {
+  background: var(--brand-accent);
+  color: var(--brand-deep);
 }
-@media (min-width: 64rem) {
-  .toast {
-    bottom: 5rem;
-  }
-  .toast-hoch {
-    bottom: 8rem;
-  }
+.speichern-knopf:disabled {
+  background: rgb(10 46 25 / 0.06);
+  color: rgb(10 46 25 / 0.5);
+  cursor: default;
+}
+.bg-brand-deep .speichern-knopf:disabled {
+  background: rgb(255 255 255 / 0.08);
+  color: rgb(255 255 255 / 0.55);
 }
 
 /* Schatten für gefaste Flächen (Spielfeld): wie bei den Screenshots der

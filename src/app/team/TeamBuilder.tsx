@@ -1391,16 +1391,46 @@ export default function TeamBuilder({
         ? t.inDays(Math.round(hoursLeft / 24))
         : t.inHours(hoursLeft);
 
+  // Transfer- bzw. Tausch-Hinweis mit seiner Aktion. Er steht in der Leiste
+  // (Handy unten, Desktop in der Statusleiste) statt schwebend über dem Feld,
+  // wo er Spieler verdeckte.
+  const hinweis =
+    tauschAus !== null
+      ? {
+          text: t.swapHint(playersById.get(tauschAus)?.name ?? "?"),
+          knopf: t.swapCancel,
+          aktion: () => setTauschAus(null),
+        }
+      : transferModus
+        ? { text: t.transferHint, knopf: t.transferDone, aktion: () => setTransferModus(false) }
+        : null;
+  // Liegt auf dem Handy ein Overlay über der Leiste, braucht die Meldung
+  // weiterhin ihren schwebenden Platz — sonst wäre sie unsichtbar.
+  const overlayOffen = marktOffen || sheetSpieler !== null || marktSpieler !== null;
+
+  const speichernInhalt = isPending ? (
+    <span className="flex items-center justify-center gap-2">
+      <span className="kringel inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent" />
+      {t.saving}
+    </span>
+  ) : gespeichert ? (
+    <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
+  ) : !gameweekOpen ? (
+    t.locked
+  ) : (
+    (naechsterSchritt ?? t.save)
+  );
+  const speichernGesperrt = isPending || !gameweekOpen || keineAenderung;
+
   return (
     // pb-28: Platz fuer die feste Aktionsleiste, damit sie nichts verdeckt.
     <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:pb-0">
       {/* Toast */}
-      {toast && (
+      {toast && overlayOffen && (
         <p
           role="status"
-          className={`toast ${
-            transferModus || tauschAus !== null ? "toast-hoch " : ""
-          }rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
+          onClick={() => setToast(null)}
+          className={`toast cursor-pointer rounded-full px-5 py-2.5 text-sm font-bold shadow-lg lg:hidden ${
             toast.kind === "error"
               ? "bg-brand-danger text-white"
               : "bg-brand-accent text-brand-deep"
@@ -1570,36 +1600,6 @@ export default function TeamBuilder({
         );
       })()}
 
-      {/* Transfer-Modus-Hinweis mit Fertig-Knopf. */}
-      {transferModus && tauschAus === null && (
-        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-20">
-          <span className="truncate">{t.transferHint}</span>
-          <button
-            type="button"
-            onClick={() => setTransferModus(false)}
-            className="pressable shrink-0 fase-knopf bg-brand-accent px-3 py-1 font-bold text-brand-deep"
-          >
-            {t.transferDone}
-          </button>
-        </div>
-      )}
-
-      {/* Tauschmodus-Hinweis mit Abbrechen — schwebt unten, bis getauscht wird. */}
-      {tauschAus !== null && (
-        <div className="fixed inset-x-0 bottom-28 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-3 rounded-full bg-brand-deep px-4 py-2.5 text-xs font-semibold text-white shadow-2xl lg:bottom-20">
-          <span className="truncate">
-            {t.swapHint(playersById.get(tauschAus)?.name ?? "?")}
-          </span>
-          <button
-            type="button"
-            onClick={() => setTauschAus(null)}
-            className="pressable shrink-0 fase-knopf bg-white/15 px-3 py-1 font-bold"
-          >
-            {t.swapCancel}
-          </button>
-        </div>
-      )}
-
       {/* ===== Spielfeld ===== */}
       {/* Füllt die Breite neben dem Markt. Vorher war der Abschnitt auf 44rem
           gedeckelt und der ganze Block mittig gesetzt — Spielfeld und Markt
@@ -1647,7 +1647,9 @@ export default function TeamBuilder({
 
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
+        {/* Ab lg klebt die Leiste oben und trägt den Speichern-Knopf samt
+            Meldungen — vorher klebte der Knopf unten mitten über dem Feld. */}
+        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm lg:sticky lg:top-3 lg:z-20">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           <div className="grid grid-cols-2 items-baseline gap-x-4 gap-y-1 text-sm sm:flex sm:flex-wrap">
@@ -1744,6 +1746,39 @@ export default function TeamBuilder({
                 {t.discard}
               </button>
             </span>
+          </div>
+          <div className="mt-2 hidden h-11 items-center gap-3 border-t border-brand-deep/10 pt-2 lg:flex">
+            <div className="min-w-0 flex-1 text-sm">
+              {toast ? (
+                <p
+                  role="status"
+                  className={`truncate font-bold ${
+                    toast.kind === "error" ? "text-brand-danger" : "text-brand-magenta"
+                  }`}
+                >
+                  {toast.text}
+                </p>
+              ) : hinweis ? (
+                <p className="flex min-w-0 items-center gap-3">
+                  <span className="truncate font-semibold text-brand-deep/80">{hinweis.text}</span>
+                  <button
+                    type="button"
+                    onClick={hinweis.aktion}
+                    className="pressable shrink-0 fase-knopf bg-brand-deep px-3 py-1.5 text-xs font-bold text-brand-accent"
+                  >
+                    {hinweis.knopf}
+                  </button>
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              disabled={speichernGesperrt}
+              onClick={handleSave}
+              className="speichern-knopf pressable shrink-0 fase-knopf px-6 py-2.5 text-sm font-bold"
+            >
+              {speichernInhalt}
+            </button>
           </div>
         </div>
 
@@ -2075,31 +2110,6 @@ export default function TeamBuilder({
           })}
         </div>
 
-        {/* Speichern — ab lg hier, darunter in der festen Leiste am
-            unteren Rand. Vorher klebte dieser Knopf nur innerhalb der
-            linken Spalte und war aus dem Markt heraus nicht erreichbar. */}
-        <div className="sticky bottom-4 z-20 mt-4 hidden justify-center lg:flex">
-          {/* Deckend auch im deaktivierten Zustand: Der Knopf klebt über dem Spielfeld. */}
-          <button
-            type="button"
-            disabled={isPending || !gameweekOpen || keineAenderung}
-            onClick={handleSave}
-            className="pressable w-full max-w-xs fase-knopf bg-brand-accent px-6 py-3 font-bold text-brand-deep shadow-lg shadow-brand-deep/20 disabled:bg-[#f6d3f9] disabled:text-brand-deep/50"
-          >
-            {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="kringel inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent" />
-                  {t.saving}
-                </span>
-              ) : gespeichert ? (
-                <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
-              ) : !gameweekOpen ? (
-                t.locked
-              ) : (
-                (naechsterSchritt ?? t.save)
-              )}
-          </button>
-        </div>
       </section>
 
       {/* ===== Spielermarkt ===== */}
@@ -2112,14 +2122,43 @@ export default function TeamBuilder({
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
         <div className="mx-auto max-w-md px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="chamfer bg-brand-deep px-3 py-2.5 shadow-2xl shadow-black/40">
-            <div className="mb-2 flex items-baseline justify-between text-xs font-semibold text-white/75">
-              <span>
-                {t.squad} {squad.length}/{settings.squadSize} · {t.starters} {startingCount}/
-                {settings.startingSize}
-              </span>
-              <span className={budgetLeft < -1e-9 ? "text-brand-accent" : ""}>
-                {t.budget} {budgetLeft.toFixed(1)}
-              </span>
+            {/* Feste Höhe: Meldung, Hinweis oder Kaderstand wechseln sich hier ab,
+                ohne dass die Leiste springt. Vorher schwebten Meldung und
+                Hinweis über der Mittelfeldreihe. */}
+            <div className="mb-2 flex h-6 items-center justify-between gap-3 text-xs font-semibold text-white/75">
+              {toast && !overlayOffen ? (
+                <button
+                  type="button"
+                  role="status"
+                  onClick={() => setToast(null)}
+                  className={`min-w-0 truncate text-left font-bold ${
+                    toast.kind === "error" ? "text-[#ff9a9a]" : "text-brand-accent"
+                  }`}
+                >
+                  {toast.text}
+                </button>
+              ) : hinweis ? (
+                <>
+                  <span className="min-w-0 truncate">{hinweis.text}</span>
+                  <button
+                    type="button"
+                    onClick={hinweis.aktion}
+                    className="pressable tap-ziel shrink-0 fase-knopf bg-brand-accent px-3 py-0.5 font-bold text-brand-deep"
+                  >
+                    {hinweis.knopf}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="truncate">
+                    {t.squad} {squad.length}/{settings.squadSize} · {t.starters} {startingCount}/
+                    {settings.startingSize}
+                  </span>
+                  <span className={`shrink-0 ${budgetLeft < -1e-9 ? "text-brand-accent" : ""}`}>
+                    {t.budget} {budgetLeft.toFixed(1)}
+                  </span>
+                </>
+              )}
             </div>
             <div className="flex gap-2">
               <button
@@ -2131,22 +2170,11 @@ export default function TeamBuilder({
               </button>
               <button
                 type="button"
-                disabled={isPending || !gameweekOpen || keineAenderung}
+                disabled={speichernGesperrt}
                 onClick={handleSave}
-                className="pressable flex-[1.3] fase-knopf bg-brand-accent px-3 py-3 text-sm font-bold text-brand-deep disabled:opacity-40"
+                className="speichern-knopf pressable flex-[1.3] fase-knopf px-3 py-3 text-sm font-bold"
               >
-                {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="kringel inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent" />
-                  {t.saving}
-                </span>
-              ) : gespeichert ? (
-                <span className="flex items-center justify-center gap-1.5">✓ {t.savedShort}</span>
-              ) : !gameweekOpen ? (
-                t.locked
-              ) : (
-                (naechsterSchritt ?? t.save)
-              )}
+                {speichernInhalt}
               </button>
             </div>
           </div>
