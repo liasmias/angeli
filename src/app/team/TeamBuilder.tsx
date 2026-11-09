@@ -156,7 +156,7 @@ function PlayerCard({
     >
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
-          className={`pop-in absolute top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`pop-in absolute top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
             onQuickRemove || player.flag ? "left-0.5" : "right-0.5"
           } ${pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"}`}
         >
@@ -168,7 +168,7 @@ function PlayerCard({
         <span
           title={player.flagNote ?? undefined}
           aria-label={`${player.name}: ${player.flagNote ?? (player.flag === "red" ? t.flagRed : t.flagYellow)}`}
-          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold leading-none ring-2 ring-white sm:h-6 sm:w-6 ${
+          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold leading-none ring-2 ring-white sm:h-6 sm:w-6 ${
             player.flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
           }`}
         >
@@ -184,7 +184,7 @@ function PlayerCard({
           onClick={onQuickRemove}
           title={t.remove(player.name)}
           aria-label={t.remove(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-[10px] font-bold leading-none text-white ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-xs font-bold leading-none text-white ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ✕
         </button>
@@ -195,7 +195,7 @@ function PlayerCard({
           onClick={onUndo}
           title={t.undoTitle(player.name)}
           aria-label={t.undoTitle(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-[10px] font-bold leading-none text-brand-deep ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-xs font-bold leading-none text-brand-deep ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ↩
         </button>
@@ -210,7 +210,7 @@ function PlayerCard({
         }`}
       >
         <Jersey club={player.club} fluid />
-        <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
+        <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-xs font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
           <span className="block truncate">{player.name}</span>
         </div>
         {/* Normal der nächste Gegner — im Transfer-Modus der Preis, denn
@@ -224,12 +224,12 @@ function PlayerCard({
         <div
           className={`w-full truncate rounded-b px-1 py-0.5 text-center leading-4 sm:px-1.5 ${
             showPrice
-              ? "bg-brand-accent text-[9px] font-bold text-brand-deep sm:text-xs"
+              ? "bg-brand-accent text-xs font-bold text-brand-deep sm:text-xs"
               : player.nextFixtures.length > 1
-                ? "bg-brand-deep text-[8px] font-medium text-white/90 sm:text-[11px]"
+                ? "bg-brand-deep text-xs font-medium text-white/90 sm:text-xs"
                 : player.nextOpponent
-                  ? "bg-brand-deep text-[10px] font-medium text-white/90 sm:text-xs"
-                  : "bg-brand-magenta text-[8px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
+                  ? "bg-brand-deep text-xs font-medium text-white/90 sm:text-xs"
+                  : "bg-brand-magenta text-xs font-bold uppercase tracking-wide text-white sm:text-xs"
           }`}
         >
           {showPrice ? player.price.toFixed(1) : (player.nextOpponent ?? t.blank)}
@@ -254,7 +254,7 @@ function FlagMarke({ flag, note, label }: { flag: PlayerFlag; note: string | nul
       title={note ?? undefined}
       role="img"
       aria-label={note ?? label}
-      className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold leading-none ${
+      className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none ${
         flag === "red" ? "bg-brand-danger text-white" : "bg-amber-400 text-amber-950"
       }`}
     >
@@ -287,7 +287,7 @@ function FormLeiste({ form }: { form: PlayerOption["form"] }) {
                 )}
               </div>
             )}
-            <p className="mt-1 text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
+            <p className="mt-1 text-xs font-semibold uppercase leading-tight text-brand-deep/65">
               GW {f.gw}
             </p>
           </div>
@@ -339,7 +339,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
 
       <div className="mt-3 rounded-xl bg-brand-deep/5 px-3 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+          <span className="text-xs font-bold uppercase tracking-wide text-brand-deep/65">
             {player.nextFixtures.length > 1 ? t.cardTwoGames : t.cardNextGame}
           </span>
           <span
@@ -358,7 +358,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
 
       {player.upcoming.length > 0 && (
         <>
-          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+          <p className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-deep/65">
             {t.cardUpcoming}
           </p>
           {/* Ein Block je Partie. Heimspiele dunkel, Auswaertsspiele hell —
@@ -374,11 +374,11 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
                     : "bg-brand-deep/8 text-brand-deep"
                 }`}
               >
-                <p className="text-[9px] font-semibold uppercase leading-tight opacity-55">
+                <p className="text-xs font-semibold uppercase leading-tight opacity-55">
                   GW {f.gw}
                 </p>
                 <p className="truncate text-xs font-bold leading-tight">{f.opponent}</p>
-                <p className="text-[9px] font-semibold leading-tight opacity-55">
+                <p className="text-xs font-semibold leading-tight opacity-55">
                   {f.home ? "(H)" : "(A)"}
                 </p>
               </div>
@@ -389,7 +389,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
 
       {player.form.length > 0 && (
         <>
-          <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+          <p className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-deep/65">
             {t.cardForm}
           </p>
           <FormLeiste form={player.form} />
@@ -397,16 +397,16 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
       )}
 
       {player.flagNote && (
-        <p className="mt-2 text-[11px] leading-snug text-brand-deep/70">{player.flagNote}</p>
+        <p className="mt-2 text-xs leading-snug text-brand-deep/70">{player.flagNote}</p>
       )}
 
-      <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+      <p className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-deep/65">
         {t.cardSeason}
       </p>
       <dl className="mt-1.5 grid grid-cols-4 gap-1.5">
         {kennzahlen.map(([label, wert]) => (
           <div key={label} className="rounded-lg bg-brand-deep/10 px-1.5 py-1.5 text-center">
-            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
+            <dt className="truncate text-xs font-semibold uppercase leading-tight text-brand-deep/65">
               {label}
             </dt>
             <dd className="text-sm font-bold tabular-nums text-brand-deep">{wert}</dd>
@@ -418,7 +418,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
             style={{ animationDelay: `${i * 28}ms` }}
             className="tile-in rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center"
           >
-            <dt className="truncate text-[9px] font-semibold uppercase leading-tight text-brand-deep/65">
+            <dt className="truncate text-xs font-semibold uppercase leading-tight text-brand-deep/65">
               {label}
             </dt>
             <dd className="text-sm font-bold tabular-nums text-brand-deep">{wert}</dd>
@@ -462,7 +462,7 @@ function TauschStapel({
         <PlayerCard t={t} player={alt} pick={{ ...altPick, isCaptain: false, isViceCaptain: false }} showPrice imStapel />
       </div>
       <PlayerCard t={t} player={neu} pick={neuPick} showPrice imStapel onTap={onTap} onUndo={onUndo} />
-      <span className="pointer-events-none mt-0.5 max-w-full truncate text-[9px] font-semibold text-white/45">
+      <span className="pointer-events-none mt-0.5 max-w-full truncate text-xs font-semibold text-white/75">
         ↔ {alt.name}
       </span>
     </div>
@@ -492,14 +492,14 @@ function EmptySlot({
     >
       <span aria-hidden className="invisible flex w-full flex-col items-center">
         <span className="aspect-square w-[clamp(2.25rem,11vw,4rem)]" />
-        <span className="block px-1 py-0.5 text-[10px] leading-4 sm:text-sm sm:leading-5">&nbsp;</span>
-        <span className="block px-1 py-0.5 text-[10px] leading-4 sm:text-xs">&nbsp;</span>
+        <span className="block px-1 py-0.5 text-xs leading-4 sm:text-sm sm:leading-5">&nbsp;</span>
+        <span className="block px-1 py-0.5 text-xs leading-4 sm:text-xs">&nbsp;</span>
       </span>
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
         <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-lg font-bold leading-none text-white/90 sm:h-12 sm:w-12 sm:text-2xl">
           +
         </span>
-        <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-white/85 sm:text-[11px]">
+        <span className="w-full truncate text-center text-xs font-bold leading-tight text-white/85 sm:text-xs">
           {label}
         </span>
       </span>
@@ -556,7 +556,7 @@ const MarktZeile = memo(function MarktZeile({
               <span
                 title={t.manualShort}
                 aria-label={t.manualShort}
-                className="shrink-0 text-[11px] leading-none"
+                className="shrink-0 text-xs leading-none"
               >
                 ℹ️
               </span>
@@ -573,7 +573,7 @@ const MarktZeile = memo(function MarktZeile({
         </span>
         {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
         <span className="w-11 text-right">
-          <span className="block text-[10px] font-semibold uppercase text-brand-deep/65">
+          <span className="block text-xs font-semibold uppercase text-brand-deep/65">
             {t.statShort[spalte]}
           </span>
           <span className="block font-bold tabular-nums text-brand-deep">
@@ -871,7 +871,7 @@ export default function TeamBuilder({
   const leereBankplaetze = (pos: Position) => fehlend(pos) - leereFeldplaetze(pos);
   const bankPlatz = (pos: Position, i: number) => (
     <div key={`bank-leer-${pos}-${i}`} className={BANK_PLATZ}>
-      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+      <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
         —
       </span>
       <EmptySlot t={t} label={t.positions[pos]} missing={fehlend(pos)} onClick={() => ersatzSuchen(pos)} />
@@ -1443,7 +1443,7 @@ export default function TeamBuilder({
                   <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
                     <span aria-hidden>ℹ️</span> {t.manualTitle}
                   </p>
-                  <p className="mt-1 text-[11px] leading-snug text-brand-deep/70">{t.manualText}</p>
+                  <p className="mt-1 text-xs leading-snug text-brand-deep/70">{t.manualText}</p>
                 </div>
               )}
               <div className="flex flex-col gap-1.5 sm:mt-auto">
@@ -1551,7 +1551,7 @@ export default function TeamBuilder({
                   <p className="flex items-center gap-1.5 text-xs font-bold text-brand-deep">
                     <span aria-hidden>&#8505;&#65039;</span> {t.manualTitle}
                   </p>
-                  <p className="mt-1 text-[11px] leading-snug text-brand-deep/70">{t.manualText}</p>
+                  <p className="mt-1 text-xs leading-snug text-brand-deep/70">{t.manualText}</p>
                 </div>
               )}
               <button
@@ -1628,7 +1628,7 @@ export default function TeamBuilder({
                 >
                   <span
                     aria-hidden
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                       i === aktuellerSchritt
                         ? "bg-brand-deep text-brand-accent"
                         : i < aktuellerSchritt
@@ -1652,7 +1652,7 @@ export default function TeamBuilder({
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           <div className="grid grid-cols-2 items-baseline gap-x-4 gap-y-1 text-sm sm:flex sm:flex-wrap">
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.budget} </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.budget} </span>
               <span
                 className={`font-bold tabular-nums ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
@@ -1662,7 +1662,7 @@ export default function TeamBuilder({
               </span>
               {effectiveCap > settings.budgetCap && (
                 <span
-                  className="ml-1 text-[11px] font-medium text-brand-deep/65"
+                  className="ml-1 text-xs font-medium text-brand-deep/65"
                   title={t.capHint}
                 >
                   {t.of} {effectiveCap.toFixed(1)}
@@ -1670,19 +1670,19 @@ export default function TeamBuilder({
               )}
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad} </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {squad.length}/{settings.squadSize}
               </span>
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters} </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters} </span>
               <span className="font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </span>
               {/* Platz bleibt reserviert, sonst bricht die Zeile bei 11 Spielern um. */}
               <span
-                className={`ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-brand-deep ${
+                className={`ml-1.5 rounded bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold tabular-nums text-brand-deep ${
                   startingCount === settings.startingSize && !formationError ? "" : "invisible"
                 }`}
               >
@@ -1692,7 +1692,7 @@ export default function TeamBuilder({
               </span>
             </span>
             <span className="whitespace-nowrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
               {unlimitedTransfers || ersterKader ? (
                 <span className="font-bold text-brand-magenta">{t.unlimited}</span>
               ) : wildcardActive ? (
@@ -1707,18 +1707,18 @@ export default function TeamBuilder({
               )}
             </span>
             {doubleGameweek && (
-              <span className="whitespace-nowrap rounded-full bg-brand-lime px-2 py-0.5 text-[11px] font-bold text-brand-deep">
+              <span className="whitespace-nowrap rounded-full bg-brand-lime px-2 py-0.5 text-xs font-bold text-brand-deep">
                 {t.doubleGameweek}
               </span>
             )}
             {/* Der Countdown entsteht erst nach dem Mounten; der Platz steht schon. */}
-            <span className={`whitespace-nowrap text-[11px] font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
+            <span className={`whitespace-nowrap text-xs font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
               {t.deadlineIn(countdown ?? t.inHours(0))}
             </span>
           </div>
           {/* Detail- und Warnzeile: immer genau eine Zeile hoch. Tauchte sie erst
               bei Bedarf auf, rutschte das ganze Spielfeld darunter nach unten. */}
-          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-[11px] leading-4">
+          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-xs leading-4">
             {squad.length < settings.squadSize ? (
               <span className="truncate font-medium text-brand-deep/65">
                 {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
@@ -1870,20 +1870,20 @@ export default function TeamBuilder({
 
         {/* Bank — Torhüter fix zuerst, danach die Einwechsel-Reihenfolge. */}
         <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4 sm:px-5 sm:py-5">
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
+          <div className="mb-1 text-xs font-bold uppercase tracking-wider text-white/75">
             {t.bank}
           </div>
           {/* Eingeklappt: Der Text stand bei jedem Aufruf ueber der Bank und
               kostete auf dem Handy drei Zeilen, obwohl man ihn einmal liest. */}
           <details className="mb-3 group">
-            <summary className="cursor-pointer list-none text-[11px] font-semibold text-white/45 [&::-webkit-details-marker]:hidden">
+            <summary className="cursor-pointer list-none text-xs font-semibold text-white/75 [&::-webkit-details-marker]:hidden">
               {t.benchHint} <span className="group-open:hidden">▾</span>
               <span className="hidden group-open:inline">▴</span>
             </summary>
-            <p className="mt-1.5 text-[11px] leading-snug text-white/45">{t.benchOrderHint}</p>
+            <p className="mt-1.5 text-xs leading-snug text-white/75">{t.benchOrderHint}</p>
           </details>
           {bench.length === 0 && leereBankGk.length === 0 && leereBankFeld.length === 0 ? (
-            <p className="flex min-h-28 items-center justify-center text-center text-sm text-white/50 sm:min-h-44">{t.emptyBench}</p>
+            <p className="flex min-h-28 items-center justify-center text-center text-sm text-white/75 sm:min-h-44">{t.emptyBench}</p>
           ) : (
             <div className="flex items-start justify-center gap-2 sm:gap-6">
               {benchGk.map((pick) => {
@@ -1891,7 +1891,7 @@ export default function TeamBuilder({
                 if (!player) return null;
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
-                    <span className="rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70">
+                    <span className="rounded bg-white/15 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/70">
                       GK
                     </span>
                     <PlayerCard
@@ -1920,7 +1920,7 @@ export default function TeamBuilder({
                 if (!player) return null;
                 return (
                   <div key={pick.playerId} className={BANK_PLATZ}>
-                    <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-[9px] font-bold text-brand-accent">
+                    <span className="rounded bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold text-brand-accent">
                       {i + 1}. {player.position}
                     </span>
                     <PlayerCard
@@ -1944,7 +1944,7 @@ export default function TeamBuilder({
                         disabled={i === 0}
                         aria-label={t.benchEarlier(player.name)}
                         title={t.benchEarlier(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ‹
                       </button>
@@ -1954,7 +1954,7 @@ export default function TeamBuilder({
                         disabled={i === benchFeld.length - 1}
                         aria-label={t.benchLater(player.name)}
                         title={t.benchLater(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-[10px] font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ›
                       </button>
@@ -1978,7 +1978,7 @@ export default function TeamBuilder({
                     const nachfolger = nachfolgerPick ? playersById.get(nachfolgerPick.playerId) : undefined;
                     return (
                       <div key={`ghost-${e.playerId}`} className={BANK_PLATZ}>
-                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/40">
+                        <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white/75">
                           —
                         </span>
                         {nachfolger && nachfolgerPick ? (
@@ -2037,7 +2037,7 @@ export default function TeamBuilder({
                           Chip gilt als belegt — bis zur Deadline aber
                           umkehrbar, dann steht wieder 1/1. */}
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                        className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${
                           verbraucht || c.activeNow
                             ? "bg-brand-deep/10 text-brand-deep/65"
                             : "bg-brand-accent/25 text-brand-deep"
@@ -2046,7 +2046,7 @@ export default function TeamBuilder({
                         {verbraucht || c.activeNow ? "0/1" : "1/1"}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-brand-deep/70">
+                    <p className="mt-0.5 text-xs leading-snug text-brand-deep/70">
                       {verbraucht ? t.chipUsed(c.usedInGameweek ?? 0) : desc}
                     </p>
                   </div>
@@ -2066,7 +2066,7 @@ export default function TeamBuilder({
                   )}
                 </div>
                 {c.activeNow && gameweekNumber !== null && (
-                  <p className="mt-2 text-[11px] font-bold text-brand-deep">
+                  <p className="mt-2 text-xs font-bold text-brand-deep">
                     {t.chipActive(gameweekNumber)}
                   </p>
                 )}
@@ -2112,7 +2112,7 @@ export default function TeamBuilder({
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
         <div className="mx-auto max-w-md px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="chamfer bg-brand-deep px-3 py-2.5 shadow-2xl shadow-black/40">
-            <div className="mb-2 flex items-baseline justify-between text-[11px] font-semibold text-white/60">
+            <div className="mb-2 flex items-baseline justify-between text-xs font-semibold text-white/75">
               <span>
                 {t.squad} {squad.length}/{settings.squadSize} · {t.starters} {startingCount}/
                 {settings.startingSize}
@@ -2195,7 +2195,7 @@ export default function TeamBuilder({
                     {pos === "ALL" ? t.all : pos}
                     {pos !== "ALL" && (
                       <span
-                        className={`ml-1 text-[10px] font-semibold ${
+                        className={`ml-1 text-xs font-semibold ${
                           filterPos === pos
                             ? "text-brand-accent/70"
                             : full

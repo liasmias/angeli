@@ -24,7 +24,7 @@ export function Suchfeld({
     <input
       type="search"
       style={{ WebkitAppearance: "none" }}
-      className={`w-full min-w-0 px-3 py-2 text-base placeholder:text-brand-deep/50 sm:py-1.5 sm:text-sm ${GEMEINSAM} ${flaeche(aufSeite)} ${className}`}
+      className={`w-full min-w-0 px-3 py-2 text-base placeholder:text-brand-deep/70 sm:py-1.5 sm:text-sm ${GEMEINSAM} ${flaeche(aufSeite)} ${className}`}
       {...rest}
     />
   );

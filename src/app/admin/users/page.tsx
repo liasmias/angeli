@@ -78,7 +78,7 @@ export default async function AdminUsersPage() {
                 <div>
                   <span className="font-bold text-brand-deep">{p.username}</span>
                   {isAdmin && (
-                    <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-accent">
+                    <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-xs font-bold text-brand-accent">
                       Admin
                     </span>
                   )}

@@ -65,7 +65,7 @@ function Kachel({
         {wert}
       </span>
       <span
-        className={`w-full truncate px-2 pb-1.5 text-[10px] font-semibold ${
+        className={`w-full px-1 pb-1.5 text-xs font-semibold leading-tight [overflow-wrap:anywhere] ${
           hervorgehoben ? "bg-brand-magenta/90 py-1 text-white" : "text-brand-deep/65"
         }`}
       >
@@ -139,7 +139,7 @@ export default function GameweekNav(props: GameweekNavProps) {
           Bildschirmen bricht die Gruppe um, bleibt aber zentriert. */}
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 p-3 sm:p-4">
         <span className="max-w-full truncate text-lg font-bold text-brand-deep sm:text-xl">{username}</span>
-        <div className="flex items-stretch justify-center gap-2">
+        <div className="flex w-full items-stretch justify-center gap-2 sm:w-auto">
           <Kachel wert={String(totalPoints)} label={t.totalPoints} />
           <Kachel
             wert={points === null ? "—" : String(points)}

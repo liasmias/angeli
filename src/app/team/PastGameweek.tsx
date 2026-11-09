@@ -132,7 +132,7 @@ export function Popup({
           <div className="px-5 pb-5">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-brand-deep/10 text-left text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+                <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/65">
                   <th className="py-2">{t.detailStat}</th>
                   <th className="py-2 text-right">{t.detailAmount}</th>
                   <th className="py-2 text-right">{t.detailPoints}</th>
@@ -158,7 +158,7 @@ export function Popup({
                   <td className="py-2 font-bold text-brand-deep" colSpan={2}>
                     {t.detailTotal}
                     {p.isCaptain && (
-                      <span className="ml-2 rounded bg-black px-1.5 py-0.5 text-[10px] font-bold text-brand-accent">
+                      <span className="ml-2 rounded bg-black px-1.5 py-0.5 text-xs font-bold text-brand-accent">
                         C ×2
                       </span>
                     )}
@@ -170,10 +170,10 @@ export function Popup({
               </tfoot>
             </table>
             {p.isCaptain && (
-              <p className="mt-2 text-[11px] text-brand-deep/65">{t.detailCaptainNote}</p>
+              <p className="mt-2 text-xs text-brand-deep/65">{t.detailCaptainNote}</p>
             )}
             {d?.rating !== null && d?.rating !== undefined && (
-              <p className="mt-2 text-[11px] text-brand-deep/65">
+              <p className="mt-2 text-xs text-brand-deep/65">
                 {t.detailRating}: ★ {d.rating.toFixed(1)}
               </p>
             )}
@@ -208,7 +208,7 @@ function Karte({
     >
       {(p.isCaptain || p.isViceCaptain) && (
         <span
-          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
             p.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
           }`}
         >
@@ -217,7 +217,7 @@ function Karte({
       )}
       {marke && (
         <span
-          className={`absolute left-0.5 top-0 z-10 rounded px-1 py-0.5 text-[8px] font-bold uppercase leading-none ring-1 ring-white/40 sm:text-[9px] ${
+          className={`absolute left-0.5 top-0 z-10 rounded px-1 py-0.5 text-xs font-bold uppercase leading-none ring-1 ring-white/40 sm:text-xs ${
             p.isStarting ? "bg-emerald-500 text-white" : "bg-brand-danger text-white"
           }`}
         >
@@ -226,10 +226,10 @@ function Karte({
       )}
       <div className={`flex w-full flex-col items-center ${zaehlt ? "" : "opacity-60"}`}>
         <Jersey club={p.club} fluid />
-        <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-[10px] font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
+        <div className="w-full overflow-hidden rounded-t bg-white px-1 py-0.5 text-center text-xs font-bold leading-4 text-brand-deep shadow sm:px-1.5 sm:text-sm sm:leading-5">
           <span className="block truncate">{p.name}</span>
         </div>
-        <div className="w-full rounded-b bg-brand-deep px-1 py-0.5 text-center text-[11px] font-bold leading-4 tabular-nums text-brand-accent sm:text-xs">
+        <div className="w-full rounded-b bg-brand-deep px-1 py-0.5 text-center text-xs font-bold leading-4 tabular-nums text-brand-accent sm:text-xs">
           {punkte === null ? "—" : `${punkte} ${t.pts}`}
         </div>
       </div>
@@ -287,7 +287,7 @@ export default function PastGameweek({
             return (
               <div key={pos} className="flex items-start justify-center gap-1.5 sm:gap-5">
                 {reihe.length === 0 ? (
-                  <span className="py-6 text-[11px] font-semibold text-white/60">
+                  <span className="py-6 text-xs font-semibold text-white/75">
                     {posLabel[pos]}
                   </span>
                 ) : (
@@ -309,12 +309,12 @@ export default function PastGameweek({
       </div>
 
       <div className="mt-3 chamfer bg-brand-deep/95 px-4 py-4">
-        <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">
+        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/75">
           {t.bench} {benchBoost && <span className="text-brand-accent">{t.benchCounted}</span>}
         </div>
         <div className="flex items-start gap-1.5 sm:gap-5">
           {bench.length === 0 ? (
-            <p className="text-sm text-white/50">—</p>
+            <p className="text-sm text-white/75">—</p>
           ) : (
             bench.map((p) => (
               <Karte

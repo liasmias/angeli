@@ -137,7 +137,7 @@ const StatsZeile = memo(function StatsZeile({
                           Emoji-Kürzeln (⚽ 🅰 ⭐ 👥 🛡) — 84 px je Spieler, sieben pro
                           Bildschirm. Jeder weitere Wert ist über die Sortierung
                           erreichbar und erscheint dann als eigene Spalte. */}
-                      <span className="block truncate text-[11px] font-medium text-brand-deep/65 sm:hidden">
+                      <span className="block truncate text-xs font-medium text-brand-deep/65 sm:hidden">
                         {r.club} · {r.position} · {r.price.toFixed(1)}
                         {r.priceDelta !== 0 && (r.priceDelta > 0 ? " ▲" : " ▼")}
                         {r.form !== null && ` · ${t.form} ${r.form.toFixed(1)}`}
@@ -151,7 +151,7 @@ const StatsZeile = memo(function StatsZeile({
                   {r.price.toFixed(1)}
                   {r.priceDelta !== 0 && (
                     <span
-                      className={`ml-1 text-[11px] font-bold ${
+                      className={`ml-1 text-xs font-bold ${
                         r.priceDelta > 0 ? "text-brand-grass-text" : "text-brand-magenta"
                       }`}
                       title={t.priceDeltaTitle(r.priceDelta)}

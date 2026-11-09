@@ -37,7 +37,7 @@ export default async function ProfilPage() {
         {profil?.created_at &&
           t.memberSince(new Date(profil.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "de-CH", { timeZone: "Europe/Zurich" }))}
         {profil?.role === "admin" && (
-          <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-[10px] font-bold text-brand-accent">
+          <span className="ml-2 rounded-full bg-brand-deep px-2 py-0.5 text-xs font-bold text-brand-accent">
             Admin
           </span>
         )}
@@ -55,13 +55,13 @@ export default async function ProfilPage() {
             <ul className="divide-y divide-brand-deep/5">
               {(meldungen ?? []).map((m) => (
                 <li key={m.id} className="py-2.5 first:pt-0 last:pb-0">
-                  <p className="text-[11px] font-semibold text-brand-deep/65">
+                  <p className="text-xs font-semibold text-brand-deep/65">
                     {new Date(m.created_at).toLocaleString(lang === "en" ? "en-GB" : "de-CH", {
                       day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                       timeZone: "Europe/Zurich",
                     })}
                     <span
-                      className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${
                         m.resolved_at
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-amber-100 text-amber-900"
@@ -73,7 +73,7 @@ export default async function ProfilPage() {
                   <p className="mt-1 whitespace-pre-wrap text-sm text-brand-deep/80">{m.message}</p>
                   {m.reply ? (
                     <div className="mt-2 rounded-xl bg-brand-deep/5 px-3 py-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+                      <p className="text-xs font-bold uppercase tracking-wide text-brand-deep/65">
                         {t.reportAnswer}
                       </p>
                       <p className="mt-0.5 whitespace-pre-wrap text-sm text-brand-deep">{m.reply}</p>

@@ -233,12 +233,12 @@ export default async function FixturesPage() {
                       <details className="group">
                         <summary className="cursor-pointer list-none transition-colors hover:bg-brand-deep/5 [&::-webkit-details-marker]:hidden">
                           {matchRow}
-                          <div className="pb-2 text-center text-[11px] font-semibold text-brand-magenta group-open:hidden">
+                          <div className="pb-2 text-center text-xs font-semibold text-brand-magenta group-open:hidden">
                             {t.showBest}
                           </div>
                         </summary>
                         <div className="border-t border-brand-deep/5 bg-brand-deep/[0.03] px-5 py-3 text-sm">
-                          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-deep/65">
+                          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep/65">
                             {t.bestPlayers}
                           </div>
                           <BestPlayerChips

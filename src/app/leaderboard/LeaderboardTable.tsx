@@ -20,7 +20,7 @@ function Bewegung({ wert }: { wert: number | null }) {
   if (wert === null) return <span className="w-9 shrink-0" aria-hidden />;
   if (wert === 0) {
     return (
-      <span className="w-9 shrink-0 text-center text-xs font-bold text-brand-deep/55" aria-hidden>
+      <span className="w-9 shrink-0 text-center text-xs font-bold text-brand-deep/70" aria-hidden>
         –
       </span>
     );

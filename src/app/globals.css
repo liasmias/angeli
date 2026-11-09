@@ -45,7 +45,7 @@ h2 {
 
 /* Rasengrün ins Hellgrün — dieselbe Kurve wie zuvor, nur andere Töne. */
 .brand-gradient {
-  background: linear-gradient(100deg, var(--brand-deep) 0%, #1f8b44 55%, #8ef2a8 130%);
+  background: linear-gradient(100deg, var(--brand-deep) 0%, #18733c 60%, #24884a 130%);
 }
 
 /* Startseite: Das Fenster selbst scrollt nicht, nur <main> darin — auf dem
