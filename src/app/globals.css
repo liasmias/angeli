@@ -44,6 +44,24 @@ h2 {
 }
 
 /* Rasengrün ins Hellgrün — dieselbe Kurve wie zuvor, nur andere Töne. */
+/* Trefferfläche mindestens 44×44 px (Apple HIG), ohne das Layout zu ändern:
+   Ein unsichtbares ::after wächst um das Element herum. In @layer components,
+   damit Tailwind-Klassen wie `absolute` das `relative` hier überschreiben. */
+@layer components {
+  .tap-ziel {
+    position: relative;
+  }
+}
+.tap-ziel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
 .brand-gradient {
   background: linear-gradient(100deg, var(--brand-deep) 0%, #18733c 60%, #24884a 130%);
 }

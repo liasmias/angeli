@@ -81,7 +81,7 @@ const Zeile = memo(function Zeile({
         onClick={() => onToggle(row.username)}
         aria-label={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
         title={istFavorit ? t.removeFavorite(row.username) : t.addFavorite(row.username)}
-        className={`pressable ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg ${
+        className={`pressable ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg ${
           istFavorit ? "text-amber-400" : "text-brand-deep/55 hover:text-amber-400"
         }`}
       >

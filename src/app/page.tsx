@@ -48,13 +48,13 @@ export default async function Home() {
               <>
                 <Link
                   href="/team"
-                  className="pressable fase-knopf bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-brand-accent min-h-11 whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.toTeam}
                 </Link>
                 <Link
                   href="/leaderboard"
-                  className="pressable fase-knopf bg-white/10 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-white/10 min-h-11 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.leaderboard}
                 </Link>
@@ -63,13 +63,13 @@ export default async function Home() {
               <>
                 <Link
                   href="/signup"
-                  className="pressable fase-knopf bg-brand-accent whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-brand-accent min-h-11 whitespace-nowrap px-5 py-2.5 text-[15px] font-bold text-brand-deep sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.cta}
                 </Link>
                 <Link
                   href="/login"
-                  className="pressable fase-knopf bg-white/10 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
+                  className="pressable fase-knopf bg-white/10 min-h-11 whitespace-nowrap px-5 py-2.5 text-[15px] font-semibold hover:bg-white/20 hover:text-brand-accent sm:px-7 sm:py-3 sm:text-base"
                 >
                   {t.login}
                 </Link>
@@ -78,7 +78,7 @@ export default async function Home() {
           </div>
           <a
             href="#how-to-play"
-            className="text-sm font-semibold text-white/80 underline-offset-4 hover:text-brand-accent hover:underline"
+            className="tap-ziel inline-block text-sm font-semibold text-white/80 underline-offset-4 hover:text-brand-accent hover:underline"
           >
             {t.howToPlay} ↓
           </a>

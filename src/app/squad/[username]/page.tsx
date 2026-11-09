@@ -62,7 +62,7 @@ export default async function SquadPage({
   if (verfuegbar.length === 0) {
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <Link href="/leaderboard" className="text-sm font-semibold text-brand-magenta">
+        <Link href="/leaderboard" className="tap-ziel inline-block text-sm font-semibold text-brand-magenta">
           {t.back}
         </Link>
         <h1 className="mb-4 mt-2 text-2xl font-bold tracking-tight text-brand-deep">
@@ -136,7 +136,7 @@ export default async function SquadPage({
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-      <Link href="/leaderboard" className="text-sm font-semibold text-brand-magenta">
+      <Link href="/leaderboard" className="tap-ziel inline-block text-sm font-semibold text-brand-magenta">
         {t.back}
       </Link>
       <h1 className="mb-4 mt-2 text-2xl font-bold tracking-tight text-brand-deep">

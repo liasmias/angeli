@@ -184,7 +184,7 @@ function PlayerCard({
           onClick={onQuickRemove}
           title={t.remove(player.name)}
           aria-label={t.remove(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-xs font-bold leading-none text-white ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-danger text-xs font-bold leading-none text-white ring-2 ring-white before:absolute before:-inset-3 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ✕
         </button>
@@ -195,7 +195,7 @@ function PlayerCard({
           onClick={onUndo}
           title={t.undoTitle(player.name)}
           aria-label={t.undoTitle(player.name)}
-          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-xs font-bold leading-none text-brand-deep ring-2 ring-white before:absolute before:-inset-2.5 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
+          className="pressable absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-lime text-xs font-bold leading-none text-brand-deep ring-2 ring-white before:absolute before:-inset-3 before:content-[''] sm:h-6 sm:w-6 sm:text-xs"
         >
           ↩
         </button>
@@ -1876,7 +1876,7 @@ export default function TeamBuilder({
           {/* Eingeklappt: Der Text stand bei jedem Aufruf ueber der Bank und
               kostete auf dem Handy drei Zeilen, obwohl man ihn einmal liest. */}
           <details className="mb-3 group">
-            <summary className="cursor-pointer list-none text-xs font-semibold text-white/75 [&::-webkit-details-marker]:hidden">
+            <summary className="tap-ziel cursor-pointer list-none text-xs font-semibold text-white/75 [&::-webkit-details-marker]:hidden">
               {t.benchHint} <span className="group-open:hidden">▾</span>
               <span className="hidden group-open:inline">▴</span>
             </summary>
@@ -1944,7 +1944,7 @@ export default function TeamBuilder({
                         disabled={i === 0}
                         aria-label={t.benchEarlier(player.name)}
                         title={t.benchEarlier(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ‹
                       </button>
@@ -1954,7 +1954,7 @@ export default function TeamBuilder({
                         disabled={i === benchFeld.length - 1}
                         aria-label={t.benchLater(player.name)}
                         title={t.benchLater(player.name)}
-                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-2.5 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
+                        className="pressable relative h-5 w-5 rounded bg-white/15 text-xs font-bold leading-none text-white before:absolute before:-inset-3 before:content-[''] disabled:opacity-25 sm:h-6 sm:w-6"
                       >
                         ›
                       </button>

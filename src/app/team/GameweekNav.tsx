@@ -24,7 +24,7 @@ export interface GameweekNavProps {
 function Arrow({ to, dir, basePath, label }: { to: number | null; dir: "prev" | "next"; basePath: string; label: string }) {
   const glyph = dir === "prev" ? "‹" : "›";
   const base =
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-2xl leading-none";
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl leading-none";
 
   if (to === null) {
     return (

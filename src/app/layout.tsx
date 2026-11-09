@@ -92,7 +92,7 @@ export default async function RootLayout({
         <footer className="mt-auto px-4 py-4 text-center text-xs leading-relaxed text-brand-deep/65">
           <p>
             {t.disclaimer}{" "}
-            <Link href="/impressum" className="font-semibold underline hover:text-brand-magenta">
+            <Link href="/impressum" className="tap-ziel inline-block font-semibold underline hover:text-brand-magenta">
               {t.imprint}
             </Link>
           </p>

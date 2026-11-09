@@ -13,7 +13,7 @@ function flaeche(aufSeite: boolean) {
 }
 
 const GEMEINSAM =
-  "rounded-lg text-brand-deep outline-none focus:ring-2 focus:ring-brand-magenta/30";
+  "min-h-11 rounded-lg text-brand-deep outline-none sm:min-h-0 focus:ring-2 focus:ring-brand-magenta/30";
 
 export function Suchfeld({
   aufSeite = false,

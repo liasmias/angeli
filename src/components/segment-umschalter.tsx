@@ -51,7 +51,7 @@ export default function SegmentUmschalter({
             setGewaehlt(i);
             startTransition(() => router.push(o.href, { scroll: false }));
           }}
-          className={`relative flex-1 px-4 py-1.5 text-center text-sm font-bold transition-colors duration-200 ${
+          className={`relative flex min-h-11 flex-1 items-center justify-center px-4 py-1.5 text-center text-sm font-bold transition-colors duration-200 ${
             i === gewaehlt ? "text-brand-accent" : "text-brand-deep/70 hover:text-brand-deep"
           }`}
         >

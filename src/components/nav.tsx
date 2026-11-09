@@ -59,7 +59,7 @@ export default async function Nav() {
       <button
         type="submit"
         title={lang === "de" ? "Switch to English" : "Auf Deutsch wechseln"}
-        className="pressable fase-knopf bg-white/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide hover:bg-white/20 hover:text-brand-accent"
+        className="pressable tap-ziel fase-knopf bg-white/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide hover:bg-white/20 hover:text-brand-accent"
       >
         {lang === "de" ? "EN" : "DE"}
       </button>
@@ -69,7 +69,7 @@ export default async function Nav() {
   return (
     <nav className="brand-gradient relative pt-[env(safe-area-inset-top)] text-white">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6 sm:py-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap sm:gap-2.5">
+        <Link href="/" className="tap-ziel flex shrink-0 items-center gap-2 whitespace-nowrap sm:gap-2.5">
           <Logo className="h-7 w-7 shrink-0 text-white sm:h-8 sm:w-8" />
           <span className="text-lg font-bold leading-none tracking-tight sm:text-xl">Angeli</span>
         </Link>

@@ -307,7 +307,7 @@ export default function StatsTable({
               type="button"
               onClick={() => setFilterPos(pos)}
               // Auf dem Handy 36 px hoch — vorher 24, unter dem iOS-Minimum von 28.
-              className={`pressable-subtle h-9 fase-knopf px-3.5 text-xs font-bold sm:h-auto sm:px-3 sm:py-1 ${
+              className={`pressable-subtle h-11 min-w-11 fase-knopf px-3.5 text-xs font-bold sm:h-auto sm:px-3 sm:py-1 ${
                 filterPos === pos
                   ? "bg-brand-deep text-brand-accent"
                   : "bg-brand-deep/5 text-brand-deep/70 hover:bg-brand-deep/10"
@@ -397,59 +397,59 @@ export default function StatsTable({
             <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/65">
               <th className="px-2 py-2 sm:px-3">#</th>
               <th className="px-2 py-2 sm:px-3">
-                <button type="button" onClick={() => toggleSort("name")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("name")} className="tap-ziel uppercase">
                   {t.player}{sortIndicator("name")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 sm:table-cell">{t.club}</th>
               <th className="hidden px-3 py-2 sm:table-cell">{t.pos}</th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("price")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("price")} className="tap-ziel uppercase">
                   {t.price}{sortIndicator("price")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("form")} className="uppercase" title={t.formTitle}>
+                <button type="button" onClick={() => toggleSort("form")} className="tap-ziel uppercase" title={t.formTitle}>
                   {t.form}{sortIndicator("form")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("valuePerMillion")} className="uppercase" title={t.valueTitle}>
+                <button type="button" onClick={() => toggleSort("valuePerMillion")} className="tap-ziel uppercase" title={t.valueTitle}>
                   {t.value}{sortIndicator("valuePerMillion")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("minutes")} className="uppercase" title={t.minutesTitle}>
+                <button type="button" onClick={() => toggleSort("minutes")} className="tap-ziel uppercase" title={t.minutesTitle}>
                   {t.minutes}{sortIndicator("minutes")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("rating")} className="uppercase" title={t.ratingTitle}>
+                <button type="button" onClick={() => toggleSort("rating")} className="tap-ziel uppercase" title={t.ratingTitle}>
                   {t.rating}{sortIndicator("rating")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("goals")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("goals")} className="tap-ziel uppercase">
                   {t.goals}{sortIndicator("goals")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("assists")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("assists")} className="tap-ziel uppercase">
                   {t.assists}{sortIndicator("assists")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("cleanSheets")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("cleanSheets")} className="tap-ziel uppercase">
                   {t.cleanSheets}{sortIndicator("cleanSheets")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("bonus")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("bonus")} className="tap-ziel uppercase">
                   {t.bonus}{sortIndicator("bonus")}
                 </button>
               </th>
               <th className="hidden px-3 py-2 text-right sm:table-cell">
-                <button type="button" onClick={() => toggleSort("owned")} className="uppercase" title={t.ownedTitle}>
+                <button type="button" onClick={() => toggleSort("owned")} className="tap-ziel uppercase" title={t.ownedTitle}>
                   {t.owned}{sortIndicator("owned")}
                 </button>
               </th>
@@ -464,7 +464,7 @@ export default function StatsTable({
                   <button
                     type="button"
                     onClick={() => toggleSort("latestPoints")}
-                    className="uppercase"
+                    className="tap-ziel uppercase"
                   >
                     {t.gwCol(latestGameweekNumber)}
                     {sortIndicator("latestPoints")}
@@ -472,7 +472,7 @@ export default function StatsTable({
                 </th>
               )}
               <th className="px-2 py-2 text-right sm:px-3">
-                <button type="button" onClick={() => toggleSort("totalPoints")} className="uppercase">
+                <button type="button" onClick={() => toggleSort("totalPoints")} className="tap-ziel uppercase">
                   {t.points}{sortIndicator("totalPoints")}
                 </button>
               </th>

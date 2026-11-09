@@ -65,7 +65,7 @@ export default function MobileMenu({
         onClick={() => setOffen((o) => !o)}
         aria-expanded={offen}
         aria-label={offen ? labels.closeMenu : labels.openMenu}
-        className="pressable flex h-10 w-10 items-center justify-center rounded-lg hover:bg-white/10"
+        className="pressable flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10"
       >
         {/* Drei Striche, die sich beim Öffnen zum Kreuz drehen. */}
         <span className="relative block h-4 w-6" aria-hidden>
