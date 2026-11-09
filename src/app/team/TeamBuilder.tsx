@@ -1432,7 +1432,7 @@ export default function TeamBuilder({
               tabIndex={-1}
               // Handy: Bottom Sheet. Ab sm: festes Panel rechts, immer am selben
               // Ort — als Popover an der Karte sprang das Menü von Spieler zu Spieler.
-              className="spieler-panel fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] max-w-md flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-x-auto sm:inset-y-4 sm:right-4 sm:max-h-none sm:w-96 sm:rounded-2xl sm:pb-4"
+              className="spieler-panel fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85dvh] max-w-md flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-x-auto sm:inset-y-4 sm:right-4 sm:max-h-none sm:w-96 sm:rounded-2xl sm:pb-4"
             >
               <div aria-hidden className="mx-auto -mt-1 mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-deep/20 sm:hidden" />
               <div className="mb-3">
@@ -1542,7 +1542,7 @@ export default function TeamBuilder({
               aria-modal="true"
               aria-label={player.name}
               tabIndex={-1}
-              className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85vh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
+              className="sheet-up fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl outline-none sm:inset-0 sm:m-auto sm:h-fit sm:w-80 sm:rounded-2xl sm:pb-4"
             >
               <div aria-hidden className="mx-auto -mt-1 mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-deep/20 sm:hidden" />
               <SpielerKarte player={player} t={t} />

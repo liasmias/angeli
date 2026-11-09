@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { usernameMuster } from "@/lib/username";
 
 export type ProfilState = { error?: string; message?: string } | undefined;
 
@@ -36,13 +37,15 @@ export async function changeUsername(
   if (aktuell?.username === neu) return { message: "Das ist bereits dein Accountname." };
 
   // Vorabprüfung für eine verständliche Meldung; die eigentliche Absicherung
-  // ist die unique-Bedingung auf profiles.username (siehe Fehlerbehandlung).
+  // ist der eindeutige Index auf lower(username) (siehe Fehlerbehandlung).
+  // Der eigene Name zählt nicht: „max“ → „Max“ ist erlaubt.
   const { data: belegt } = await admin
     .from("profiles")
     .select("id")
-    .eq("username", neu)
-    .maybeSingle();
-  if (belegt) return { error: "Dieser Accountname ist bereits vergeben." };
+    .ilike("username", usernameMuster(neu))
+    .neq("id", user.id)
+    .limit(1);
+  if (belegt && belegt.length > 0) return { error: "Dieser Accountname ist bereits vergeben." };
 
   const { error } = await admin.from("profiles").update({ username: neu }).eq("id", user.id);
   if (error) {

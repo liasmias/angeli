@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSheet } from "@/lib/use-sheet";
 import Jersey from "@/components/jersey";
 import { POSITIONS } from "@/lib/formation";
 import type { Position } from "@/lib/database.types";
@@ -61,16 +62,23 @@ export function Popup({
   const basis = zeilen.reduce((s, z) => s + z.punkte, 0);
   const total = basis * (p.isCaptain ? 2 : 1);
 
+  // Das Popup existiert nur, solange es offen ist. useSheet bringt Escape,
+  // Zurück-Geste, Fokus und Scroll-Sperre wie bei den Sheets im TeamBuilder.
+  const dialog = useSheet(true, onClose);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
       onClick={onClose}
     >
       <div
+        ref={dialog}
         role="dialog"
         aria-modal="true"
+        aria-label={p.name}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="chamfer max-h-full w-full max-w-md overflow-y-auto bg-white shadow-xl"
+        className="chamfer max-h-full w-full max-w-md overflow-y-auto bg-white shadow-xl outline-none"
       >
         {/* Kopf: Name, Position/Club, Gegner */}
         <div className="brand-gradient relative flex items-center gap-4 px-5 py-5 text-white">

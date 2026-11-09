@@ -45,7 +45,7 @@ export function Auswahl({
   return (
     <div className={`relative min-w-0 ${huelle}`}>
       <select
-        className={`w-full min-w-0 appearance-none py-2 pl-2.5 pr-6 text-[15px] sm:py-1.5 sm:text-sm ${GEMEINSAM} ${flaeche(aufSeite)} ${className}`}
+        className={`w-full min-w-0 appearance-none py-2 pl-2.5 pr-6 text-base sm:py-1.5 sm:text-sm ${GEMEINSAM} ${flaeche(aufSeite)} ${className}`}
         {...rest}
       >
         {children}

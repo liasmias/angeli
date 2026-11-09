@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { usernameMuster } from "@/lib/username";
 
 export type SignupState = { error?: string; message?: string } | undefined;
 
@@ -24,6 +25,18 @@ export async function signup(_prevState: SignupState, formData: FormData): Promi
   const captchaToken = String(formData.get("cf-turnstile-response") ?? "") || undefined;
 
   const supabase = await createClient();
+
+  // Ohne diese Prüfung scheitert der Profil-Trigger am eindeutigen Index auf
+  // lower(username) mit einer unverständlichen Datenbankmeldung.
+  const { data: belegt } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("username", usernameMuster(username))
+    .limit(1);
+  if (belegt && belegt.length > 0) {
+    return { error: "Dieser Accountname ist bereits vergeben." };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

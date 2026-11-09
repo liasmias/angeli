@@ -21,6 +21,12 @@ export default function SignupForm({ lang }: { lang: Lang }) {
             name="username"
             type="text"
             placeholder={t.accountName}
+            aria-label={t.accountName}
+            // Sonst schreibt iOS den ersten Buchstaben gross und korrigiert den Namen.
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
             minLength={3}
             maxLength={20}

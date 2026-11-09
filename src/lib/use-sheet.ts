@@ -156,13 +156,22 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
     // Nicht passiv: preventDefault verhindert, dass die Seite mitzieht.
     el.addEventListener("touchmove", bewegen, { passive: false });
     el.addEventListener("touchend", ende);
-    el.addEventListener("touchcancel", ende);
+    // Bricht iOS die Geste ab (Anruf, Systemgeste), hat der Daumen nicht
+    // losgelassen — dann zurückschnappen statt schliessen.
+    const abbruch = () => {
+      if (!zieht) return;
+      verfolgt = zieht = false;
+      el.style.transition = "translate 180ms ease-out";
+      if (hintergrund) hintergrund.style.transition = "opacity 180ms ease-out";
+      setzen(0);
+    };
+    el.addEventListener("touchcancel", abbruch);
     return () => {
       window.clearTimeout(timer);
       el.removeEventListener("touchstart", start);
       el.removeEventListener("touchmove", bewegen);
       el.removeEventListener("touchend", ende);
-      el.removeEventListener("touchcancel", ende);
+      el.removeEventListener("touchcancel", abbruch);
     };
   }, [offen, wischen]);
 

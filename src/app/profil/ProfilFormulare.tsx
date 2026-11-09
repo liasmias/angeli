@@ -39,6 +39,11 @@ export function UsernameFormular({ lang, aktuell }: { lang: Lang; aktuell: strin
         <input
           name="username"
           defaultValue={aktuell}
+          aria-label={t.usernameTitle}
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           minLength={3}
           maxLength={20}
@@ -128,7 +133,17 @@ export function LoeschenFormular({ lang, username }: { lang: Lang; username: str
           <label className="text-sm text-brand-deep/70">
             {t.deleteConfirmPre} <span className="font-bold text-brand-deep">{username}</span> {t.deleteConfirmPost}
           </label>
-          <input name="confirm" placeholder={username} required className={feld} autoComplete="off" />
+          <input
+            name="confirm"
+            placeholder={username}
+            aria-label={`${t.deleteConfirmPre} ${username} ${t.deleteConfirmPost}`}
+            required
+            className={feld}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
           <Meldung state={state} />
           <button
             type="submit"
@@ -158,6 +173,7 @@ export function MeldungFormular({ lang }: { lang: Lang }) {
           maxLength={1000}
           rows={3}
           placeholder={t.reportPlaceholder}
+          aria-label={t.reportTitle}
           className={feld}
         />
         <Meldung state={state} />
