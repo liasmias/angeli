@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GwWechsel from "./GwWechsel";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
 export interface GameweekNavProps {
@@ -42,6 +43,7 @@ function Arrow({ to, dir, basePath, label }: { to: number | null; dir: "prev" | 
       scroll={false}
     >
       {glyph}
+      <GwWechsel />
     </Link>
   );
 }

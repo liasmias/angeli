@@ -176,7 +176,7 @@ body:has(main.startseite) .seite-rein {
   /* Schnell los, weich aus — fuer Dinge, die hereinfahren. */
   --kurve-aus: cubic-bezier(0.32, 0.72, 0, 1);
   /* Ueberschwingt leicht — fuer Dinge, die erscheinen. */
-  --kurve-pop: cubic-bezier(0.2, 0.9, 0.35, 1.2);
+  --kurve-pop: cubic-bezier(0.22, 1, 0.36, 1); /* ohne Überschwingen */
 }
 
 /* Bedienelemente sind kein Text: Langes Druecken soll eine Aktion ausloesen,
@@ -198,19 +198,21 @@ button,
    Antippen kleben, der Button bliebe dauerhaft vergrössert. */
 @media (hover: hover) {
   .pressable:hover {
-    transform: scale(1.045);
+    transform: scale(1.02);
   }
 }
 .pressable:active {
-  transform: scale(0.93);
+  transform: scale(0.97);
 }
 
 /* Dezente Variante für Listenzeilen (kein Grow, nur Press) */
+/* Listenzeilen und Chips: beim Drücken leicht abdunkeln statt skalieren —
+   eine ganze Zeile, die schrumpft, wirkt unruhig. */
 .pressable-subtle {
-  transition: transform var(--dauer-schnell) ease, background-color var(--dauer-schnell) ease;
+  transition: filter var(--dauer-schnell) ease, background-color var(--dauer-schnell) ease;
 }
 .pressable-subtle:active {
-  transform: scale(0.98);
+  filter: brightness(0.94);
 }
 
 /* Neue Karten ploppen aufs Feld */
@@ -336,12 +338,14 @@ button,
 }
 
 /* Jede neue Seite steigt kurz auf (app/template.tsx). */
+/* Nur eine kleine Verschiebung, keine Deckkraft: Ab 0 eingeblendet wirkte
+   jede Seite nach dem Wechsel kurz blass — und das bei jeder Navigation. */
 @keyframes seite-rein {
-  from { opacity: 0; transform: translateY(8px) }
-  to { opacity: 1; transform: none }
+  from { transform: translateY(6px) }
+  to { transform: none }
 }
 .seite-rein {
-  animation: seite-rein var(--dauer-gross) var(--kurve-aus);
+  animation: seite-rein 180ms var(--kurve-aus);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -385,6 +389,16 @@ button,
   z-index: 60;
   max-width: calc(100vw - 2rem);
   animation: toast-in var(--dauer-schnell) ease-out;
+}
+
+/* Spieltagwechsel läuft (GwWechsel): alten Inhalt sichtbar dimmen, statt
+   ihn eine Sekunde lang unverändert stehen zu lassen. */
+main {
+  transition: opacity var(--dauer-schnell) ease-out;
+}
+body:has([data-gw-wechsel]) main {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* Speichern-Knopf: kräftig, wenn es etwas zu speichern gibt; neutral und
