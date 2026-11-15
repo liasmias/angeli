@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Gemeinsames Verhalten für Sheets und Popover.
@@ -26,14 +26,33 @@ import { useEffect, useRef } from "react";
  * schliessen nur das oberste. Vorher schloss das Zurückspringen beim Schliessen
  * der Karte auch den Markt darunter.
  *
- * Gibt eine Referenz zurück, die auf den Sheet-Inhalt gesetzt wird — dorthin
+ * Schliessen blendet aus: `zu()` setzt `data-raus` auf Sheet und Verdunkelung,
+ * die passende Ausfahrt steht in globals.css (unten hinaus, Panel zur Seite,
+ * Dialog verblassen). Erst nach deren Ende wird wirklich geschlossen. ✕,
+ * Hintergrund, Escape und Zurück nutzen alle denselben Weg.
+ *
+ * Gibt `[ref, zu]` zurück: `ref` gehört auf den Sheet-Inhalt — dorthin
  * wandert der Fokus beim Öffnen, und von dort zurück auf den auslösenden
- * Knopf beim Schliessen.
+ * Knopf beim Schliessen. `zu` schliesst mit Ausfahrt.
  */
-/** Wie viele Sheets gerade offen sind, laut aktuellem History-Eintrag. */
+/** Wie viele Sheets gerade offen sind. */
+let offeneSheets = 0;
 function aktuelleTiefe(): number {
-  const tiefe = window.history.state?.angeliTiefe;
-  return typeof tiefe === "number" ? tiefe : 0;
+  return offeneSheets;
+}
+
+// Eigene Rücksprünge (history.back() beim Aufräumen) lösen ebenfalls popstate
+// aus. Sie sind kein Zurück des Nutzers und dürfen kein Sheet schliessen —
+// sonst schloss ein gleich wieder geöffnetes Sheet sich selbst.
+let eigeneRueckspruenge = 0;
+const eigeneEreignisse = new WeakSet<Event>();
+if (typeof window !== "undefined") {
+  window.addEventListener("popstate", (e) => {
+    if (eigeneRueckspruenge > 0) {
+      eigeneRueckspruenge--;
+      eigeneEreignisse.add(e);
+    }
+  });
 }
 
 export function useSheet(offen: boolean, schliessen: () => void, { wischen = false } = {}) {
@@ -47,6 +66,47 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
     schliessenAktuell.current = schliessen;
   });
   const vorherFokussiert = useRef<HTMLElement | null>(null);
+
+  // Ausfahrt läuft: weitere Schliess-Versuche lösen nichts doppelt aus.
+  const faehrtAus = useRef(false);
+  const zu = useCallback(() => {
+    if (faehrtAus.current) return;
+    const el = inhalt.current;
+    if (!el) return schliessenAktuell.current();
+    faehrtAus.current = true;
+    // Verdunkelung: Geschwister davor (Sheets) oder Eltern (Markt, Dialog).
+    const hintergruende = [el.previousElementSibling, el.parentElement].filter(
+      (h): h is HTMLElement => h instanceof HTMLElement && h.classList.contains("fade-in")
+    );
+    el.setAttribute("data-raus", "");
+    for (const h of hintergruende) h.setAttribute("data-raus", "");
+    // Falls animationend ausbleibt (Tab im Hintergrund), trotzdem schliessen.
+    const notfall = { id: 0 };
+    const fertig = () => {
+      window.clearTimeout(notfall.id);
+      el.removeEventListener("animationend", ende);
+      schliessenAktuell.current();
+    };
+    const ende = (e: AnimationEvent) => {
+      if (e.target === el) fertig();
+    };
+    // Keine Ausfahrt definiert (Desktop-Spalte, reduzierte Bewegung): sofort zu.
+    if (getComputedStyle(el).animationName === "none") return fertig();
+    el.addEventListener("animationend", ende);
+    notfall.id = window.setTimeout(fertig, 400);
+  }, []);
+  // Nach dem Schliessen aufräumen — der Markt bleibt im DOM und öffnet wieder.
+  useEffect(() => {
+    if (!offen) return;
+    const el = inhalt.current;
+    return () => {
+      faehrtAus.current = false;
+      el?.removeAttribute("data-raus");
+      if (el) el.style.translate = "";
+      el?.previousElementSibling?.removeAttribute("data-raus");
+      el?.parentElement?.removeAttribute("data-raus");
+    };
+  }, [offen]);
   // Merkt, ob der Zurück-Knopf geschlossen hat — dann darf die Aufräumroutine
   // nicht noch einmal zurückspringen.
   const durchZurueck = useRef(false);
@@ -72,17 +132,20 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
   useEffect(() => {
     if (!offen) return;
     durchZurueck.current = false;
-    const tiefe = aktuelleTiefe() + 1;
+    // Tiefe aus einem eigenen Zähler, nicht aus history.state: Der hinkt nach
+    // einem eigenen history.back() einen Moment hinterher.
+    const tiefe = ++offeneSheets;
 
     const aufTaste = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && aktuelleTiefe() === tiefe) schliessenAktuell.current();
+      if (e.key === "Escape" && aktuelleTiefe() === tiefe) zu();
     };
-    const aufZurueck = () => {
+    const aufZurueck = (e: PopStateEvent) => {
+      if (eigeneEreignisse.has(e)) return;
       // Nur schliessen, wenn der eigene Eintrag weg ist — nicht, wenn bloss
       // ein Sheet darüber zurückgesprungen ist.
-      if (aktuelleTiefe() >= tiefe) return;
+      if (aktuelleTiefe() !== tiefe) return;
       durchZurueck.current = true;
-      schliessenAktuell.current();
+      zu();
     };
 
     window.history.pushState({ angeliSheet: true, angeliTiefe: tiefe }, "");
@@ -95,11 +158,13 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
       // Wurde anders geschlossen (✕, Auswahl, Hintergrund), liegt der eigene
       // History-Eintrag noch obenauf und muss weg — sonst bräuchte es zwei
       // Mal Zurück, um die Seite zu verlassen.
-      if (!durchZurueck.current && aktuelleTiefe() === tiefe) {
+      offeneSheets--;
+      if (!durchZurueck.current && window.history.state?.angeliSheet) {
+        eigeneRueckspruenge++;
         window.history.back();
       }
     };
-  }, [offen]);
+  }, [offen, zu]);
 
   useEffect(() => {
     const el = inhalt.current;
@@ -146,6 +211,8 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
       el.style.transition = "translate 180ms ease-out";
       if (hintergrund) hintergrund.style.transition = "opacity 180ms ease-out";
       if (weg > AB_DISTANZ || weg / (e.timeStamp - startZeit) > AB_TEMPO) {
+        // Das Wegwischen ist bereits die Ausfahrt — zu() soll nicht dazwischenfunken.
+        faehrtAus.current = true;
         setzen(el.offsetHeight);
         timer = window.setTimeout(() => schliessenAktuell.current(), 180);
       } else {
@@ -187,5 +254,5 @@ export function useSheet(offen: boolean, schliessen: () => void, { wischen = fal
     };
   }, [offen]);
 
-  return inhalt;
+  return [inhalt, zu] as const;
 }

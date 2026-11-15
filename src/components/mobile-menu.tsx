@@ -35,6 +35,16 @@ export default function MobileMenu({
   labels: MobileMenuLabels;
 }) {
   const [offen, setOffen] = useState(false);
+  // Menü blendet aus, bevor es verschwindet (data-raus, siehe globals.css).
+  const [geht, setGeht] = useState(false);
+  const schliessen = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setOffen(false);
+    setGeht(true);
+    window.setTimeout(() => {
+      setOffen(false);
+      setGeht(false);
+    }, 120);
+  };
   const pfad = usePathname();
 
   useEffect(() => setOffen(false), [pfad]);
@@ -62,7 +72,7 @@ export default function MobileMenu({
     <div className="sm:hidden">
       <button
         type="button"
-        onClick={() => setOffen((o) => !o)}
+        onClick={() => (offen ? schliessen() : setOffen(true))}
         aria-expanded={offen}
         aria-label={offen ? labels.closeMenu : labels.openMenu}
         className="pressable flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10"
@@ -70,18 +80,18 @@ export default function MobileMenu({
         {/* Drei Striche, die sich beim Öffnen zum Kreuz drehen. */}
         <span className="relative block h-4 w-6" aria-hidden>
           <span
-            className={`absolute left-0 block h-0.5 w-6 bg-white transition-all duration-200 ${
-              offen ? "top-[7px] rotate-45" : "top-0"
+            className={`absolute left-0 top-[7px] block h-0.5 w-6 bg-white transition-transform duration-200 ${
+              offen && !geht ? "rotate-45" : "-translate-y-[7px]"
             }`}
           />
           <span
             className={`absolute left-0 top-[7px] block h-0.5 w-6 bg-white transition-opacity duration-200 ${
-              offen ? "opacity-0" : "opacity-100"
+              offen && !geht ? "opacity-0" : "opacity-100"
             }`}
           />
           <span
-            className={`absolute left-0 block h-0.5 w-6 bg-white transition-all duration-200 ${
-              offen ? "top-[7px] -rotate-45" : "top-[14px]"
+            className={`absolute left-0 top-[7px] block h-0.5 w-6 bg-white transition-transform duration-200 ${
+              offen && !geht ? "-rotate-45" : "translate-y-[7px]"
             }`}
           />
         </span>
@@ -97,10 +107,14 @@ export default function MobileMenu({
             type="button"
             aria-hidden
             tabIndex={-1}
-            onClick={() => setOffen(false)}
-            className="absolute inset-x-0 top-full z-40 h-dvh cursor-default bg-black/40"
+            onClick={schliessen}
+            data-raus={geht ? "" : undefined}
+            className="fade-in absolute inset-x-0 top-full z-40 h-dvh cursor-default bg-black/40"
           />
-          <div className="absolute inset-x-0 top-full z-50 max-h-[80dvh] overflow-y-auto border-t border-white/15 bg-brand-deep px-4 py-3 shadow-xl">
+          <div
+            data-raus={geht ? "" : undefined}
+            className="menue-rein absolute inset-x-0 top-full z-50 max-h-[80dvh] origin-top overflow-y-auto border-t border-white/15 bg-brand-deep px-4 py-3 shadow-xl"
+          >
             <ul className="flex flex-col">
               {links.map((l) => (
                 <li key={l.href}>

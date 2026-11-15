@@ -250,20 +250,17 @@ button,
 
 /* Neue Karten ploppen aufs Feld */
 @keyframes pop-in {
-  0% {
-    transform: scale(0.55);
+  from {
+    transform: scale(0.9);
     opacity: 0;
   }
-  70% {
-    transform: scale(1.09);
-  }
-  100% {
+  to {
     transform: scale(1);
     opacity: 1;
   }
 }
 .pop-in {
-  animation: pop-in var(--dauer-normal) var(--kurve-pop);
+  animation: pop-in var(--dauer-schnell) var(--kurve-pop);
 }
 
 /* Sheets fahren von unten herein statt aufzublitzen — dieselbe Kurve wie
@@ -298,6 +295,41 @@ button,
 }
 .fade-in {
   animation: fade-in var(--dauer-schnell) ease-out;
+}
+
+/* Ausfahrt: useSheet setzt data-raus, bevor wirklich geschlossen wird.
+   Faustregel: etwas kürzer als das Einblenden, derselbe Weg zurück. */
+@keyframes sheet-runter {
+  to { transform: translateY(100%); }
+}
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+@keyframes panel-raus {
+  to { opacity: 0; transform: translateX(12px); }
+}
+@keyframes menue-raus {
+  to { opacity: 0; transform: scale(0.98) translateY(4px); }
+}
+.sheet-up[data-raus] {
+  animation: sheet-runter 0.18s ease-in forwards;
+}
+@media (min-width: 1024px) {
+  .sheet-up[data-raus] {
+    animation: none;
+  }
+}
+/* Marktkarte: ab sm ein mittiger Dialog, der verblasst statt hinauszufahren. */
+@media (min-width: 640px) {
+  .sheet-up.sm\:m-auto[data-raus] {
+    animation: menue-raus 0.12s ease-in forwards;
+  }
+}
+.fade-in[data-raus] {
+  animation: fade-out 0.18s ease-in forwards;
+}
+.menue-rein[data-raus] {
+  animation: menue-raus 0.12s ease-in forwards;
 }
 
 /* Statistik-Kacheln setzen sich versetzt, damit die Karte gelesen wirkt
@@ -345,40 +377,68 @@ button,
   to { opacity: 1; transform: none }
 }
 .menue-rein {
-  animation: menue-rein 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation: menue-rein var(--dauer-normal) cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* Gleitende Markierung im Umschalter (SegmentUmschalter). */
 .segment-markierung {
-  transition: transform var(--dauer-gross) var(--kurve-aus);
+  transition: transform var(--dauer-normal) var(--kurve-aus);
 }
 
 /* Inhalt unter einem Umschalter fährt aus der Richtung herein, in die die
    Markierung gleitet: links ist Gesamt, rechts Spieltag. */
 @keyframes rutsch-von-rechts {
-  from { opacity: 0; transform: translateX(28px) }
+  from { opacity: 0; transform: translateX(12px) }
   to { opacity: 1; transform: none }
 }
 @keyframes rutsch-von-links {
-  from { opacity: 0; transform: translateX(-28px) }
+  from { opacity: 0; transform: translateX(-12px) }
   to { opacity: 1; transform: none }
 }
 .rutsch-von-rechts {
-  animation: rutsch-von-rechts var(--dauer-gross) var(--kurve-aus);
+  animation: rutsch-von-rechts var(--dauer-normal) var(--kurve-aus);
 }
 .rutsch-von-links {
-  animation: rutsch-von-links var(--dauer-gross) var(--kurve-aus);
+  animation: rutsch-von-links var(--dauer-normal) var(--kurve-aus);
 }
 
-/* Jede neue Seite steigt kurz auf (app/template.tsx). */
-/* Nur eine kleine Verschiebung, keine Deckkraft: Ab 0 eingeblendet wirkte
-   jede Seite nach dem Wechsel kurz blass — und das bei jeder Navigation. */
-@keyframes seite-rein {
-  from { transform: translateY(6px) }
-  to { transform: none }
+/* Seitenwechsel haben bewusst keine eigene Bewegung: Navigation ist häufig.
+   Die Klasse .seite-rein (app/template.tsx) bleibt als Hülle bestehen. */
+
+/* Aufklapper (FAQ, Bank-Hinweis, Beste Spieler, Konto löschen) klappen weich
+   auf und zu — nur wo der Browser Höhen-Schlüsselwörter interpolieren kann.
+   Sonst bleibt das bisherige harte Umschalten. */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size var(--dauer-normal) var(--kurve-aus),
+      content-visibility var(--dauer-normal) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
 }
-.seite-rein {
-  animation: seite-rein 180ms var(--kurve-aus);
+
+/* Geänderte Zahl (Budget, Punkte): Die Fläche dahinter leuchtet kurz auf,
+   die Zahl selbst bewegt sich nicht. */
+@keyframes wert-blink {
+  from { background-color: var(--status-ok-flaeche); }
+  to { background-color: transparent; }
+}
+.wert-blink {
+  border-radius: 0.25rem;
+  animation: wert-blink 0.6s ease-out;
+}
+
+/* Meldungen verblassen kurz vor Ablauf, statt schlagartig zu verschwinden.
+   --meldung-dauer kommt aus dem Markup (Anzeigedauer minus Ausblenden). */
+.meldung-raus {
+  animation: fade-out 0.12s ease-in var(--meldung-dauer, 3.38s) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -391,8 +451,17 @@ button,
   .fade-in,
   .tile-in,
   .pop-in,
-  .toast {
+  .toast,
+  .meldung-raus,
+  .wert-blink,
+  .sheet-up[data-raus],
+  .fade-in[data-raus],
+  .menue-rein[data-raus],
+  .spieler-panel[data-raus] {
     animation: none;
+  }
+  details::details-content {
+    transition: none;
   }
   .pressable,
   .pressable-subtle,
@@ -421,7 +490,9 @@ button,
   transform: translateX(-50%);
   z-index: 60;
   max-width: calc(100vw - 2rem);
-  animation: toast-in var(--dauer-schnell) ease-out;
+  animation:
+    toast-in var(--dauer-schnell) ease-out,
+    fade-out 0.12s ease-in var(--meldung-dauer, 3.38s) forwards;
 }
 
 /* Spieltagwechsel läuft (GwWechsel): alten Inhalt sichtbar dimmen, statt
@@ -446,7 +517,7 @@ body:has([data-gw-wechsel]) main {
   color: var(--brand-deep);
 }
 .speichern-knopf {
-  transition: background-color 400ms ease, color 400ms ease, transform var(--dauer-schnell) ease;
+  transition: background-color var(--dauer-gross) ease, color var(--dauer-gross) ease, transform var(--dauer-schnell) ease;
 }
 /* Deckend: Auf dem Desktop liegt der Knopf über dem Spielfeld. */
 .speichern-knopf:disabled {
@@ -463,7 +534,7 @@ body:has([data-gw-wechsel]) main {
 .haken path {
   stroke-dasharray: 16;
   stroke-dashoffset: 16;
-  animation: haken-zeichnen 320ms var(--kurve-aus) 60ms forwards;
+  animation: haken-zeichnen var(--dauer-gross) var(--kurve-aus) 60ms forwards;
 }
 @keyframes haken-zeichnen {
   to { stroke-dashoffset: 0; }
@@ -619,11 +690,27 @@ body:has([data-gw-wechsel]) main {
 }
 @media (min-width: 640px) {
   .spieler-panel {
-    animation: panel-rein 0.18s var(--kurve-aus);
+    animation: panel-rein var(--dauer-schnell) var(--kurve-aus);
+  }
+}
+.spieler-panel[data-raus] {
+  animation: sheet-runter 0.18s ease-in forwards;
+}
+@media (min-width: 640px) {
+  .spieler-panel[data-raus] {
+    animation: panel-raus 0.12s ease-in forwards;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .spieler-panel {
     animation: none;
+  }
+}
+
+/* Reduzierte Bewegung: keine Ausfahrt, egal welche Regel oben greift —
+   useSheet schliesst dann sofort (animation-name: none). */
+@media (prefers-reduced-motion: reduce) {
+  [data-raus] {
+    animation: none !important;
   }
 }

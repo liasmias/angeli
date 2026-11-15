@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GwWechsel from "./GwWechsel";
+import BlinkZahl from "@/components/blink-zahl";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
 export interface GameweekNavProps {
@@ -64,7 +65,7 @@ function Kachel({
       }`}
     >
       <span className="w-full px-2 pt-1.5 text-[28px] font-bold tabular-nums leading-tight sm:text-2xl">
-        {wert}
+        <BlinkZahl wert={wert} className="px-1" />
       </span>
       <span
         className={`w-full px-1 pb-1.5 text-xs font-semibold leading-tight [overflow-wrap:anywhere] ${

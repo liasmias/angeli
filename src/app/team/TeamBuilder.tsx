@@ -4,6 +4,7 @@ import { SymbolBenchBoost, SymbolBesitzer, SymbolWildcard } from "@/components/s
 import type { ReactNode } from "react";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Jersey from "@/components/jersey";
+import BlinkZahl from "@/components/blink-zahl";
 import type { PlayerFlag, Position } from "@/lib/database.types";
 import {
   MAX_PER_CLUB,
@@ -369,7 +370,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
             {player.upcoming.map((f, i) => (
               <div
                 key={`${f.gw}-${f.opponent}-${i}`}
-                style={{ animationDelay: `${i * 28}ms` }}
+                style={{ animationDelay: `${Math.min(i * 14, 100)}ms` }}
                 className={`tile-in flex-1 rounded-lg px-1 py-1.5 text-center ${
                   f.home
                     ? "bg-brand-deep text-white"
@@ -417,7 +418,7 @@ function SpielerKarte({ player, t }: { player: PlayerOption; t: BuilderDict }) {
         {werte.map(([label, wert], i) => (
           <div
             key={label}
-            style={{ animationDelay: `${i * 28}ms` }}
+            style={{ animationDelay: `${Math.min(i * 14, 100)}ms` }}
             className="tile-in rounded-lg bg-brand-deep/5 px-1.5 py-1.5 text-center"
           >
             <dt className="truncate text-xs font-semibold uppercase leading-tight text-brand-deep/65">
@@ -719,9 +720,9 @@ export default function TeamBuilder({
 
   // Scroll-Sperre, Escape, Zurueck-Knopf und Fokus fuer die drei Overlays.
   // Die Referenzen landen am jeweiligen Sheet-Inhalt.
-  const aktionsSheet = useSheet(sheetSpieler !== null, () => setSheetSpieler(null), { wischen: true });
-  const marktKarteSheet = useSheet(marktSpieler !== null, () => setMarktSpieler(null), { wischen: true });
-  const marktSheet = useSheet(marktOffen, () => setMarktOffen(false));
+  const [aktionsSheet, aktionsSheetZu] = useSheet(sheetSpieler !== null, () => setSheetSpieler(null), { wischen: true });
+  const [marktKarteSheet, marktKarteSheetZu] = useSheet(marktSpieler !== null, () => setMarktSpieler(null), { wischen: true });
+  const [marktSheet, marktSheetZu] = useSheet(marktOffen, () => setMarktOffen(false));
   const [tauschAus, setTauschAus] = useState<number | null>(null);
   // Transfer-Modus: Karten zeigen Preise und ein ✕ zum direkten Entfernen.
   const [transferModus, setTransferModus] = useState(false);
@@ -743,6 +744,8 @@ export default function TeamBuilder({
   // Club, Preisstufe und Sortierung liegen hinter „Filter“ — sichtbar bleiben
   // nur Position, Suche und „Bezahlbar“. Vorher standen fünf Gruppen offen.
   const [filterOffen, setFilterOffen] = useState(false);
+  // Zuletzt geholter Spieler: Nur seine Karte blendet ein, alle anderen ruhen.
+  const [frisch, setFrisch] = useState<number | null>(null);
   // Standard: die punktbesten Spieler zuoberst; umschaltbar auf Preis.
   const [sortiere, setSortiere] = useState<"points" | "price" | "goals" | "assists" | "cleanSheets" | "owned">("points");
   const marketRef = useRef<HTMLElement | null>(null);
@@ -1057,6 +1060,7 @@ export default function TeamBuilder({
       const autoStart = canStart(starterCounts(prev), player.position, settings.startingSize).ok;
       tippImpuls();
       const neuerPick = { playerId: player.id, isStarting: autoStart, isCaptain: false, isViceCaptain: false };
+      setFrisch(player.id);
       if (!geist) return rollenVorschlagen([...prev, neuerPick]);
       // An die Stelle des Vorgaengers setzen, damit die Reihenfolge im
       // Kader-Array und damit die Bankreihenfolge stabil bleibt.
@@ -1531,11 +1535,16 @@ export default function TeamBuilder({
   return (
     // pb-28: Platz fuer die feste Aktionsleiste, damit sie nichts verdeckt.
     <div className="flex flex-col gap-6 pb-28 lg:flex-row lg:pb-0">
+      {frisch !== null && (
+        <style>{`@media (prefers-reduced-motion: no-preference) { #spieler-karte-${frisch} { animation: pop-in var(--dauer-schnell) var(--kurve-pop); } }`}</style>
+      )}
       {/* Toast */}
       {toast && (
         <p
           role="status"
           onClick={() => setToast(null)}
+          key={toast.text}
+          style={{ "--meldung-dauer": toast.kind === "error" ? "5.88s" : "3.38s" } as React.CSSProperties}
           className={`toast cursor-pointer rounded-full px-5 py-2.5 text-sm font-bold shadow-lg ${
             overlayOffen ? "lg:hidden" : "hidden lg:block"
           } ${
@@ -1553,7 +1562,7 @@ export default function TeamBuilder({
         const pick = squad.find((s) => s.playerId === sheetSpieler);
         const player = playersById.get(sheetSpieler);
         if (!pick || !player) return null;
-        const zu = () => setSheetSpieler(null);
+        const zu = aktionsSheetZu;
         return (
           <>
             <button
@@ -1662,7 +1671,7 @@ export default function TeamBuilder({
         const player = playersById.get(marktSpieler);
         if (!player) return null;
         const imKader = squad.some((s) => s.playerId === player.id);
-        const zu = () => setMarktSpieler(null);
+        const zu = marktKarteSheetZu;
         return (
           <>
             {/* z-50 wie die Karte: Der offene Spielermarkt (z-40) steht weiter
@@ -1770,7 +1779,7 @@ export default function TeamBuilder({
 
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
+        <div className="chamfer mb-3 bg-white px-3 py-1.5 shadow-sm sm:py-2">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           {/* Vier feste Spalten: Label klein oben, Wert gross darunter. Die Werte
@@ -1784,24 +1793,29 @@ export default function TeamBuilder({
                 <HilfeLink href="/regeln#kader" label={t.helpBudget} />
               </dt>
               <dd
-                className={`text-base font-bold tabular-nums sm:text-sm ${
+                className={`text-sm font-bold leading-tight tabular-nums ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
                 }`}
                 title={effectiveCap > settings.budgetCap ? `${t.of} ${effectiveCap.toFixed(1)} · ${t.capHint}` : undefined}
               >
-                {budgetLeft.toFixed(1)}
+                <BlinkZahl wert={budgetLeft.toFixed(1)} className="-mx-0.5 px-0.5" />
               </dd>
             </div>
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad}</dt>
-              <dd className="text-base font-bold tabular-nums sm:text-sm text-brand-deep">
+              <dd className="text-sm font-bold leading-tight tabular-nums text-brand-deep">
                 {squad.length}/{settings.squadSize}
               </dd>
             </div>
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters}</dt>
-              <dd className="text-base font-bold tabular-nums sm:text-sm text-brand-deep">
+              <dd className="text-sm font-bold leading-tight tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
+                {startingCount === settings.startingSize && !formationError && (
+                  <span className="ml-1 text-xs font-semibold text-brand-deep/65 sm:hidden">
+                    {formationLabel(startingCounts)}
+                  </span>
+                )}
               </dd>
             </div>
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
@@ -1809,7 +1823,7 @@ export default function TeamBuilder({
                 {t.transfers}
                 <HilfeLink href="/regeln#transfers" label={t.helpTransfers} />
               </dt>
-              <dd className="truncate text-base font-bold tabular-nums sm:text-sm text-brand-deep">
+              <dd className="truncate text-sm font-bold leading-tight tabular-nums text-brand-deep">
                 {unlimitedTransfers || ersterKader ? (
                   <span className="text-brand-magenta">{t.unlimited}</span>
                 ) : wildcardActive ? (
@@ -1824,7 +1838,7 @@ export default function TeamBuilder({
           </dl>
           {/* Zweite Zeile: Formation, Double Gameweek, verbrauchte Transfers und
               Countdown. Platz steht immer, damit das Feld darunter nicht springt. */}
-          <div className="mt-1 flex h-5 items-center gap-2 overflow-hidden text-xs sm:mt-0 sm:min-w-0 sm:flex-1">
+          <div className="hidden h-5 items-center gap-2 overflow-hidden text-xs sm:flex sm:min-w-0 sm:flex-1">
             <span
               className={`rounded-full bg-brand-accent/25 px-1.5 font-bold tabular-nums text-brand-deep ${
                 startingCount === settings.startingSize && !formationError ? "" : "hidden"
@@ -1865,6 +1879,14 @@ export default function TeamBuilder({
                   .join(" · ")}
               </span>
             )}
+            {/* Handy: Die zweite Zeile entfällt, der Countdown steht hier. */}
+            <span
+              className={`shrink-0 whitespace-nowrap font-bold text-brand-magenta sm:hidden ${
+                ungespeichert || !countdown ? "hidden" : ""
+              }`}
+            >
+              {t.deadlineIn(countdown ?? t.inHours(0))}
+            </span>
             <span className={`flex shrink-0 items-center gap-1.5 ${ungespeichert ? "" : "hidden"}`}>
               <span className="hidden font-semibold text-brand-deep/65 sm:inline">{t.unsaved}</span>
               <button
@@ -2241,8 +2263,10 @@ export default function TeamBuilder({
                 <button
                   type="button"
                   role="status"
+                  key={toast.text}
                   onClick={() => setToast(null)}
-                  className={`min-w-0 truncate text-left font-bold ${
+                  style={{ "--meldung-dauer": toast.kind === "error" ? "5.88s" : "3.38s" } as React.CSSProperties}
+                  className={`meldung-raus min-w-0 truncate text-left font-bold ${
                     toast.kind === "error" ? "text-[#ff9a9a]" : "text-brand-accent"
                   }`}
                 >
@@ -2309,7 +2333,7 @@ export default function TeamBuilder({
             {t.pickPlayers}
             <button
               type="button"
-              onClick={() => setMarktOffen(false)}
+              onClick={marktSheetZu}
               aria-label={t.closeMarket}
               className="pressable relative -m-2 flex h-9 w-9 items-center justify-center rounded-full text-lg leading-none text-white/80 lg:hidden"
             >
