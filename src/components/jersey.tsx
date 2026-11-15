@@ -22,7 +22,7 @@ export default function Jersey({
 }) {
   const [failed, setFailed] = useState(false);
   const className = fluid
-    ? "aspect-square w-[clamp(2.25rem,11vw,4rem)] select-none drop-shadow-sm"
+    ? "aspect-square w-[clamp(3rem,15vw,4rem)] select-none drop-shadow-sm"
     : "select-none drop-shadow-sm";
   const dimensions = fluid ? {} : { width: size, height: size };
 

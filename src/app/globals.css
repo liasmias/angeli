@@ -515,28 +515,18 @@ body:has([data-gw-wechsel]) main {
   position: absolute;
   inset: 0;
   background-image:
-    /* Aussenlinie */
-    linear-gradient(#ffffff55, #ffffff55),
-    linear-gradient(#ffffff55, #ffffff55),
-    linear-gradient(#ffffff55, #ffffff55),
-    /* Torraum + Strafraum oben */
+    /* Torraum + Strafraum oben (die Aussenlinie zeichnet .pitch-linie) */
     radial-gradient(circle at 50% 0%, transparent 5.4rem, transparent 5.5rem),
     linear-gradient(#ffffff55, #ffffff55),
     linear-gradient(#ffffff55, #ffffff55),
     linear-gradient(#ffffff55, #ffffff55);
   background-repeat: no-repeat;
   background-size:
-    calc(100% - 2rem) 2px,
-    2px calc(100% - 1rem),
-    2px calc(100% - 1rem),
     0 0,
     38% 2px,
     2px 6.5rem,
     2px 6.5rem;
   background-position:
-    1rem 0.5rem,
-    1rem 0.5rem,
-    calc(100% - 1rem) 0.5rem,
     0 0,
     50% 7rem,
     31% 0.5rem,
@@ -548,13 +538,47 @@ body:has([data-gw-wechsel]) main {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -4.5rem;
+  /* Mittelpunkt auf der Grundlinie von .pitch-linie (8 px über dem Rand). */
+  bottom: calc(-4.5rem + 8px);
   transform: translateX(-50%);
   width: 14rem;
   height: 9rem;
   border: 2px solid #ffffff55;
   border-radius: 50%;
   pointer-events: none;
+}
+
+/* Aussenlinie des Spielfelds: ein geschlossener Linienzug mit 8 px Abstand
+   zum Feldrand, auch entlang der vier Fasen. Gezeichnet als Fläche zwischen
+   zwei gefasten Polygonen (evenodd, Brücke ohne Fläche). Fase der Linie
+   aussen: 12 − 8·(2 − √2) ≈ 7.3 px; innen 2 px weiter drinnen ≈ 6.1 px. */
+.pitch-linie {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: #ffffff55;
+  clip-path: polygon(
+    evenodd,
+    15.3px 8px,
+    calc(100% - 15.3px) 8px,
+    calc(100% - 8px) 15.3px,
+    calc(100% - 8px) calc(100% - 15.3px),
+    calc(100% - 15.3px) calc(100% - 8px),
+    15.3px calc(100% - 8px),
+    8px calc(100% - 15.3px),
+    8px 15.3px,
+    15.3px 8px,
+    16.1px 10px,
+    10px 16.1px,
+    10px calc(100% - 16.1px),
+    16.1px calc(100% - 10px),
+    calc(100% - 16.1px) calc(100% - 10px),
+    calc(100% - 10px) calc(100% - 16.1px),
+    calc(100% - 10px) 16.1px,
+    calc(100% - 16.1px) 10px,
+    16.1px 10px,
+    15.3px 8px
+  );
 }
 
 /* Ladekringel im Speichern-Knopf — der Textwechsel allein sagt nicht, dass

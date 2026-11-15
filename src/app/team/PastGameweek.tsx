@@ -208,7 +208,7 @@ function Karte({
     >
       {(p.isCaptain || p.isViceCaptain) && (
         <span
-          className={`absolute right-0.5 top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`absolute right-0.5 top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white ${
             p.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"
           }`}
         >
@@ -281,6 +281,7 @@ export default function PastGameweek({
 
       <div className="schatten-fase">
       <div className="pitch px-2 py-8 sm:px-6">
+          <span aria-hidden className="pitch-linie" />
         <div className="relative z-10 flex flex-col gap-7">
           {POSITIONS.map((pos) => {
             const reihe = starters(pos);

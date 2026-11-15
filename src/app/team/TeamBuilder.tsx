@@ -158,7 +158,7 @@ function PlayerCard({
     >
       {(pick.isCaptain || pick.isViceCaptain) && (
         <span
-          className={`pop-in absolute top-0 z-10 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white sm:h-6 sm:w-6 sm:text-xs ${
+          className={`pop-in absolute top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white ${
             onQuickRemove || player.flag ? "left-0.5" : "right-0.5"
           } ${pick.isCaptain ? "bg-black text-brand-accent" : "bg-white text-brand-deep"}`}
         >
@@ -471,6 +471,20 @@ function TauschStapel({
   );
 }
 
+/** Kleines rundes „?“ neben einer Kennzahl — springt zur passenden Regel. */
+function HilfeLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title={label}
+      className="tap-ziel flex h-[18px] w-[18px] items-center justify-center rounded-full bg-brand-deep/10 text-xs font-bold normal-case leading-none tracking-normal text-brand-deep/70 hover:bg-brand-deep/20"
+    >
+      ?
+    </a>
+  );
+}
+
 function EmptySlot({
   label,
   missing,
@@ -493,14 +507,14 @@ function EmptySlot({
       className="pressable relative flex min-w-0 max-w-[7.4rem] flex-1 flex-col items-center"
     >
       <span aria-hidden className="invisible flex w-full flex-col items-center">
-        <span className="aspect-square w-[clamp(2.25rem,11vw,4rem)]" />
+        <span className="aspect-square w-[clamp(3rem,15vw,4rem)]" />
         <span className="block px-1 py-0.5 text-xs leading-4 sm:text-sm sm:leading-5">&nbsp;</span>
         <span className="block px-1 py-0.5 text-xs leading-4 sm:text-xs">&nbsp;</span>
       </span>
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
         {/* Ausgeblichenes, neutrales Trikot mit „+“: Der Platz ist noch frei.
             Gleich gross wie die echten Trikots, damit die Reihe ruhig bleibt. */}
-        <svg viewBox="0 0 64 64" aria-hidden className="aspect-square w-[clamp(2.25rem,11vw,4rem)]">
+        <svg viewBox="0 0 64 64" aria-hidden className="aspect-square w-[clamp(3rem,15vw,4rem)]">
           <path
             d="M22 7 L8 15 L14 28 L19 24 L19 57 L45 57 L45 24 L50 28 L56 15 L42 7 C40 12 24 12 22 7 Z"
             fill="rgb(255 255 255 / 0.22)"
@@ -1730,69 +1744,75 @@ export default function TeamBuilder({
         <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
-          <div className="grid grid-cols-2 items-baseline gap-x-4 gap-y-1 text-sm sm:flex sm:flex-wrap">
-            <span className="whitespace-nowrap">
-              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.budget} </span>
-              <span
-                className={`font-bold tabular-nums ${
+          {/* Vier feste Spalten: Label klein oben, Wert gross darunter. Die Werte
+              stehen in jeder Lage an derselben Stelle. */}
+          <dl className="grid grid-cols-4 gap-x-2">
+            <div className="min-w-0">
+              <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
+                {t.budget}
+                <HilfeLink href="/regeln#kader" label={t.helpBudget} />
+              </dt>
+              <dd
+                className={`text-base font-bold tabular-nums ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
                 }`}
+                title={effectiveCap > settings.budgetCap ? `${t.of} ${effectiveCap.toFixed(1)} · ${t.capHint}` : undefined}
               >
                 {budgetLeft.toFixed(1)}
-              </span>
-              {effectiveCap > settings.budgetCap && (
-                <span
-                  className="ml-1 text-xs font-medium text-brand-deep/65"
-                  title={t.capHint}
-                >
-                  {t.of} {effectiveCap.toFixed(1)}
-                </span>
-              )}
-            </span>
-            <span className="whitespace-nowrap">
-              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad} </span>
-              <span className="font-bold tabular-nums text-brand-deep">
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad}</dt>
+              <dd className="text-base font-bold tabular-nums text-brand-deep">
                 {squad.length}/{settings.squadSize}
-              </span>
-            </span>
-            <span className="whitespace-nowrap">
-              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters} </span>
-              <span className="font-bold tabular-nums text-brand-deep">
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters}</dt>
+              <dd className="text-base font-bold tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
-              </span>
-              {/* Platz bleibt reserviert, sonst bricht die Zeile bei 11 Spielern um. */}
-              <span
-                className={`ml-1.5 rounded-full bg-brand-accent/25 px-1.5 py-0.5 text-xs font-bold tabular-nums text-brand-deep ${
-                  startingCount === settings.startingSize && !formationError ? "" : "invisible"
-                }`}
-              >
-                {startingCount === settings.startingSize && !formationError
-                  ? formationLabel(startingCounts)
-                  : "4-4-2"}
-              </span>
-            </span>
-            <span className="whitespace-nowrap">
-              <span className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.transfers} </span>
-              {unlimitedTransfers || ersterKader ? (
-                <span className="font-bold text-brand-magenta">{t.unlimited}</span>
-              ) : wildcardActive ? (
-                <span className="font-bold text-brand-magenta">Wildcard</span>
-              ) : (
-                <span className="font-bold tabular-nums text-brand-deep">
-                  {freeTransfers} {t.free}
-                  {transfersUsed > 0 && (
-                    <span className="font-medium text-brand-deep/65"> · {transfersUsed} {t.used}</span>
-                  )}
-                </span>
-              )}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
+                {t.transfers}
+                <HilfeLink href="/regeln#transfers" label={t.helpTransfers} />
+              </dt>
+              <dd className="truncate text-base font-bold tabular-nums text-brand-deep">
+                {unlimitedTransfers || ersterKader ? (
+                  <span className="text-brand-magenta">{t.unlimited}</span>
+                ) : wildcardActive ? (
+                  <span className="text-brand-magenta">Wildcard</span>
+                ) : (
+                  <>
+                    {freeTransfers} {t.free}
+                  </>
+                )}
+              </dd>
+            </div>
+          </dl>
+          {/* Zweite Zeile: Formation, Double Gameweek, verbrauchte Transfers und
+              Countdown. Platz steht immer, damit das Feld darunter nicht springt. */}
+          <div className="mt-1 flex h-5 items-center gap-2 overflow-hidden text-xs">
+            <span
+              className={`rounded-full bg-brand-accent/25 px-1.5 font-bold tabular-nums text-brand-deep ${
+                startingCount === settings.startingSize && !formationError ? "" : "hidden"
+              }`}
+            >
+              {formationLabel(startingCounts)}
             </span>
             {doubleGameweek && (
-              <span className="whitespace-nowrap rounded-full bg-brand-lime px-2 py-0.5 text-xs font-bold text-brand-deep">
+              <span className="whitespace-nowrap rounded-full bg-brand-lime px-2 font-bold text-brand-deep">
                 {t.doubleGameweek}
               </span>
             )}
+            {transfersUsed > 0 && !(unlimitedTransfers || ersterKader || wildcardActive) && (
+              <span className="whitespace-nowrap font-medium text-brand-deep/65">
+                {transfersUsed} {t.used}
+              </span>
+            )}
             {/* Der Countdown entsteht erst nach dem Mounten; der Platz steht schon. */}
-            <span className={`whitespace-nowrap text-xs font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
+            <span className={`ml-auto whitespace-nowrap font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
               {t.deadlineIn(countdown ?? t.inHours(0))}
             </span>
           </div>
@@ -1832,6 +1852,7 @@ export default function TeamBuilder({
             gefasten Ecken mit abgeschnitten, drop-shadow folgt ihnen. */}
         <div className="schatten-fase">
         <div className="pitch px-2 py-8 sm:px-6">
+          <span aria-hidden className="pitch-linie" />
           <div className="relative z-10 flex flex-col gap-7">
             {POSITIONS.map((pos) => {
               const row = starters(pos);

@@ -63,7 +63,7 @@ function Kachel({
         hervorgehoben ? "bg-brand-deep text-white" : "bg-brand-deep/5 text-brand-deep"
       }`}
     >
-      <span className="w-full px-2 pt-1.5 text-lg font-bold tabular-nums leading-tight">
+      <span className="w-full px-2 pt-1.5 text-[28px] font-bold tabular-nums leading-tight">
         {wert}
       </span>
       <span

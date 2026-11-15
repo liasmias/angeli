@@ -20,9 +20,9 @@ export const metadata = {
     "Wie Angeli funktioniert: Punkte, Kader, Transfers und Chips in der Schweizer Liga.",
 };
 
-function Abschnitt({ titel, children }: { titel: string; children: React.ReactNode }) {
+function Abschnitt({ titel, id, children }: { titel: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="chamfer bg-white p-5 shadow-sm">
+    <section id={id} className="scroll-mt-4 chamfer bg-white p-5 shadow-sm">
       <h2 className="mb-3 text-lg font-bold text-brand-deep">{titel}</h2>
       <div className="flex flex-col gap-3 text-sm leading-relaxed text-brand-deep/80">
         {children}
@@ -110,7 +110,7 @@ export default async function RegelnPage() {
             </p>
           </Abschnitt>
 
-          <Abschnitt titel="Your squad">
+          <Abschnitt titel="Your squad" id="kader">
             <ul className="ml-4 list-disc space-y-1">
               <li>
                 <b>{kader} players</b> with a budget of <b>{budget}m</b> — if price rises make
@@ -241,7 +241,7 @@ export default async function RegelnPage() {
             </p>
           </Abschnitt>
 
-          <Abschnitt titel="Transfers">
+          <Abschnitt titel="Transfers" id="transfers">
             <ul className="ml-4 list-disc space-y-1">
               <li>
                 <b>{gratis} free transfer per gameweek.</b> Every additional one costs {strafe}{" "}
@@ -300,7 +300,7 @@ export default async function RegelnPage() {
           </p>
         </Abschnitt>
 
-        <Abschnitt titel="Dein Kader">
+        <Abschnitt titel="Dein Kader" id="kader">
           <ul className="ml-4 list-disc space-y-1">
             <li>
               <b>{kader} Spieler</b> mit einem Budget von <b>{budget} Mio.</b> — steigt der Wert
@@ -433,7 +433,7 @@ export default async function RegelnPage() {
           </p>
         </Abschnitt>
 
-        <Abschnitt titel="Transfers">
+        <Abschnitt titel="Transfers" id="transfers">
           <ul className="ml-4 list-disc space-y-1">
             <li>
               <b>{gratis} Gratis-Transfer pro Spieltag.</b> Jeder weitere kostet {strafe} Punkte.
