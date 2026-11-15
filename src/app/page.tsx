@@ -129,22 +129,9 @@ export default async function Home() {
       </section>
       </div>
 
-      {/* preload="none": Das Video lädt erst beim Abspielen, die Startseite bleibt leicht. */}
+      {/* Anleitung fürs Handy — Ziel des Links „How to play ↓“. */}
       <section id="how-to-play" className="mx-auto w-full max-w-5xl shrink-0 scroll-mt-4 px-6 py-10 sm:py-14">
-        <h2 className="mb-5 text-2xl font-bold tracking-tight sm:mb-6 sm:text-4xl">{t.howToPlay}</h2>
-        <video
-          src="/how-to-play.mp4"
-          poster="/how-to-play.jpg"
-          width={1920}
-          height={1080}
-          controls
-          playsInline
-          preload="none"
-          aria-label={t.howToPlayVideo}
-          className="aspect-video h-auto w-full rounded-lg bg-brand-deep shadow-2xl shadow-black/40"
-        />
-
-        <div className="mt-10 grid items-center gap-8 sm:mt-14 sm:grid-cols-[1fr_auto] sm:gap-12">
+        <div className="grid items-center gap-8 sm:grid-cols-[1fr_auto] sm:gap-12">
           <div>
             <h3 className="text-xl font-bold tracking-tight sm:text-3xl">{t.mobileTitle}</h3>
             <p className="mt-2 text-[15px] text-white/80 sm:text-lg">{t.mobileIntro}</p>

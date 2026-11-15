@@ -41,7 +41,6 @@ const de = {
     shotStats: "Statistikseite mit Punkten, Form und Wert aller Spieler",
     leaderboard: "Rangliste",
     howToPlay: "How to play",
-    howToPlayVideo: "Video: Team zusammenstellen, Captain wählen, Transfers und Rangliste",
     mobileTitle: "So spielst du auf dem Handy",
     mobileIntro: "Angeli läuft im Browser, du brauchst keinen App Store.",
     mobileSteps: [
@@ -428,7 +427,6 @@ const en: typeof de = {
     shotStats: "Statistics page with points, form and value of every player",
     leaderboard: "Leaderboard",
     howToPlay: "How to play",
-    howToPlayVideo: "Video: building a team, picking a captain, transfers and the leaderboard",
     mobileTitle: "Playing on your phone",
     mobileIntro: "Angeli runs in the browser, no app store needed.",
     mobileSteps: [
