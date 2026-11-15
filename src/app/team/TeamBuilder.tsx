@@ -592,7 +592,10 @@ const MarktZeile = memo(function MarktZeile({
         aria-label={t.cardOpen(p.name)}
         className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-2 pr-2 text-left"
       >
-        <Jersey club={p.club} size={52} />
+        {/* Am Desktop kleiner: Die Spalte ist schmal, 52 px wirkten dort wuchtig. */}
+        <span className="shrink-0 lg:[&>*]:h-9 lg:[&>*]:w-9">
+          <Jersey club={p.club} size={52} />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
             {p.flag && (
@@ -1772,14 +1775,16 @@ export default function TeamBuilder({
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           {/* Vier feste Spalten: Label klein oben, Wert gross darunter. Die Werte
               stehen in jeder Lage an derselben Stelle. */}
-          <dl className="grid grid-cols-4 gap-x-2">
-            <div className="min-w-0">
+          {/* Ab sm eine einzige kompakte Zeile: Label und Wert nebeneinander. */}
+          <div className="sm:flex sm:items-center sm:gap-x-5">
+          <dl className="grid grid-cols-4 gap-x-2 sm:flex sm:gap-x-5">
+            <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
                 {t.budget}
                 <HilfeLink href="/regeln#kader" label={t.helpBudget} />
               </dt>
               <dd
-                className={`text-base font-bold tabular-nums ${
+                className={`text-base font-bold tabular-nums sm:text-sm ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
                 }`}
                 title={effectiveCap > settings.budgetCap ? `${t.of} ${effectiveCap.toFixed(1)} · ${t.capHint}` : undefined}
@@ -1787,24 +1792,24 @@ export default function TeamBuilder({
                 {budgetLeft.toFixed(1)}
               </dd>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad}</dt>
-              <dd className="text-base font-bold tabular-nums text-brand-deep">
+              <dd className="text-base font-bold tabular-nums sm:text-sm text-brand-deep">
                 {squad.length}/{settings.squadSize}
               </dd>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters}</dt>
-              <dd className="text-base font-bold tabular-nums text-brand-deep">
+              <dd className="text-base font-bold tabular-nums sm:text-sm text-brand-deep">
                 {startingCount}/{settings.startingSize}
               </dd>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
                 {t.transfers}
                 <HilfeLink href="/regeln#transfers" label={t.helpTransfers} />
               </dt>
-              <dd className="truncate text-base font-bold tabular-nums text-brand-deep">
+              <dd className="truncate text-base font-bold tabular-nums sm:text-sm text-brand-deep">
                 {unlimitedTransfers || ersterKader ? (
                   <span className="text-brand-magenta">{t.unlimited}</span>
                 ) : wildcardActive ? (
@@ -1819,7 +1824,7 @@ export default function TeamBuilder({
           </dl>
           {/* Zweite Zeile: Formation, Double Gameweek, verbrauchte Transfers und
               Countdown. Platz steht immer, damit das Feld darunter nicht springt. */}
-          <div className="mt-1 flex h-5 items-center gap-2 overflow-hidden text-xs">
+          <div className="mt-1 flex h-5 items-center gap-2 overflow-hidden text-xs sm:mt-0 sm:min-w-0 sm:flex-1">
             <span
               className={`rounded-full bg-brand-accent/25 px-1.5 font-bold tabular-nums text-brand-deep ${
                 startingCount === settings.startingSize && !formationError ? "" : "hidden"
@@ -1841,6 +1846,7 @@ export default function TeamBuilder({
             <span className={`ml-auto whitespace-nowrap font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
               {t.deadlineIn(countdown ?? t.inHours(0))}
             </span>
+          </div>
           </div>
           {/* Detail- und Warnzeile: immer genau eine Zeile hoch. Tauchte sie erst
               bei Bedarf auf, rutschte das ganze Spielfeld darunter nach unten. */}

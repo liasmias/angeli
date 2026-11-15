@@ -603,6 +603,11 @@ body:has([data-gw-wechsel]) main {
   content-visibility: auto;
   contain-intrinsic-size: auto 70px;
 }
+@media (min-width: 64rem) {
+  .markt-zeile {
+    contain-intrinsic-size: auto 54px;
+  }
+}
 
 /* Spielermenü: unten hereinfahren (Handy), ab sm rechts als Panel einblenden. */
 @keyframes panel-rein {
