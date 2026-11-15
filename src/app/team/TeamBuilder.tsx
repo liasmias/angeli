@@ -1512,6 +1512,12 @@ export default function TeamBuilder({
   ) : (
     (naechsterSchritt ?? t.save)
   );
+  // Detailtext der Leiste: offene Positionen, solange der Kader unvollständig
+  // ist, sonst Warnungen (Punktabzug, Formation). Handy: in der Aktionsleiste.
+  const detailWarnung = squad.length >= settings.squadSize;
+  const detailText = detailWarnung
+    ? [pendingCost > 0 ? t.pointsOnSave(pendingCost) : null, formationError].filter(Boolean).join(" · ")
+    : POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ");
   const speichernGesperrt = isPending || !gameweekOpen || keineAenderung;
 
   return (
@@ -1761,14 +1767,14 @@ export default function TeamBuilder({
 
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        <div className="chamfer mb-3 bg-white px-3 py-1.5 shadow-sm sm:py-2.5">
+        <div className="chamfer mb-3 bg-white px-3 py-2 shadow-sm sm:py-2.5">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           {/* Vier feste Spalten: Label klein oben, Wert gross darunter. Die Werte
               stehen in jeder Lage an derselben Stelle. */}
           {/* Ab sm eine einzige kompakte Zeile: Label und Wert nebeneinander. */}
           <div className="sm:flex sm:items-center sm:gap-x-4">
-          <dl className="grid grid-cols-4 gap-x-2 sm:flex sm:shrink-0 sm:gap-x-4">
+          <dl className="grid grid-cols-4 items-center gap-x-2 sm:flex sm:shrink-0 sm:gap-x-4">
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
                 {t.budget}
@@ -1794,11 +1800,14 @@ export default function TeamBuilder({
               <dd className="text-sm font-bold leading-tight tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
                 {/* Handy: Formation direkt darunter; ab sm steht sie als Chip daneben. */}
-                {startingCount === settings.startingSize && !formationError && (
-                  <span className="block text-xs font-semibold text-brand-deep/65 sm:hidden">
-                    {formationLabel(startingCounts)}
-                  </span>
-                )}
+                {/* Platz bleibt reserviert, sonst wächst die Leiste bei elf Spielern. */}
+                <span
+                  className={`block text-xs font-semibold leading-tight text-brand-deep/65 sm:hidden ${
+                    startingCount === settings.startingSize && !formationError ? "" : "invisible"
+                  }`}
+                >
+                  {formationLabel(startingCounts)}
+                </span>
               </dd>
             </div>
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
@@ -1840,11 +1849,10 @@ export default function TeamBuilder({
               </span>
             )}
           </div>
-          {/* Detail- und Warnzeile: auf dem Handy immer genau eine Zeile hoch —
-              tauchte sie erst bei Bedarf auf, rutschte das Spielfeld nach unten.
-              Ab sm steht sie rechts in derselben Zeile; eine eigene Zeile liess
-              die Leiste dort zu hoch wirken und die Werte oben kleben. */}
-          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-xs leading-4 sm:mt-0 sm:h-5 sm:min-w-0 sm:flex-1 sm:justify-end">
+          {/* Detail- und Warnzeile, ab sm rechts in derselben Zeile. Auf dem
+              Handy steht sie in der Aktionsleiste unten: Als eigene Zeile hier
+              machte sie die Leiste zu hoch, und die Werte klebten oben. */}
+          <div className="hidden items-center gap-3 text-xs leading-4 sm:flex sm:h-5 sm:min-w-0 sm:flex-1 sm:justify-end">
             {squad.length < settings.squadSize ? (
               <span className="truncate font-medium text-brand-deep/65">
                 {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
@@ -2255,6 +2263,21 @@ export default function TeamBuilder({
                   >
                     {hinweis.knopf}
                   </button>
+                </>
+              ) : detailText || ungespeichert ? (
+                <>
+                  <span className={`min-w-0 truncate ${detailWarnung ? "font-bold text-[#ff9a9a]" : ""}`}>
+                    {detailText || t.unsaved}
+                  </span>
+                  {ungespeichert && (
+                    <button
+                      type="button"
+                      onClick={entwurfVerwerfen}
+                      className="tap-ziel shrink-0 font-bold text-brand-accent underline"
+                    >
+                      {t.discard}
+                    </button>
+                  )}
                 </>
               ) : (
                 <>

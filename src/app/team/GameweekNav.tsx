@@ -142,7 +142,7 @@ export default function GameweekNav(props: GameweekNavProps) {
 
       {/* Name und Punkte-Kacheln mittig auf einer Zeile; auf sehr schmalen
           Bildschirmen bricht die Gruppe um, bleibt aber zentriert. */}
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 p-3 sm:p-4">
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-3 pb-3 pt-1.5 sm:p-4">
         <span className="max-w-full truncate text-lg font-bold text-brand-deep sm:text-xl">{username}</span>
         <div className="flex w-full items-stretch justify-center gap-2 sm:w-auto">
           <Kachel wert={String(totalPoints)} label={t.totalPoints} />
