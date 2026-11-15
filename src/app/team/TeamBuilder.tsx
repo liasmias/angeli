@@ -471,6 +471,31 @@ function TauschStapel({
   );
 }
 
+/** Ein aktiver Filter als Chip; Antippen entfernt ihn. */
+function FilterChip({ label, entfernen, onClick }: { label: string; entfernen: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${entfernen}: ${label}`}
+      className="pressable-subtle tap-ziel flex items-center gap-1.5 fase-knopf bg-brand-deep px-2.5 py-1 text-xs font-bold text-brand-accent"
+    >
+      {label}
+      <span aria-hidden>×</span>
+    </button>
+  );
+}
+
+/** Sortierung als Wort für den Hinweis über der Liste (ohne Pfeil). */
+const SORT_LABEL = (t: BuilderDict) => ({
+  points: t.sortPoints.replace(" ↓", ""),
+  price: t.sortPrice.replace(" ↓", ""),
+  goals: t.sortGoals.replace(" ↓", ""),
+  assists: t.sortAssists.replace(" ↓", ""),
+  cleanSheets: t.sortCleanSheets.replace(" ↓", ""),
+  owned: t.sortOwned.replace(" ↓", ""),
+});
+
 /** Kleines rundes „?“ neben einer Kennzahl — springt zur passenden Regel. */
 function HilfeLink({ href, label }: { href: string; label: string }) {
   return (
@@ -565,9 +590,9 @@ const MarktZeile = memo(function MarktZeile({
         type="button"
         onClick={() => onOpen(p.id)}
         aria-label={t.cardOpen(p.name)}
-        className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-2 text-left"
+        className="pressable-subtle flex min-w-0 flex-1 items-center gap-3 py-2 pl-2 pr-2 text-left"
       >
-        <Jersey club={p.club} size={28} />
+        <Jersey club={p.club} size={52} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 truncate font-semibold text-brand-deep">
             {p.flag && (
@@ -601,16 +626,17 @@ const MarktZeile = memo(function MarktZeile({
             )}
           </span>
         </span>
-        {/* Die Spalte zeigt, wonach sortiert ist — Punkte als Standard. */}
-        <span className="w-11 text-right">
+        {/* Feste Spalten, in jeder Zeile an derselben Stelle: die sortierte
+            Kennzahl (Punkte als Standard) und der Preis. */}
+        <span className="w-12 shrink-0 text-right">
           <span className="block text-xs font-semibold uppercase text-brand-deep/65">
             {t.statShort[spalte]}
           </span>
-          <span className="block font-bold tabular-nums text-brand-deep">
+          <span className="block text-[17px] font-bold leading-tight tabular-nums text-brand-deep">
             {spalte === "cleanSheets" ? (p.cleanSheets ?? "—") : p[spalte]}
           </span>
         </span>
-        <span className="w-9 text-right font-bold tabular-nums text-brand-deep">
+        <span className="w-11 shrink-0 text-right text-[15px] font-semibold tabular-nums text-brand-deep">
           {p.price.toFixed(1)}
         </span>
       </button>
@@ -2392,6 +2418,32 @@ export default function TeamBuilder({
               </Auswahl>
             </div>
             )}
+            {/* Aktive Filter als Chips zum Entfernen — nur, wenn einer gesetzt ist. */}
+            {(filterPreis !== "ALL" || filterClub !== "ALL" || filterPos !== "ALL") && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {filterPos !== "ALL" && (
+                  <FilterChip label={filterPos} entfernen={t.removeFilter} onClick={() => setFilterPos("ALL")} />
+                )}
+                {filterPreis !== "ALL" && (
+                  <FilterChip
+                    label={filterPreis === "LEISTBAR" ? t.affordable : t.priceMax(Number(filterPreis))}
+                    entfernen={t.removeFilter}
+                    onClick={() => setFilterPreis("ALL")}
+                  />
+                )}
+                {filterClub !== "ALL" && (
+                  <FilterChip label={filterClub} entfernen={t.removeFilter} onClick={() => setFilterClub("ALL")} />
+                )}
+                <button
+                  type="button"
+                  onClick={filterZuruecksetzen}
+                  className="tap-ziel ml-auto text-xs font-bold text-brand-magenta underline"
+                >
+                  {t.reset}
+                </button>
+              </div>
+            )}
+            <p className="text-xs text-brand-deep/65">{t.sortedBy(SORT_LABEL(t)[sortiere])}</p>
           </div>
           <div ref={listeRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:max-h-[34rem] lg:flex-none">
             {filtered.slice(0, sichtbar).map((p) => (

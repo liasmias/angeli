@@ -601,7 +601,7 @@ body:has([data-gw-wechsel]) main {
    460 Einträge und soll auf dem Handy trotzdem sofort reagieren. */
 .markt-zeile {
   content-visibility: auto;
-  contain-intrinsic-size: auto 53px;
+  contain-intrinsic-size: auto 70px;
 }
 
 /* Spielermenü: unten hereinfahren (Handy), ab sm rechts als Panel einblenden. */
