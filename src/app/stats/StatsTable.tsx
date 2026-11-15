@@ -97,6 +97,38 @@ function sortLabel(key: SortKey, t: ReturnType<typeof getDictionary>["stats"]): 
 /** Zeilen je Nachladeschritt. */
 const SCHRITT = 50;
 
+/** Spalten der Handy-Tabelle, in dieser Reihenfolge — die wichtigsten zuerst. */
+const MOBIL_SPALTEN: SortKey[] = [
+  "totalPoints", "latestPoints", "price", "form", "valuePerMillion", "minutes",
+  "rating", "goals", "assists", "cleanSheets", "bonus", "owned",
+];
+
+function mobilKopf(key: SortKey, t: ReturnType<typeof getDictionary>["stats"]): string {
+  const kopf: Partial<Record<SortKey, string>> = {
+    totalPoints: t.points, price: t.price, form: t.form, valuePerMillion: t.value,
+    minutes: t.minutes, rating: t.rating, goals: t.goals, assists: t.assists,
+    cleanSheets: t.cleanSheets, bonus: t.bonus, owned: t.owned,
+  };
+  return kopf[key] ?? "";
+}
+
+function mobilWert(r: StatsRow, key: SortKey): string {
+  switch (key) {
+    case "latestPoints": return r.latestPoints === null ? "—" : String(r.latestPoints);
+    case "price": return r.price.toFixed(1) + (r.priceDelta > 0 ? " ▲" : r.priceDelta < 0 ? " ▼" : "");
+    case "form": return r.form === null ? "—" : r.form.toFixed(1);
+    case "valuePerMillion": return r.valuePerMillion === null ? "—" : r.valuePerMillion.toFixed(1);
+    case "minutes": return String(r.minutes);
+    case "rating": return r.rating === null ? "—" : r.rating.toFixed(1);
+    case "goals": return String(r.goals);
+    case "assists": return String(r.assists);
+    case "cleanSheets": return r.cleanSheets === null ? "—" : String(r.cleanSheets);
+    case "bonus": return String(r.bonus);
+    case "owned": return `${r.owned} %`;
+    default: return "";
+  }
+}
+
 /**
  * Eine Tabellenzeile. memo: Ändert sich nur der Filter, bleiben die übrigen
  * Zeilen unangetastet, statt dass React jede einzelne neu vergleicht.
@@ -270,9 +302,12 @@ export default function StatsTable({
   const eigeneSpalte = !OHNE_EIGENE_SPALTE.includes(sortKey);
 
   const fuehler = useRef<HTMLTableRowElement | null>(null);
+  const fuehlerMobil = useRef<HTMLTableRowElement | null>(null);
   useEffect(() => {
-    const el = fuehler.current;
-    if (!el) return;
+    const sensoren = [fuehler.current, fuehlerMobil.current].filter(
+      (e): e is HTMLTableRowElement => e !== null
+    );
+    if (sensoren.length === 0) return;
     const beobachter = new IntersectionObserver(
       (eintraege) => {
         if (eintraege.some((e) => e.isIntersecting)) setAnzahl((n) => n + SCHRITT);
@@ -280,7 +315,7 @@ export default function StatsTable({
       // Früh nachladen, damit beim normalen Scrollen nie ein Ende sichtbar wird.
       { rootMargin: "800px 0px" }
     );
-    beobachter.observe(el);
+    for (const el of sensoren) beobachter.observe(el);
     return () => beobachter.disconnect();
   }, [gerendert.length, visible.length]);
 
@@ -391,7 +426,99 @@ export default function StatsTable({
         Position, Preis und Rating wandern dort unter den Namen; ab `sm`
         erscheint wieder die volle Tabelle.
       */}
-      <div className="overflow-x-auto">
+      {/* Handy: alle Spalten, seitlich wischbar. Die Spielerspalte bleibt
+          links stehen; nur die Tabelle scrollt seitlich, nicht die Seite. */}
+      <p className="border-b border-brand-deep/10 px-3 py-2 text-xs text-brand-deep/65 sm:hidden">
+        {t.mobileHint(
+          sortKey === "name"
+            ? t.player
+            : sortKey === "latestPoints"
+              ? t.gwCol(latestGameweekNumber ?? 0)
+              : mobilKopf(sortKey, t)
+        )}
+      </p>
+      <div className="overflow-x-auto overscroll-x-contain sm:hidden">
+        <table className="border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-brand-deep/10 text-xs font-bold uppercase tracking-wide text-brand-deep/65">
+              <th className="sticky left-0 z-10 min-w-[10.5rem] border-r border-brand-deep/10 bg-white px-2 py-2 text-left">
+                <button type="button" onClick={() => toggleSort("name")} className="tap-ziel uppercase">
+                  {t.player}{sortIndicator("name")}
+                </button>
+              </th>
+              {MOBIL_SPALTEN.map((k) =>
+                k === "latestPoints" && latestGameweekNumber === null ? null : (
+                  <th key={k} className="whitespace-nowrap px-2.5 py-2 text-right">
+                    <button type="button" onClick={() => toggleSort(k)} className="tap-ziel uppercase">
+                      {k === "latestPoints" ? t.gwCol(latestGameweekNumber ?? 0) : mobilKopf(k, t)}
+                      {sortIndicator(k)}
+                    </button>
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-deep/5">
+            {gerendert.map((r, i) => (
+              <tr key={r.id}>
+                <td className="sticky left-0 z-10 border-r border-brand-deep/10 bg-white px-2 py-1.5">
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 shrink-0 text-right text-xs tabular-nums text-brand-deep/65">{i + 1}</span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/jerseys/${r.club}.png`}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      decoding="async"
+                      className="shrink-0 select-none"
+                    />
+                    <span className="min-w-0">
+                      <span className="block max-w-[7.5rem] truncate font-semibold text-brand-deep">{r.name}</span>
+                      <span className="block text-xs text-brand-deep/65">
+                        {r.club} · {r.position}
+                      </span>
+                    </span>
+                  </span>
+                </td>
+                {MOBIL_SPALTEN.map((k) =>
+                  k === "latestPoints" && latestGameweekNumber === null ? null : (
+                    <td
+                      key={k}
+                      className={`whitespace-nowrap px-2.5 py-1.5 text-right tabular-nums ${
+                        k === "totalPoints" ? "" : k === sortKey ? "font-bold text-brand-deep" : "text-brand-deep/80"
+                      }`}
+                    >
+                      {k === "totalPoints" ? (
+                        <span className="rounded-full bg-brand-accent/20 px-2.5 py-0.5 font-bold text-brand-deep">
+                          {r.totalPoints}
+                        </span>
+                      ) : (
+                        mobilWert(r, k)
+                      )}
+                    </td>
+                  )
+                )}
+              </tr>
+            ))}
+            {gerendert.length < visible.length && (
+              <tr ref={fuehlerMobil} aria-hidden>
+                <td colSpan={MOBIL_SPALTEN.length + 1} className="h-10" />
+              </tr>
+            )}
+            {visible.length === 0 && (
+              <tr>
+                <td colSpan={MOBIL_SPALTEN.length + 1} className="px-3 py-8 text-left text-brand-deep/65">
+                  {t.noneFound}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full border-collapse text-sm sm:min-w-[36rem]">
           <thead>
             <tr className="border-b border-brand-deep/10 text-left text-xs font-bold uppercase tracking-wide text-brand-deep/65">

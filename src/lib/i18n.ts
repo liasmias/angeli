@@ -348,6 +348,7 @@ const de = {
     postponedHint: "Neuer Termin noch offen. Die Partie wird dem Spieltag zugeordnet, an dem sie nachgeholt wird.",
   },
   stats: {
+    mobileHint: (sortiert: string) => `Sortierung: ${sortiert} · seitlich wischen, Spaltenkopf antippen zum Sortieren`,
     title: "Statistiken",
     introAfter: (n: number) => `Punkte aller Spieler — Stand nach Spieltag ${n}.`,
     introEmpty: "Sobald der erste Spieltag synchronisiert ist, erscheinen hier die Punkte aller Spieler.",
@@ -732,6 +733,7 @@ const en: typeof de = {
     postponedHint: "New date to be confirmed. The match will be assigned to the gameweek it is played in.",
   },
   stats: {
+    mobileHint: (sorted: string) => `Sorted by ${sorted} · swipe sideways, tap a column header to sort`,
     title: "Statistics",
     introAfter: (n: number) => `Points for all players — as of gameweek ${n}.`,
     introEmpty: "Once the first gameweek has been synced, all player points appear here.",
