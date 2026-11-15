@@ -95,7 +95,7 @@ const Zeile = memo(function Zeile({
         className="pressable-subtle flex min-w-0 flex-1 items-center justify-between gap-3 py-3 pl-1 pr-5 hover:bg-brand-deep/5"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <span className="w-9 shrink-0 text-center text-[18px] font-bold tabular-nums text-brand-deep/65">
+          <span className="w-8 shrink-0 text-center text-base font-bold tabular-nums text-brand-deep/65">
             {MEDALS[row.rank - 1] ?? row.rank}
           </span>
           <span className="truncate font-semibold text-brand-deep">{row.username}</span>
@@ -108,7 +108,7 @@ const Zeile = memo(function Zeile({
         {/* Ohne Pfeil: Die ganze Zeile ist bereits ein Link, das Zeichen war
             nur Dekoration — auf dem Handy brachen dafuer die Namen ab. */}
         <span className="flex shrink-0 items-center">
-          <span className="min-w-[3.5rem] rounded-full bg-brand-accent/20 px-3 py-0.5 text-right text-[18px] font-bold tabular-nums text-brand-deep">
+          <span className="min-w-[3rem] rounded-full bg-brand-accent/20 px-2.5 py-0.5 text-center text-base font-bold tabular-nums text-brand-deep">
             {row.total_points}
           </span>
         </span>

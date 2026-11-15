@@ -349,25 +349,15 @@ button,
 }
 
 /* Wer Bewegung abbestellt hat, bekommt die Endzustaende sofort. */
-/* Ladeplatzhalter: ein Lichtstreifen wandert über die Balken, statt dass sie
-   nur pulsieren — wirkt wie Arbeit, nicht wie Warten. background-attachment
-   fixed lässt alle Balken denselben Streifen zeigen, er zieht also als eine
-   Welle über die ganze Seite. */
-@keyframes skelett-schimmer {
-  from { background-position: -60vw 0 }
-  to { background-position: 160vw 0 }
+/* Ladeplatzhalter: ruhiges, gleichmässiges Pulsieren der Deckkraft. Der
+   frühere wandernde Lichtstreifen (background-attachment: fixed) lief
+   ruckartig und auf iOS Safari nur eingeschränkt. */
+@keyframes skelett-puls {
+  from { opacity: 1; }
+  to { opacity: 0.45; }
 }
 .skelett {
-  background-image: linear-gradient(
-    100deg,
-    transparent 0,
-    rgb(255 255 255 / 0.55) 12vw,
-    transparent 24vw
-  );
-  background-size: 24vw 100%;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  animation: skelett-schimmer 1.3s var(--kurve-aus) infinite;
+  animation: skelett-puls 0.9s ease-in-out infinite alternate;
 }
 
 /* Spielermenü: ruhig einblenden statt aufploppen — kaum Grösse, kein

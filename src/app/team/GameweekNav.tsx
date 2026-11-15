@@ -1,6 +1,7 @@
 import Link from "next/link";
 import GwWechsel from "./GwWechsel";
 import BlinkZahl from "@/components/blink-zahl";
+import Countdown from "./Countdown";
 import { getDictionary, type Lang } from "@/lib/i18n";
 
 export interface GameweekNavProps {
@@ -64,7 +65,7 @@ function Kachel({
         hervorgehoben ? "bg-brand-deep text-white" : "bg-brand-deep/5 text-brand-deep"
       }`}
     >
-      <span className="w-full px-2 pt-1.5 text-[28px] font-bold tabular-nums leading-tight sm:text-2xl">
+      <span className="w-full px-2 pt-1.5 text-[22px] font-bold tabular-nums leading-tight">
         <BlinkZahl wert={wert} className="px-1" />
       </span>
       <span
@@ -135,6 +136,7 @@ export default function GameweekNav(props: GameweekNavProps) {
               timeZone: "Europe/Zurich",
             })}
           </span>
+          {deadline && <Countdown deadline={deadline} lang={lang} />}
         </p>
       )}
 

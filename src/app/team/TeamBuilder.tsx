@@ -667,7 +667,6 @@ export default function TeamBuilder({
   settings,
   gameweekOpen,
   gameweekNumber,
-  deadline,
   freeTransfers,
   transfersUsed,
   unlimitedTransfers,
@@ -1477,23 +1476,6 @@ export default function TeamBuilder({
   const marktToggle = useCallback((p: PlayerOption) => toggleAktuell.current(p), []);
   const marktOeffnen = useCallback((id: number) => setMarktSpieler(id), []);
 
-  // Erst nach dem Mounten berechnet: `Date.now()` im Render würde beim
-  // Hydrieren vom Server-Wert abweichen können (React-Hydration-Mismatch).
-  const [hoursLeft, setHoursLeft] = useState<number | null>(null);
-  useEffect(() => {
-    if (!deadline) return;
-    const rechne = () =>
-      setHoursLeft(Math.max(0, Math.round((new Date(deadline).getTime() - Date.now()) / 3_600_000)));
-    rechne();
-    const id = setInterval(rechne, 60_000);
-    return () => clearInterval(id);
-  }, [deadline]);
-  const countdown =
-    hoursLeft === null
-      ? null
-      : hoursLeft >= 48
-        ? t.inDays(Math.round(hoursLeft / 24))
-        : t.inHours(hoursLeft);
 
   // Transfer- bzw. Tausch-Hinweis mit seiner Aktion. Er steht in der Leiste
   // (Handy unten, Desktop in der Statusleiste) statt schwebend über dem Feld,
@@ -1779,21 +1761,21 @@ export default function TeamBuilder({
 
         {/* Status-Leiste: eine schmale Zeile mit allen Kennzahlen statt
             vier hoher Kacheln — Warnungen darunter, nur wenn nötig. */}
-        <div className="chamfer mb-3 bg-white px-3 py-1.5 shadow-sm sm:py-2">
+        <div className="chamfer mb-3 bg-white px-3 py-1.5 shadow-sm sm:py-2.5">
           {/* Festes Raster auf dem Handy: Im freien Umbruch wechselte die Zeilenzahl
               mit der Länge des Budgets, und das Spielfeld sprang mit. */}
           {/* Vier feste Spalten: Label klein oben, Wert gross darunter. Die Werte
               stehen in jeder Lage an derselben Stelle. */}
           {/* Ab sm eine einzige kompakte Zeile: Label und Wert nebeneinander. */}
-          <div className="sm:flex sm:items-center sm:gap-x-5">
-          <dl className="grid grid-cols-4 gap-x-2 sm:flex sm:gap-x-5">
+          <div className="sm:flex sm:items-center sm:gap-x-4">
+          <dl className="grid grid-cols-4 gap-x-2 sm:flex sm:shrink-0 sm:gap-x-4">
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brand-deep/65">
                 {t.budget}
                 <HilfeLink href="/regeln#kader" label={t.helpBudget} />
               </dt>
               <dd
-                className={`text-sm font-bold leading-tight tabular-nums ${
+                className={`text-lg font-bold leading-tight tabular-nums sm:text-sm ${
                   budgetLeft < 0 ? "text-brand-danger" : "text-brand-deep"
                 }`}
                 title={effectiveCap > settings.budgetCap ? `${t.of} ${effectiveCap.toFixed(1)} · ${t.capHint}` : undefined}
@@ -1803,7 +1785,7 @@ export default function TeamBuilder({
             </div>
             <div className="min-w-0 sm:flex sm:items-center sm:gap-1.5">
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.squad}</dt>
-              <dd className="text-sm font-bold leading-tight tabular-nums text-brand-deep">
+              <dd className="text-lg font-bold leading-tight tabular-nums text-brand-deep sm:text-sm">
                 {squad.length}/{settings.squadSize}
               </dd>
             </div>
@@ -1811,8 +1793,9 @@ export default function TeamBuilder({
               <dt className="text-xs font-semibold uppercase tracking-wide text-brand-deep/65">{t.starters}</dt>
               <dd className="text-sm font-bold leading-tight tabular-nums text-brand-deep">
                 {startingCount}/{settings.startingSize}
+                {/* Handy: Formation direkt darunter; ab sm steht sie als Chip daneben. */}
                 {startingCount === settings.startingSize && !formationError && (
-                  <span className="ml-1 text-xs font-semibold text-brand-deep/65 sm:hidden">
+                  <span className="block text-xs font-semibold text-brand-deep/65 sm:hidden">
                     {formationLabel(startingCounts)}
                   </span>
                 )}
@@ -1838,7 +1821,7 @@ export default function TeamBuilder({
           </dl>
           {/* Zweite Zeile: Formation, Double Gameweek, verbrauchte Transfers und
               Countdown. Platz steht immer, damit das Feld darunter nicht springt. */}
-          <div className="hidden h-5 items-center gap-2 overflow-hidden text-xs sm:flex sm:min-w-0 sm:flex-1">
+          <div className="hidden h-5 shrink-0 items-center gap-2 text-xs sm:flex">
             <span
               className={`rounded-full bg-brand-accent/25 px-1.5 font-bold tabular-nums text-brand-deep ${
                 startingCount === settings.startingSize && !formationError ? "" : "hidden"
@@ -1856,15 +1839,12 @@ export default function TeamBuilder({
                 {transfersUsed} {t.used}
               </span>
             )}
-            {/* Der Countdown entsteht erst nach dem Mounten; der Platz steht schon. */}
-            <span className={`ml-auto whitespace-nowrap font-bold text-brand-magenta ${countdown ? "" : "invisible"}`}>
-              {t.deadlineIn(countdown ?? t.inHours(0))}
-            </span>
           </div>
-          </div>
-          {/* Detail- und Warnzeile: immer genau eine Zeile hoch. Tauchte sie erst
-              bei Bedarf auf, rutschte das ganze Spielfeld darunter nach unten. */}
-          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-xs leading-4">
+          {/* Detail- und Warnzeile: auf dem Handy immer genau eine Zeile hoch —
+              tauchte sie erst bei Bedarf auf, rutschte das Spielfeld nach unten.
+              Ab sm steht sie rechts in derselben Zeile; eine eigene Zeile liess
+              die Leiste dort zu hoch wirken und die Werte oben kleben. */}
+          <div className="mt-0.5 flex h-4 items-center justify-between gap-3 text-xs leading-4 sm:mt-0 sm:h-5 sm:min-w-0 sm:flex-1 sm:justify-end">
             {squad.length < settings.squadSize ? (
               <span className="truncate font-medium text-brand-deep/65">
                 {POSITIONS.map((p) => `${p} ${countByPosition[p]}/${slotsByPosition[p]}`).join(" · ")}
@@ -1879,14 +1859,6 @@ export default function TeamBuilder({
                   .join(" · ")}
               </span>
             )}
-            {/* Handy: Die zweite Zeile entfällt, der Countdown steht hier. */}
-            <span
-              className={`shrink-0 whitespace-nowrap font-bold text-brand-magenta sm:hidden ${
-                ungespeichert || !countdown ? "hidden" : ""
-              }`}
-            >
-              {t.deadlineIn(countdown ?? t.inHours(0))}
-            </span>
             <span className={`flex shrink-0 items-center gap-1.5 ${ungespeichert ? "" : "hidden"}`}>
               <span className="hidden font-semibold text-brand-deep/65 sm:inline">{t.unsaved}</span>
               <button
@@ -1898,6 +1870,7 @@ export default function TeamBuilder({
                 {t.discard}
               </button>
             </span>
+          </div>
           </div>
         </div>
 
