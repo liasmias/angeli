@@ -13,6 +13,9 @@ export default async function LeaderboardPage({
 }) {
   const { ansicht, gw } = await searchParams;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const [{ data: standings }, { data: gameweeks }, { data: fixtures }, lang] = await Promise.all([
     supabase.from("standings").select("*"),
     supabase.from("gameweeks").select("id, number, deadline, is_locked").order("number"),
@@ -133,7 +136,7 @@ export default async function LeaderboardPage({
           </div>
         </nav>
         <div key={runde} className="fade-in">
-          <LeaderboardTable rows={zeilen} lang={lang} />
+          <LeaderboardTable rows={zeilen} lang={lang} ichId={user?.id ?? null} />
         </div>
         </div>
       </main>
@@ -200,7 +203,7 @@ export default async function LeaderboardPage({
       {vorletzte !== null && letzte !== null && (
         <p className="mb-6 text-sm text-brand-deep/65">{t.movementHint(letzte, vorletzte)}</p>
       )}
-      <LeaderboardTable rows={rows} lang={lang} />
+      <LeaderboardTable rows={rows} lang={lang} ichId={user?.id ?? null} />
       </div>
     </main>
   );

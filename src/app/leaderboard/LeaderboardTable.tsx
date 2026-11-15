@@ -66,16 +66,19 @@ function loadFavorites(): string[] {
 const Zeile = memo(function Zeile({
   row,
   istFavorit,
+  istIch,
   onToggle,
   t,
 }: {
   row: StandingRow;
   istFavorit: boolean;
+  /** Eigene Zeile des eingeloggten Mitglieds: rosa wie „im Team“ im Markt. */
+  istIch: boolean;
   onToggle: (username: string) => void;
   t: ReturnType<typeof getDictionary>["leaderboard"];
 }) {
   return (
-    <li className="flex items-center">
+    <li className={`flex items-center ${istIch ? "bg-brand-accent/15" : ""}`}>
       <button
         type="button"
         onClick={() => onToggle(row.username)}
@@ -92,10 +95,12 @@ const Zeile = memo(function Zeile({
         className="pressable-subtle flex min-w-0 flex-1 items-center justify-between gap-3 py-3 pl-1 pr-5 hover:bg-brand-deep/5"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <span className="w-8 shrink-0 text-center font-bold tabular-nums text-brand-deep/65">
+          <span className="w-9 shrink-0 text-center text-[18px] font-bold tabular-nums text-brand-deep/65">
             {MEDALS[row.rank - 1] ?? row.rank}
           </span>
           <span className="truncate font-semibold text-brand-deep">{row.username}</span>
+          {/* Ausserhalb des gekürzten Namens, damit „(du)“ nie abgeschnitten wird. */}
+          {istIch && <span className="-ml-2 shrink-0 font-medium text-brand-deep/65">{t.you}</span>}
         </span>
         <span className="ml-auto flex shrink-0 items-center">
           <Bewegung wert={row.movement} />
@@ -103,7 +108,7 @@ const Zeile = memo(function Zeile({
         {/* Ohne Pfeil: Die ganze Zeile ist bereits ein Link, das Zeichen war
             nur Dekoration — auf dem Handy brachen dafuer die Namen ab. */}
         <span className="flex shrink-0 items-center">
-          <span className="rounded-full bg-brand-accent/20 px-3 py-1 font-bold tabular-nums text-brand-deep">
+          <span className="min-w-[3.5rem] rounded-full bg-brand-accent/20 px-3 py-0.5 text-right text-[18px] font-bold tabular-nums text-brand-deep">
             {row.total_points}
           </span>
         </span>
@@ -112,7 +117,16 @@ const Zeile = memo(function Zeile({
   );
 });
 
-export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; lang: Lang }) {
+export default function LeaderboardTable({
+  rows,
+  lang,
+  ichId = null,
+}: {
+  rows: StandingRow[];
+  lang: Lang;
+  /** Eingeloggtes Mitglied, für die Hervorhebung der eigenen Zeile. */
+  ichId?: string | null;
+}) {
   const t = getDictionary(lang).leaderboard;
   const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -159,7 +173,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
           </div>
           <ol className="divide-y divide-brand-deep/5">
             {favoriteRows.map((row) => (
-              <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} onToggle={toggleFavorite} t={t} />
+              <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} istIch={row.user_id === ichId} onToggle={toggleFavorite} t={t} />
             ))}
           </ol>
         </div>
@@ -179,7 +193,7 @@ export default function LeaderboardTable({ rows, lang }: { rows: StandingRow[]; 
         </div>
         <ol className="divide-y divide-brand-deep/5">
           {visible.map((row) => (
-            <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} onToggle={toggleFavorite} t={t} />
+            <Zeile key={row.user_id} row={row} istFavorit={favorites.includes(row.username)} istIch={row.user_id === ichId} onToggle={toggleFavorite} t={t} />
           ))}
           {rows.length > 0 && visible.length === 0 && (
             <li className="px-5 py-8 text-center text-sm text-brand-deep/65">{t.noMatch}</li>
