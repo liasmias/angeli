@@ -149,9 +149,24 @@ export default async function Home() {
               ))}
             </ol>
           </div>
-          <div className="flex justify-center gap-3 sm:gap-4">
-            <HandyBild src="/handy-aufstellung.jpg" alt={t.mobileShotTeam} />
-            <HandyBild src="/handy-spieler.jpg" alt={t.mobileShotPlayer} />
+          {/* Zwei Geräte, leicht gegeneinander gedreht und überlappend, vor
+              einem weichen Lichtschein — wie die Screenshots im ersten Bildschirm. */}
+          <div className="relative flex items-center justify-center py-4 sm:px-6 sm:py-8">
+            <div
+              aria-hidden
+              className="absolute inset-0 m-auto h-3/4 w-3/4 rounded-full bg-brand-lime/25 blur-3xl"
+            />
+            <HandyBild
+              src="/handy-aufstellung.webp"
+              alt={t.mobileShotTeam}
+              className="z-10 -rotate-[4deg] sm:-translate-y-4"
+            />
+            <HandyBild
+              src="/handy-spieler.webp"
+              alt={t.mobileShotPlayer}
+              abgedunkelt
+              className="-ml-5 translate-y-5 rotate-[4deg] sm:-ml-8 sm:translate-y-6"
+            />
           </div>
         </div>
       </section>
@@ -159,20 +174,45 @@ export default async function Home() {
   );
 }
 
-/** Screenshot der Handy-Ansicht in einem schlichten Gerätrahmen. */
-function HandyBild({ src, alt }: { src: string; alt: string }) {
+/**
+ * Screenshot der Handy-Ansicht in einem Geräterahmen: dunkles Gehäuse mit
+ * feiner Lichtkante, oben die Kamera-Insel in einer hellen Statusleiste.
+ * Reines CSS — kein Bild eines fremden Geräts.
+ */
+function HandyBild({
+  src,
+  alt,
+  className = "",
+  abgedunkelt = false,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  /** Screenshot mit offenem Sheet: Die Statusleiste nimmt dessen Abdunklung auf. */
+  abgedunkelt?: boolean;
+}) {
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={src}
-      alt={alt}
-      width={390}
-      height={780}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-      className="h-auto w-[calc(50%-0.375rem)] max-w-[12.5rem] select-none rounded-[1.5rem] border-4 border-brand-deep shadow-2xl shadow-black/40 sm:w-48"
-    />
+    <div
+      className={`relative w-[47%] max-w-[13.5rem] shrink-0 rounded-[2rem] bg-[#06150c] p-[5px] shadow-2xl shadow-black/50 ring-1 ring-white/25 sm:w-56 sm:rounded-[2.4rem] sm:p-[7px] ${className}`}
+    >
+      <div className={`overflow-hidden rounded-[1.7rem] sm:rounded-[2rem] ${abgedunkelt ? "bg-[#929492]" : "bg-background"}`}>
+        {/* Statusleiste mit Kamera-Insel, damit sie nichts vom Screenshot verdeckt. */}
+        <div className="flex h-6 items-center justify-center sm:h-7" aria-hidden>
+          <span className="h-3 w-[30%] rounded-full bg-[#06150c] sm:h-3.5" />
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          width={390}
+          height={844}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="block h-auto w-full select-none"
+        />
+      </div>
+    </div>
   );
 }
 
