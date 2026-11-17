@@ -92,16 +92,16 @@ export default async function Home() {
           <Bildschirm
             src="/startseite-stats.webp"
             alt={t.shotStats}
-            breite={716}
-            hoehe={902}
-            className="z-0 w-[min(54cqw,calc(82cqh*0.794))] translate-y-[2%] -rotate-[5deg]"
+            breite={704}
+            hoehe={1056}
+            className="z-0 w-[min(50cqw,calc(84cqh*0.667))] translate-y-[2%] -rotate-[5deg]"
           />
           <Bildschirm
             src="/startseite-team.webp"
             alt={t.shotTeam}
-            breite={716}
-            hoehe={958}
-            className="z-10 -ml-[14cqw] w-[min(58cqw,calc(96cqh*0.747))] rotate-[4deg]"
+            breite={856}
+            hoehe={1128}
+            className="z-10 -ml-[14cqw] w-[min(58cqw,calc(96cqh*0.759))] rotate-[4deg]"
           />
         </div>
       </div>
